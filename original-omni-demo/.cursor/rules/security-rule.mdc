@@ -1,0 +1,42 @@
+# Security Rules for Omni Demo Project
+
+## XSS Prevention
+- ALWAYS use `SecurityUtils.safeSetText()` instead of directly setting `innerHTML` with user input
+- ALWAYS use `SecurityUtils.safeSetHTML()` when HTML content is necessary, which includes sanitization
+- NEVER use `document.write()` or `eval()` with user input
+- ALWAYS validate and sanitize user inputs before DOM manipulation
+
+## Email and Input Validation  
+- Use `SecurityUtils.isValidEmail()` for email validation
+- Use `SecurityUtils.isCloudwalkEmail()` for domain-specific validation
+- ALWAYS validate inputs on both client and server side
+
+## Secure Data Storage
+- Use `SecurityUtils.secureStore()` for storing sensitive data instead of plain localStorage/sessionStorage
+- Use `SecurityUtils.secureRetrieve()` for retrieving stored sensitive data
+- ALWAYS use `SecurityUtils.secureClear()` to clean up sensitive data when no longer needed
+- NEVER store passwords or tokens in plain text
+
+## Token Generation
+- Use `SecurityUtils.generateSecureToken()` for generating secure random tokens
+- NEVER use Math.random() for security-critical random values
+
+## DOM Manipulation Safety
+- Use `SecurityUtils.createElement()` for creating new DOM elements safely
+- ALWAYS escape user content when displaying it
+- Validate element existence before manipulation
+
+## General Security Practices
+- Implement proper error handling that doesn't expose sensitive information
+- Use HTTPS for all network communications
+- Validate all data at entry points
+- Follow principle of least privilege
+- Regular security audits of dependencies
+
+## Code Review Checklist
+- [ ] All user inputs are validated and sanitized
+- [ ] No direct innerHTML assignments with user data
+- [ ] Sensitive data is properly stored and cleared
+- [ ] No hardcoded secrets or credentials
+- [ ] Error messages don't expose system information
+- [ ] All network requests use HTTPS
