@@ -1,0 +1,37 @@
+{
+  "name": "omni-jimmer-tool",
+  "version": "1.0.0",
+  "description": "Matrix-based AI video generator for Brazilian businesses with CNAE classification",
+  "main": "index.html",
+  "scripts": {
+    "start": "python3 -m http.server 8080",
+    "dev": "python3 -m http.server 3000",
+    "build": "echo 'No build process needed for static files'",
+    "deploy": "rsync -avz --exclude node_modules --exclude .git . user@server:/path/to/deployment/",
+    "lint": "echo 'Linting HTML, CSS, and JS files...'",
+    "test": "echo 'No tests configured yet'"
+  },
+  "keywords": [
+    "ai",
+    "video-generator",
+    "brazilian-business",
+    "cnae",
+    "matrix",
+    "content-generation"
+  ],
+  "author": "Omni Jimmer Team",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/your-username/omni-jimmer-tool.git"
+  },
+  "bugs": {
+    "url": "https://github.com/your-username/omni-jimmer-tool/issues"
+  },
+  "homepage": "https://github.com/your-username/omni-jimmer-tool#readme",
+  "devDependencies": {},
+  "dependencies": {},
+  "engines": {
+    "node": ">=14.0.0"
+  }
+}

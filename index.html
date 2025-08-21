@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Omni Jimmer Tool - AI Video Matrix Generator</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <header class="header">
+        <div class="header-content">
+            <h1>🎬 Omni Jimmer Tool</h1>
+            <p class="sub">Matrix-based AI video generator for Brazilian businesses with CNAE classification and product-specific content generation.</p>
+        </div>
+    </header>
+
+    <main class="three-column-container">
+        <!-- LEFT COLUMN: Controls -->
+        <section class="left-column">
+            <!-- API Configuration Section -->
+            <div class="controls-section">
+                <h3>🔑 API Configuration</h3>
+                <div class="api-inputs">
+                    <input type="password" id="openai-key" placeholder="OpenAI API Key" class="api-input">
+                    <input type="password" id="replicate-key" placeholder="Replicate API Key" class="api-input">
+                    <button id="save-keys" class="btn btn-secondary">Save Keys</button>
+                </div>
+            </div>
+
+            <!-- Matrix Quick Actions -->
+            <div class="controls-section">
+                <h3>Quick Actions</h3>
+                <div class="generation-options">
+                    <button id="generate-all-row" class="btn btn-success mb-2">Generate All (by rows)</button>
+                    <button id="generate-all-col" class="btn btn-info mb-2">Generate All (by columns)</button>
+                </div>
+            </div>
+
+            <!-- Export/Import Controls -->
+            <div class="controls-section">
+                <h3>Export & Import</h3>
+                <div class="generation-options">
+                    <button id="export-config" class="btn btn-warning mb-2">Export Config</button>
+                    <button id="import-config" class="btn btn-warning mb-2">Import Config</button>
+                    <button id="download-all-images" class="btn btn-info">Download All Images</button>
+                    <input type="file" id="import-file" accept=".json" style="display: none;">
+                </div>
+            </div>
+        </section>
+
+        <!-- CENTER COLUMN: Matrix Grid -->
+        <section class="center-column">
+            <!-- Matrix Grid Section -->
+            <div class="step">
+                <h3>🎯 Content Matrix</h3>
+                <div id="matrix-grid" class="matrix-grid"></div>
+            </div>
+
+            <!-- Generation Progress -->
+            <div class="step progress-section" style="display: none;">
+                <h3>⚡ Generation Progress</h3>
+                <div class="progress-bar">
+                    <div id="progress-fill" class="progress-fill"></div>
+                </div>
+                <div id="progress-text" class="progress-text">0/0 completed</div>
+            </div>
+        </section>
+
+        <!-- RIGHT COLUMN: App Preview -->
+        <section class="right-column">
+            <div class="app-preview">
+                <h3>📱 Demo App Preview</h3>
+                <div class="preview-controls">
+                    <label class="preview-switch">
+                        <input type="radio" name="previewMode" value="carousel" id="previewCarousel" checked>
+                        <span>Carousel View</span>
+                    </label>
+                </div>
+                <div class="demo-controls mb-2">
+                    <select id="demo-cnae-select" class="input">
+                        <option value="">Select a CNAE to preview</option>
+                    </select>
+                </div>
+                <div class="phone-mockup">
+                    <!-- Background Video -->
+                    <video class="phone-mockup-video" id="phoneBgVideo" autoplay muted loop playsinline>
+                        <source src="./app-bg-video.mp4" type="video/mp4">
+                        <!-- Fallback background color if video fails -->
+                    </video>
+                    
+                    <!-- Video Component Overlay -->
+                    <div class="video-overlay" id="videoOverlay">
+                        <div class="video-component">
+                            <div class="video-placeholder">
+                                <span>Generated content will appear here</span>
+                            </div>
+                            <div class="video-controls">
+                                <div class="gradient-overlay"></div>
+                                <div class="content-overlay">
+                                    <div class="text-overlay">
+                                        <p id="demo-cnae-title">Select CNAE</p>
+                                    </div>
+                                    <button class="cta-button">Começar a usar</button>
+                                </div>
+                                <div class="carousel-indicators">
+                                    <div class="indicator active"></div>
+                                    <div class="indicator"></div>
+                                    <div class="indicator"></div>
+                                    <div class="indicator"></div>
+                                    <div class="indicator"></div>
+                                    <div class="indicator"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- iPhone Frame Overlay -->
+                    <div class="iphone-frame"></div>
+                </div>
+                
+                <!-- Carousel Controls -->
+                <div class="carousel-controls mt-2">
+                    <button id="prev-slide" class="btn btn-secondary btn-sm" disabled>‹ Previous</button>
+                    <span id="slide-indicator" class="mx-2">0/0</span>
+                    <button id="next-slide" class="btn btn-secondary btn-sm" disabled>Next ›</button>
+                </div>
+            </div>
+        </section>
+    </main>
+
+
+
+    <!-- Cell Modal -->
+    <div id="cell-modal" class="modal" style="display: none;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="modal-title">Cell Details</h3>
+                <button class="modal-close" onclick="app.closeCellModal()">&times;</button>
+            </div>
+            
+            <div class="modal-body">
+                <div class="step-workflow">
+                    <div class="workflow-step" id="workflow-step-1">
+                        <div class="step-indicator">
+                            <span class="step-number">1</span>
+                            <span class="step-label">Prompt</span>
+                        </div>
+                        <div class="step-content">
+                            <textarea id="prompt-editor" placeholder="Generated prompt will appear here..." readonly></textarea>
+                            <div class="step-actions">
+                                <button id="generate-prompt-btn" class="btn btn-primary">Generate Prompt</button>
+                                <button id="edit-prompt-btn" class="btn btn-secondary">Edit</button>
+                                <button id="save-prompt-btn" class="btn btn-success" style="display: none;">Save</button>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="workflow-step" id="workflow-step-2">
+                        <div class="step-indicator">
+                            <span class="step-number">2</span>
+                            <span class="step-label">Image</span>
+                        </div>
+                        <div class="step-content">
+                            <div id="image-preview" class="image-preview">
+                                <div class="placeholder">Generated image will appear here</div>
+                            </div>
+                            <div class="step-actions">
+                                <button id="generate-image-btn" class="btn btn-success" disabled>Generate Image</button>
+                                <button id="regenerate-image-btn" class="btn btn-warning" style="display: none;">Regenerate</button>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="workflow-step" id="workflow-step-3">
+                        <div class="step-indicator">
+                            <span class="step-number">3</span>
+                            <span class="step-label">Video</span>
+                        </div>
+                        <div class="step-content">
+                            <div class="coming-soon">Coming Soon</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="characteristics-info">
+                    <strong>Brazilian Context:</strong>
+                    <span id="dynamic-characteristics"></span>
+                </div>
+            </div>
+            
+            <div class="modal-footer">
+                <button class="btn btn-danger" onclick="app.deleteCellData()">Delete All</button>
+                <button class="btn btn-secondary" onclick="app.closeCellModal()">Close</button>
+            </div>
+        </div>
+    </div>
+
+    <footer class="footer">
+        <small>Omni Jimmer Tool - Matrix-based AI video generator for Brazilian businesses. Content: pt-BR. UI: English/Portuguese.</small>
+    </footer>
+
+    <!-- Scripts -->
+    <script src="security-utils.js"></script>
+    <script src="auth.js"></script>
+    <script src="app.js"></script>
+</body>
+</html>
