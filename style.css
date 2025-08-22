@@ -6,12 +6,16 @@
   --text: #e8e8ea;
   --muted: #a8a8ad;
   --accent: #ffffff;
-  --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
-  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
-  --radius: 8px;
-  --radius-lg: 12px;
   
-  /* Stage Colors */
+  /* Step Button Colors - Consistent across app */
+  --step-1-color: #442e85;
+  --step-1-text: #2a1a50;
+  --step-2-color: #7a54c9;
+  --step-2-text: #4a3270;
+  --step-3-color: #89b06e;
+  --step-3-text: #526b42;
+  
+  /* Legacy Stage Colors (being phased out) */
   --stage-1-color: #2E7D8A; /* Prompt - Teal */
   --stage-2-color: #22C55E; /* Image - Green */
   --stage-3-color: #c87ef7; /* Video - Purple */
@@ -55,24 +59,273 @@ html, body { margin: 0; padding: 0; background: var(--bg); color: var(--text); f
   line-height: 1.4;
 }
 
+/* User Info - Compact header display */
+.user-info {
+  position: absolute;
+  top: 16px;
+  right: 24px;
+  z-index: 100;
+}
+
+.user-profile {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--card);
+  border: 1px solid #232427;
+  border-radius: 8px;
+  padding: 8px 12px;
+  transition: all 0.2s ease;
+}
+
+.user-profile:hover {
+  border-color: var(--green);
+}
+
+.user-avatar {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 2px solid var(--green);
+}
+
+.user-details {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+  min-width: 0;
+}
+
+.user-name {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 120px;
+}
+
+.user-email {
+  font-size: 10px;
+  color: var(--muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 120px;
+}
+
+.sign-out-btn {
+  background: rgba(200, 126, 247, 0.1);
+  border: 1px solid rgba(200, 126, 247, 0.3);
+  color: var(--purple);
+  border-radius: 4px;
+  padding: 4px 8px;
+  font-size: 10px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  margin-left: 8px;
+}
+
+.sign-out-btn:hover {
+  background: rgba(200, 126, 247, 0.2);
+  border-color: var(--purple);
+}
+
+/* Menu Toggle Button */
+.menu-toggle {
+  position: fixed;
+  top: 20px;
+  left: 20px;
+  z-index: 1001;
+  background: var(--card);
+  border: 1px solid #3a3b3f;
+  border-radius: 8px;
+  padding: 12px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+}
+
+.menu-toggle:hover {
+  background: #343539;
+  transform: translateY(-1px);
+}
+
+.hamburger {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.hamburger span {
+  width: 20px;
+  height: 2px;
+  background: var(--text);
+  transition: all 0.3s ease;
+}
+
+.menu-toggle.active .hamburger span:nth-child(1) {
+  transform: rotate(45deg) translate(5px, 5px);
+}
+
+.menu-toggle.active .hamburger span:nth-child(2) {
+  opacity: 0;
+}
+
+.menu-toggle.active .hamburger span:nth-child(3) {
+  transform: rotate(-45deg) translate(7px, -6px);
+}
+
 .three-column-container {
   max-width: 1600px;
   margin: 0 auto;
   padding: 24px;
   display: grid;
-  grid-template-columns: 1fr 1fr 1fr;
+  grid-template-columns: 1fr 1fr;
   gap: 24px;
   align-items: start;
   min-height: calc(100vh - 160px);
+  transition: all 0.3s ease;
 }
 
-/* LEFT COLUMN: Controls */
+.three-column-container.sidebar-open {
+  margin-left: 320px;
+}
+
+/* LEFT COLUMN: Collapsible Controls */
 .left-column {
+  position: fixed !important;
+  top: 0;
+  left: 0;
+  width: 320px;
+  height: 100vh;
+  background: var(--bg);
+  border-right: 1px solid #232427;
   display: flex;
   flex-direction: column;
   gap: 20px;
-  height: fit-content;
+  padding: 20px;
+  transform: translateX(-100%);
+  transition: transform 0.3s ease;
+  z-index: 1000;
+  overflow-y: auto;
+  box-shadow: 2px 0 10px rgba(0, 0, 0, 0.3);
+  /* Remove from grid flow */
+  grid-column: auto;
+  grid-row: auto;
 }
+
+.left-column.open {
+  transform: translateX(0);
+}
+
+.left-column.collapsed {
+  transform: translateX(-100%);
+}
+
+.sidebar-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-bottom: 20px;
+  border-bottom: 1px solid #232427;
+  margin-bottom: 20px;
+  margin-top: 40px;
+}
+
+.sidebar-header h2 {
+  margin: 0;
+  color: var(--text);
+  font-size: 18px;
+}
+
+.close-btn {
+  background: transparent;
+  border: none;
+  color: var(--muted);
+  font-size: 24px;
+  cursor: pointer;
+  padding: 4px 8px;
+  border-radius: 4px;
+  transition: all 0.2s ease;
+}
+
+.close-btn:hover {
+  background: #232427;
+  color: var(--text);
+}
+
+/* Shuffle Button Controls - Copied from Original App */
+.shuffle-controls {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  justify-content: flex-start;
+  margin: 12px 0;
+}
+
+.shuffle-controls .shuffle-btn,
+.shuffle-controls .lock-btn {
+  flex: 0 0 auto;
+  padding: 10px 16px;
+  background: #2a2b2f;
+  color: var(--text);
+  border: 1px solid #3a3b3f;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.shuffle-controls .shuffle-btn:hover,
+.shuffle-controls .lock-btn:hover {
+  background: #343539;
+  transform: translateY(-1px);
+}
+
+.shuffle-controls .shuffle-btn:disabled {
+  background: #1a1b1f;
+  color: #555;
+  border-color: #2a2b2f;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.shuffle-controls .lock-btn.locked {
+  background: var(--purple);
+  color: #000;
+  border-color: var(--purple);
+}
+
+ /* Apply shuffle-btn styling to control buttons (not strip buttons) */
+ .shuffle-controls .shuffle-btn:not(.step-1):not(.step-2):not(.step-3) {
+   padding: 10px 16px;
+   background: #2a2b2f;
+   color: var(--text);
+   border: 1px solid #3a3b3f;
+   border-radius: 8px;
+   font-size: 14px;
+   font-weight: 600;
+   cursor: pointer;
+   transition: all 0.2s ease;
+ }
+ 
+ .shuffle-controls .shuffle-btn:not(.step-1):not(.step-2):not(.step-3):hover {
+   background: #343539;
+   transform: translateY(-1px);
+ }
+ 
+ .shuffle-controls .shuffle-btn:not(.step-1):not(.step-2):not(.step-3):disabled {
+   background: #1a1b1f;
+   color: #555;
+   border-color: #2a2b2f;
+   cursor: not-allowed;
+   transform: none;
+ }
 
 .controls-section {
   background: var(--card);
@@ -86,7 +339,14 @@ html, body { margin: 0; padding: 0; background: var(--bg); color: var(--text); f
   margin-bottom: 0;
 }
 
-.controls-section h3 { 
+.profile-section {
+  background: var(--card);
+  border: 1px solid #232427;
+  border-radius: 12px;
+  padding: 20px;
+}
+
+.controls-section h3, .profile-section h3 { 
   margin: 0 0 16px; 
   font-size: 16px; 
   color: var(--text);
@@ -109,12 +369,34 @@ html, body { margin: 0; padding: 0; background: var(--bg); color: var(--text); f
   border-radius: 8px;
   cursor: pointer;
   transition: all 0.2s ease;
+  position: relative;
   justify-content: space-between;
 }
 
 .option-toggle:hover {
   background: #202124;
   border-color: #3a3b3f;
+}
+
+.option-toggle input[type="checkbox"]:disabled + .checkmark {
+  background: #2a2b2f;
+  border-color: #2a2b2f;
+  opacity: 0.5;
+}
+
+.option-toggle:has(input[type="checkbox"]:disabled) {
+  opacity: 0.6;
+  cursor: not-allowed;
+  background: #151617;
+}
+
+.option-toggle:has(input[type="checkbox"]:disabled):hover {
+  background: #151617;
+  border-color: #2a2b2f;
+}
+
+.option-toggle:has(input[type="checkbox"]:disabled) .option-text {
+  color: var(--muted);
 }
 
 .option-toggle input[type="checkbox"] {
@@ -155,6 +437,35 @@ html, body { margin: 0; padding: 0; background: var(--bg); color: var(--text); f
   color: var(--green);
   font-weight: 600;
   margin-left: auto;
+}
+
+/* Pricing Total Display - From Original */
+.pricing-total {
+  margin-top: 16px;
+  padding-top: 16px;
+  border-top: 1px solid #232427;
+}
+
+.total-display {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px;
+  background: #0f1114;
+  border-radius: 8px;
+  border: 1px solid #232427;
+}
+
+.total-label {
+  font-size: 14px;
+  color: var(--text);
+  font-weight: 500;
+}
+
+.total-amount {
+  font-size: 16px;
+  color: var(--green);
+  font-weight: 700;
 }
 
 .action-buttons {
@@ -202,6 +513,16 @@ html, body { margin: 0; padding: 0; background: var(--bg); color: var(--text); f
   animation-duration: 1.5s;
 }
 
+.shuffle-btn {
+  padding: 10px 16px;
+  border: none;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
 @keyframes gradientGlow {
   0%, 100% {
     background-position: 0% 50%;
@@ -211,15 +532,38 @@ html, body { margin: 0; padding: 0; background: var(--bg); color: var(--text); f
   }
 }
 
-/* Buttons */
+/* Button System - Improved from Original */
+button { 
+  appearance: none; 
+  background: #232427; 
+  color: var(--text); 
+  border: 1px solid #2c2e33; 
+  border-radius: 10px; 
+  padding: 10px 14px; 
+  cursor: pointer; 
+  transition: all 0.2s ease;
+  font-weight: 500;
+}
+
+button.primary { 
+  background: linear-gradient(90deg, var(--green), var(--purple)); 
+  color: #101010; 
+  font-weight: 600; 
+}
+
+button:disabled { 
+  opacity: 0.6; 
+  cursor: not-allowed; 
+}
+
 .btn {
   padding: 0.75rem 1.5rem;
   border: none;
-  border-radius: var(--radius);
+  border-radius: 10px;
   font-size: 1rem;
   font-weight: 500;
   cursor: pointer;
-  transition: all 0.2s;
+  transition: all 0.2s ease;
   display: inline-flex;
   align-items: center;
   gap: 0.5rem;
@@ -228,6 +572,7 @@ html, body { margin: 0; padding: 0; background: var(--bg); color: var(--text); f
 .btn-primary {
   background: linear-gradient(45deg, var(--green), var(--purple));
   color: #101010;
+  font-weight: 600;
 }
 
 .btn-primary:hover {
@@ -253,6 +598,7 @@ html, body { margin: 0; padding: 0; background: var(--bg); color: var(--text); f
 
 .btn-success:hover {
   background: #a8e32a;
+  transform: translateY(-1px);
 }
 
 .btn-info {
@@ -262,6 +608,7 @@ html, body { margin: 0; padding: 0; background: var(--bg); color: var(--text); f
 
 .btn-info:hover {
   background: #2563EB;
+  transform: translateY(-1px);
 }
 
 .btn-warning {
@@ -271,6 +618,7 @@ html, body { margin: 0; padding: 0; background: var(--bg); color: var(--text); f
 
 .btn-warning:hover {
   background: #D97706;
+  transform: translateY(-1px);
 }
 
 .btn-danger {
@@ -280,6 +628,7 @@ html, body { margin: 0; padding: 0; background: var(--bg); color: var(--text); f
 
 .btn-danger:hover {
   background: #DC2626;
+  transform: translateY(-1px);
 }
 
 .btn-sm {
@@ -287,11 +636,55 @@ html, body { margin: 0; padding: 0; background: var(--bg); color: var(--text); f
   font-size: 0.875rem;
 }
 
+/* Shuffle Control Styles */
+.shuffle-controls {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  justify-content: flex-start;
+}
+
+.shuffle-controls .shuffle-btn,
+.shuffle-controls .lock-btn {
+  flex: 0 0 auto;
+  padding: 10px 16px;
+  background: #2a2b2f;
+  color: var(--text);
+  border: 1px solid #3a3b3f;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.shuffle-controls .shuffle-btn:hover,
+.shuffle-controls .lock-btn:hover {
+  background: #343539;
+  transform: translateY(-1px);
+}
+
+.shuffle-controls .shuffle-btn:disabled {
+  background: #1a1b1f;
+  color: #555;
+  border-color: #2a2b2f;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.shuffle-controls .lock-btn.locked {
+  background: var(--purple);
+  color: #000;
+  border-color: var(--purple);
+}
+
 /* CENTER COLUMN: Generated Content */
 .center-column {
   display: flex;
   flex-direction: column;
   gap: 16px;
+  width: 100%;
+  min-height: 400px;
 }
 
 .center-column .step { 
@@ -319,13 +712,137 @@ html, body { margin: 0; padding: 0; background: var(--bg); color: var(--text); f
   object-fit: contain; 
 }
 
-/* Matrix Styles */
+/* Download Button Styling */
+.download-btn { 
+  display: inline-block; 
+  margin: 12px 0 0; 
+  padding: 8px 16px; 
+  background: linear-gradient(135deg, var(--green), var(--purple)); 
+  color: #101010; 
+  text-decoration: none; 
+  border-radius: 8px; 
+  font-size: 13px; 
+  font-weight: 600; 
+  transition: transform 0.2s ease, opacity 0.2s ease;
+}
+
+.download-btn:hover { 
+  transform: translateY(-1px); 
+  opacity: 0.9; 
+}
+
+/* Prompt Display */
+/* Old prompt display definition removed - using new matrix prompt styles */
+
+/* Old prompt display show rule removed */
+
+/* Matrix Styles - Enhanced from Original */
 .matrix-section {
   background: var(--card);
   border: 1px solid #232427;
   border-radius: 12px;
   padding: 20px;
   margin-bottom: 24px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+/* Generated Texts Styling - From Original */
+.generated-texts {
+  background: var(--card);
+  border-radius: 12px;
+  padding: 20px;
+  margin-bottom: 24px;
+  border: 1px solid #2a2b2f;
+}
+
+.generated-texts h3 {
+  margin: 0 0 16px;
+  font-size: 16px;
+  color: var(--text);
+}
+
+.text-results {
+  display: grid;
+  gap: 12px;
+}
+
+.overlay-text-result,
+.button-text-result,
+.custom-notes-result,
+.product-callout-result {
+  background: #0f1114;
+  border-radius: 8px;
+  padding: 12px;
+  border: 1px solid #232427;
+}
+
+.overlay-text-result label,
+.button-text-result label,
+.custom-notes-result label,
+.product-callout-result label {
+  display: block;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--muted);
+  margin-bottom: 6px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.overlay-text-result textarea,
+.button-text-result input,
+.custom-notes-result textarea,
+.product-callout-result input {
+  width: 100%;
+  background: #121316;
+  border: 1px solid #2a2b2f;
+  border-radius: 6px;
+  padding: 8px 10px;
+  font-size: 14px;
+  color: var(--text);
+  font-weight: 500;
+  font-family: inherit;
+  resize: none;
+  transition: border-color 0.2s ease;
+}
+
+.overlay-text-result textarea:focus,
+.button-text-result input:focus,
+.custom-notes-result textarea:focus,
+.product-callout-result input:focus {
+  outline: none;
+  border-color: var(--green);
+}
+
+.overlay-text-result label small,
+.button-text-result label small,
+.custom-notes-result label small,
+.product-callout-result label small {
+  color: var(--green);
+  font-weight: normal;
+}
+
+.overlay-text-result.has-custom-value,
+.button-text-result.has-custom-value,
+.custom-notes-result.has-custom-value,
+.product-callout-result.has-custom-value {
+  border-left: 3px solid var(--green);
+  background: rgba(193, 247, 50, 0.05);
+}
+
+.overlay-text-result.has-custom-value textarea,
+.button-text-result.has-custom-value input,
+.custom-notes-result.has-custom-value textarea,
+.product-callout-result.has-custom-value input {
+  border-color: var(--green);
+}
+
+.custom-notes-result textarea {
+  min-height: 80px;
+}
+
+.custom-notes-result label small {
+  color: var(--purple);
 }
 
 .matrix-section h2 {
@@ -344,7 +861,9 @@ html, body { margin: 0; padding: 0; background: var(--bg); color: var(--text); f
 .matrix-grid {
   overflow-x: auto;
   border: 2px solid #232427;
-  border-radius: var(--radius);
+  border-radius: 8px;
+  min-height: 300px;
+  width: 100%;
 }
 
 .matrix-table {
@@ -1009,14 +1528,16 @@ html, body { margin: 0; padding: 0; background: var(--bg); color: var(--text); f
 }
 
 .image-preview {
-  min-height: 200px;
-  border: 2px dashed #333;
-  border-radius: 8px;
+  width: 320px;
+  height: 180px;
+  border: none;
+  border-radius: 0;
   display: flex;
   align-items: center;
   justify-content: center;
   background: #1a1b1e;
   margin-bottom: 1rem;
+  overflow: hidden;
 }
 
 .image-preview .placeholder {
@@ -1025,9 +1546,11 @@ html, body { margin: 0; padding: 0; background: var(--bg); color: var(--text); f
 }
 
 .image-preview img {
+  width: 100%;
   max-width: 100%;
-  max-height: 200px;
-  border-radius: 6px;
+  height: auto;
+  object-fit: contain;
+  border-radius: 0;
 }
 
 .coming-soon {
@@ -1093,7 +1616,7 @@ html, body { margin: 0; padding: 0; background: var(--bg); color: var(--text); f
 }
 
 .btn-success {
-  background: #22C55E;
+  background: var(--step-2-color);
   color: white;
 }
 
@@ -1157,7 +1680,7 @@ html, body { margin: 0; padding: 0; background: var(--bg); color: var(--text); f
 }
 
 .column-action-btn.step-2 {
-  background: #22C55E;
+  background: var(--step-2-color);
   color: white;
 }
 
@@ -1216,6 +1739,8 @@ html, body { margin: 0; padding: 0; background: var(--bg); color: var(--text); f
   border-radius: 12px;
   overflow: hidden;
   border: 1px solid #333;
+  width: 100%;
+  min-height: 200px;
 }
 
 /* Matrix Header Row */
@@ -1225,93 +1750,165 @@ html, body { margin: 0; padding: 0; background: var(--bg); color: var(--text); f
   padding: 1rem;
   border-bottom: 1px solid #333;
   align-items: center;
+  gap: 1rem;
 }
 
 .column-spacer {
-  width: 180px;
-  margin-right: 1rem;
+  width: 160px;
+  margin-right: 0;
 }
 
 .column-spacer:nth-child(2) {
-  width: 280px;
+  width: 320px;
+  margin-right: 0;
 }
 
 .cnae-header-card {
-  width: 140px;
-  padding: 0.75rem;
+  width: 320px;
+  padding: 0;
   text-align: center;
-  margin-right: 1rem;
+  margin-right: 0;
   position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: var(--card);
+  border-radius: 0;
+  overflow: hidden;
 }
 
 .cnae-step-buttons {
   display: flex;
-  gap: 0.25rem;
-  justify-content: center;
-  margin-bottom: 0.5rem;
+  width: 100%;
+  gap: 0;
+  margin-bottom: 0;
+  border-radius: 0;
+  overflow: hidden;
 }
 
-.cnae-step-buttons .step-btn {
-  width: 20px;
-  height: 20px;
-  border-radius: 4px;
+.cnae-step-buttons .shuffle-btn {
+  flex: 1;
+  height: 2px;
+  border-radius: 0;
   border: none;
-  background: #666;
-  color: white;
+  color: transparent;
   font-weight: 600;
-  font-size: 0.7rem;
+  font-size: 0.8rem;
   cursor: pointer;
-  transition: all 0.2s;
+  transition: all 0.3s ease;
   display: flex;
   align-items: center;
   justify-content: center;
+  overflow: hidden;
 }
 
-.cnae-step-buttons .step-btn.step-1 {
-  background: var(--stage-1-color);
+/* Column button colors using CSS variables */
+.cnae-step-buttons .shuffle-btn.step-1 {
+  background: var(--step-1-color);
 }
 
-.cnae-step-buttons .step-btn.step-2 {
-  background: var(--stage-2-color);
+.cnae-step-buttons .shuffle-btn.step-2 {
+  background: var(--step-2-color);
 }
 
-.cnae-step-buttons .step-btn.step-3 {
-  background: var(--stage-3-color);
+.cnae-step-buttons .shuffle-btn.step-3 {
+  background: var(--step-3-color);
 }
 
-.cnae-step-buttons .step-btn:hover {
-  transform: translateY(-1px);
+/* Hover over entire column header expands all buttons - with darker text */
+.cnae-header-card:hover .shuffle-btn {
+  height: 24px;
+}
+
+.cnae-header-card:hover .shuffle-btn.step-1 {
+  color: var(--step-1-text);
+}
+
+.cnae-header-card:hover .shuffle-btn.step-2 {
+  color: var(--step-2-text);
+}
+
+.cnae-header-card:hover .shuffle-btn.step-3 {
+  color: var(--step-3-text);
+}
+
+  /* Column header processing states */
+  .cnae-step-buttons .shuffle-btn.processing {
+    animation: pulse 1.5s ease-in-out infinite;
+    height: 24px;
+  }
+  
+  /* Column header completed states using CSS variables */
+  .cnae-step-buttons .shuffle-btn.step-1.completed {
+    background: var(--step-1-color);
+    color: var(--step-1-text);
+    height: 24px;
+  }
+  
+  .cnae-step-buttons .shuffle-btn.step-2.completed {
+    background: var(--step-2-color);
+    color: var(--step-2-text);
+    height: 24px;
+  }
+  
+  .cnae-step-buttons .shuffle-btn.step-3.completed {
+    background: var(--step-3-color);
+    color: var(--step-3-text);
+    height: 24px;
+  }
+
+/* Column completed buttons stay expanded */
+.cnae-step-buttons .shuffle-btn.completed {
+  height: 24px !important;
+}
+
+.cnae-step-buttons .shuffle-btn.completed:hover {
   opacity: 0.9;
 }
 
 .cnae-header-card h3 {
-  margin: 0 0 0.5rem 0;
+  margin: 0;
   color: var(--text);
   font-size: 0.9rem;
   font-weight: 600;
   line-height: 1.2;
-}
-
-.cnae-remove-btn {
-  width: 16px;
-  height: 16px;
-  background: #EF4444;
-  border: none;
-  color: white;
-  font-size: 0.7rem;
-  cursor: pointer;
-  transition: all 0.2s;
+  text-align: center;
+  width: 100%;
+  padding: 1rem 0.75rem;
+  flex: 1;
   display: flex;
   align-items: center;
   justify-content: center;
+}
+
+.cnae-remove-btn {
+  width: 24px;
+  height: 24px;
+  background: #EF4444;
+  border: none;
+  color: white;
+  font-size: 0.8rem;
+  cursor: pointer;
+  transition: all 0.2s;
+  display: none;
+  align-items: center;
+  justify-content: center;
   position: absolute;
-  top: 0.25rem;
-  right: 0.25rem;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  border-radius: 50%;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+}
+
+.cnae-header-card.showing-remove .cnae-remove-btn {
+  display: flex;
 }
 
 .cnae-remove-btn:hover {
   background: #DC2626;
-  transform: scale(1.1);
+  transform: translate(-50%, -50%) scale(1.1);
 }
 
 /* Product Row Cards */
@@ -1319,7 +1916,10 @@ html, body { margin: 0; padding: 0; background: var(--bg); color: var(--text); f
   display: flex;
   align-items: stretch;
   border-bottom: 1px solid #333;
-  min-height: 80px;
+  min-height: 180px;
+  max-height: 180px;
+  gap: 1rem;
+  padding: 0 1rem;
 }
 
 .product-row-card:last-child {
@@ -1327,36 +1927,203 @@ html, body { margin: 0; padding: 0; background: var(--bg); color: var(--text); f
 }
 
 .product-column {
-  width: 180px;
-  padding: 0.75rem;
-  background: #2a2b2e;
+  width: 160px;
+  padding: 0;
+  background: transparent;
   display: flex;
   flex-direction: column;
   align-items: center;
-  text-align: center;
-  margin-right: 1rem;
-}
-
-.product-step-buttons {
-  display: flex;
-  gap: 0.25rem;
-  margin-bottom: 0.5rem;
   justify-content: center;
+  text-align: center;
+  margin-right: 0;
+  height: 100%;
 }
 
+/* Product Header - Sharp corners, fill cell */
+.product-header {
+  width: 100%;
+  height: 100%;
+  position: relative;
+  border-radius: 0;
+  overflow: hidden;
+  box-shadow: none;
+  display: flex;
+  flex-direction: column;
+  background: var(--card);
+}
+
+.product-title-container {
+  background: var(--card);
+  border-radius: 0;
+  padding: 0 0.75rem;
+  position: relative;
+  border: none;
+  height: calc(180px - 2px);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: flex-start;
+}
+
+/* Product Name Display - Borderless by default */
 .product-name-display {
   font-size: 0.9rem;
   font-weight: 600;
   color: var(--text);
-  margin-bottom: 0.5rem;
   line-height: 1.2;
+  cursor: pointer;
+  background: transparent;
+  border: none;
+  padding: 4px 8px;
+  border-radius: 4px;
+  transition: all 0.2s ease;
+  text-align: left;
+  width: 100%;
+  margin: 0;
 }
 
+.product-name-display:hover {
+  background: rgba(193, 247, 50, 0.1);
+  border: 1px solid rgba(193, 247, 50, 0.3);
+}
+
+/* Step Buttons Strip - Horizontal Bar */
+.product-step-buttons-strip {
+  display: flex;
+  width: 100%;
+  border-radius: 0;
+  overflow: hidden;
+  margin-bottom: 0;
+  border: none;
+  gap: 0;
+}
+
+/* Strip Button Styling - Interactive compact design */
+.shuffle-btn {
+  flex: 1;
+  height: 2px;
+  border: none;
+  border-radius: 0;
+  color: transparent;
+  font-weight: 600;
+  font-size: 0.8rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  overflow: hidden;
+}
+
+/* Default button colors using CSS variables */
+.shuffle-btn.step-1 {
+  background: var(--step-1-color);
+}
+
+.shuffle-btn.step-2 {
+  background: var(--step-2-color);
+}
+
+.shuffle-btn.step-3 {
+  background: var(--step-3-color);
+}
+
+/* Hover over entire product header expands all buttons - with darker text */
+.product-header:hover .shuffle-btn {
+  height: 24px;
+}
+
+.product-header:hover .shuffle-btn.step-1 {
+  color: var(--step-1-text);
+}
+
+.product-header:hover .shuffle-btn.step-2 {
+  color: var(--step-2-text);
+}
+
+.product-header:hover .shuffle-btn.step-3 {
+  color: var(--step-3-text);
+}
+
+/* Processing animation when clicked */
+.shuffle-btn.processing {
+  animation: pulse-processing 1.5s ease-in-out infinite;
+  height: 24px !important;
+  color: #fff !important;
+}
+
+@keyframes pulse-processing {
+  0% { 
+    opacity: 1; 
+    transform: scale(1);
+    box-shadow: 0 0 0 0 rgba(255, 255, 255, 0.7);
+  }
+  50% { 
+    opacity: 0.7; 
+    transform: scale(1.05);
+    box-shadow: 0 0 0 8px rgba(255, 255, 255, 0);
+  }
+  100% { 
+    opacity: 1; 
+    transform: scale(1);
+    box-shadow: 0 0 0 0 rgba(255, 255, 255, 0);
+  }
+}
+
+  /* Processing states - pulsing animation */
+  .shuffle-btn.processing {
+    animation: pulse 1.5s ease-in-out infinite;
+    height: 24px;
+  }
+  
+  @keyframes pulse {
+    0% { opacity: 0.7; }
+    50% { opacity: 1; }
+    100% { opacity: 0.7; }
+  }
+  
+  /* Completed states using CSS variables */
+  .shuffle-btn.step-1.completed {
+    background: var(--step-1-color);
+    color: var(--step-1-text);
+    height: 24px;
+  }
+  
+  .shuffle-btn.step-2.completed {
+    background: var(--step-2-color);
+    color: var(--step-2-text);
+    height: 24px;
+  }
+  
+  .shuffle-btn.step-3.completed {
+    background: var(--step-3-color);
+    color: var(--step-3-text);
+    height: 24px;
+  }
+
+/* When completed, always show full height and numbers */
+.shuffle-btn.completed {
+  height: 24px !important;
+}
+
+.shuffle-btn.completed:hover {
+  opacity: 0.9;
+}
+
+/* Product Controls - Hidden by default */
 .product-controls {
   display: flex;
   gap: 0.25rem;
   justify-content: center;
   align-items: center;
+  position: absolute;
+  bottom: 0.25rem;
+  right: 0.25rem;
+}
+
+.product-controls.hidden {
+  display: none;
 }
 
 .control-btn {
@@ -1439,32 +2206,68 @@ html, body { margin: 0; padding: 0; background: var(--bg); color: var(--text); f
 }
 
 .prompt-column {
-  width: 280px;
-  padding: 0.75rem;
+  width: 320px;
+  padding: 1rem 0.75rem;
   display: flex;
   flex-direction: column;
   justify-content: center;
-  margin-right: 1rem;
+  align-items: flex-start;
+  margin-right: 0;
 }
 
-.prompt-edit {
+/* Prompt Display Container */
+.prompt-display-container {
+  position: relative;
+  margin-bottom: 0.4rem;
+  width: 100%;
+  text-align: left;
+  box-sizing: border-box;
+}
+
+/* Prompt Display - Consistent box model with edit mode */
+.prompt-display {
   width: 100%;
   min-height: 60px;
-  background: #1a1b1e;
-  border: 1px solid #333;
+  background: transparent;
+  border: 1px solid transparent;
   border-radius: 6px;
   padding: 0.5rem;
   color: var(--text);
   font-family: inherit;
   font-size: 0.85rem;
   line-height: 1.3;
-  margin-bottom: 0.4rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  word-wrap: break-word;
+  display: flex;
+  align-items: flex-start;
+  text-align: left;
+  box-sizing: border-box;
+}
+
+/* Hover effect removed */
+
+/* Prompt Edit - Consistent box model with display mode */
+.prompt-edit {
+  width: 100%;
+  min-height: 60px;
+  background: #1a1b1e;
+  border: 1px solid var(--green);
+  border-radius: 6px;
+  padding: 0.5rem;
+  color: var(--text);
+  font-family: inherit;
+  font-size: 0.85rem;
+  line-height: 1.3;
   resize: vertical;
+  text-align: left;
+  box-sizing: border-box;
 }
 
 .prompt-edit:focus {
   outline: none;
   border-color: var(--green);
+  box-shadow: 0 0 0 2px rgba(193, 247, 50, 0.2);
 }
 
 .characteristics-display {
@@ -1473,23 +2276,32 @@ html, body { margin: 0; padding: 0; background: var(--bg); color: var(--text); f
   font-style: italic;
   border-top: 1px solid #333;
   padding-top: 0.4rem;
+  padding-left: 0.5rem;
+  text-align: left;
+  width: 100%;
+  margin: 0;
+  box-sizing: border-box;
 }
 
 .cnae-result-column {
-  width: 140px;
-  padding: 0.75rem;
-  margin-right: 1rem;
+  width: 320px;
+  padding: 1rem 0.75rem;
+  margin-right: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
 }
 
-/* CNAE Cell Content - New Design */
+/* CNAE Cell Content - Exact 16:9 dimensions, no border, status top bar */
 .cnae-cell-content {
   background: #2a2b2e;
-  border-radius: 6px;
-  height: 100%;
+  border-radius: 0;
+  width: 320px;
+  height: 180px;
   cursor: pointer;
   transition: all 0.2s;
-  border: 3px solid #444;
-  min-height: 60px;
+  border: none;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -1498,6 +2310,8 @@ html, body { margin: 0; padding: 0; background: var(--bg); color: var(--text); f
   font-size: 0.8rem;
   padding: 0.5rem;
   box-sizing: border-box;
+  position: relative;
+  overflow: hidden;
 }
 
 .cnae-cell-content:hover {
@@ -1505,39 +2319,54 @@ html, body { margin: 0; padding: 0; background: var(--bg); color: var(--text); f
   box-shadow: var(--shadow);
 }
 
-/* Status-based borders using stage colors */
-.cnae-cell-content.cell-empty {
-  border-color: #444;
-  color: var(--muted);
+/* Status-based top bars */
+.cnae-cell-content::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 5px;
+  background: transparent;
+  z-index: 1;
 }
 
-.cnae-cell-content.cell-prompt-ready {
-  border-color: var(--stage-1-color);
-  color: var(--text);
+.cnae-cell-content.cell-empty::before {
+  background: #555;
 }
 
-.cnae-cell-content.cell-generating {
-  border-color: var(--stage-2-color);
-  color: var(--text);
+.cnae-cell-content.cell-prompt-ready::before {
+  background: var(--step-1-color);
+}
+
+.cnae-cell-content.cell-generating::before {
+  background: var(--step-2-color);
   animation: pulse 1.5s infinite;
 }
 
+.cnae-cell-content.cell-generated::before {
+  background: var(--step-2-color);
+}
+
+.cnae-cell-content.cell-error::before {
+  background: #EF4444;
+}
+
 .cnae-cell-content.cell-generated {
-  border-color: var(--stage-2-color);
   padding: 0;
 }
 
 .cnae-cell-content.cell-error {
-  border-color: var(--stage-error-color);
   color: #ff9999;
 }
 
-/* Images fill the whole cell */
+/* Images fit to max width, maintain aspect ratio */
 .cnae-cell-content .cell-image {
   width: 100%;
-  height: 100%;
-  object-fit: cover;
-  border-radius: 3px;
+  max-width: 100%;
+  height: auto;
+  object-fit: contain;
+  border-radius: 0;
 }
 
 .matrix-cell.error {
@@ -1702,22 +2531,131 @@ html, body { margin: 0; padding: 0; background: var(--bg); color: var(--text); f
   margin-top: 0.25rem;
 }
 
-/* Form Elements */
+/* Form Elements - Enhanced from Original */
 .input, .api-input {
   width: 100%;
-  padding: 0.75rem 1rem;
-  border: 2px solid #2a2b2f;
-  border-radius: var(--radius);
-  font-size: 1rem;
+  padding: 10px 12px;
+  border: 1px solid #2a2b2f;
+  border-radius: 8px;
   background: #121316;
   color: var(--text);
-  transition: border-color 0.2s, box-shadow 0.2s;
+  font-size: 14px;
+  transition: border-color 0.2s ease;
 }
 
 .input:focus, .api-input:focus {
   outline: none;
   border-color: var(--green);
-  box-shadow: 0 0 0 3px rgba(193, 247, 50, 0.1);
+}
+
+/* API Key Input Styling - From Original */
+.api-inputs {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.key-input {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.key-input label {
+  min-width: 120px;
+  font-weight: 600;
+  color: var(--text);
+  font-size: 14px;
+}
+
+.key-input input {
+  flex: 1;
+  min-width: 200px;
+  padding: 0.5rem;
+  border: 1px solid #232427;
+  border-radius: 4px;
+  font-size: 0.9rem;
+  background: var(--bg);
+  color: var(--text);
+}
+
+.key-input input:focus {
+  outline: none;
+  border-color: var(--green);
+}
+
+.key-input button {
+  background: var(--green);
+  color: var(--bg);
+  border: none;
+  padding: 0.5rem 1rem;
+  border-radius: 4px;
+  cursor: pointer;
+  font-weight: 600;
+  transition: background-color 0.2s;
+  font-size: 14px;
+}
+
+.key-input button:hover {
+  background: #a8e32a;
+}
+
+.api-input {
+  padding: 10px 12px;
+  border: 1px solid #2a2b2f;
+  border-radius: 8px;
+  background: #121316;
+  color: var(--text);
+  font-size: 14px;
+  transition: border-color 0.2s ease;
+}
+
+.api-input:focus {
+  outline: none;
+  border-color: var(--green);
+}
+
+/* Form Grid and Labels */
+.form-grid { 
+  display: grid; 
+  gap: 12px; 
+}
+
+.profile-section label { 
+  display: grid; 
+  gap: 6px; 
+  font-size: 12px; 
+  color: var(--muted); 
+  margin-bottom: 12px; 
+}
+
+.profile-section label small {
+  color: var(--green);
+  font-weight: normal;
+  font-size: 10px;
+  text-transform: none;
+  letter-spacing: normal;
+}
+
+.profile-section input, .profile-section select { 
+  width: 100%; 
+  padding: 10px 12px; 
+  border-radius: 8px; 
+  border: 1px solid #2a2b2f; 
+  background: #121316; 
+  color: var(--text); 
+}
+
+.profile-section label.has-custom-value {
+  border-left: 3px solid var(--green);
+  background: rgba(193, 247, 50, 0.05);
+  padding-left: 12px;
+  border-radius: 0 8px 8px 0;
+}
+
+.profile-section label.has-custom-value input {
+  border-color: var(--green);
 }
 
 /* RIGHT COLUMN: App Preview */
@@ -2008,6 +2946,46 @@ html, body { margin: 0; padding: 0; background: var(--bg); color: var(--text); f
   margin-top: 1rem;
 }
 
+/* Global Style Prompt Controls */
+.style-prompt-container {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.style-prompt-editor {
+  background: var(--card);
+  border: 1px solid #232427;
+  border-radius: 8px;
+  color: var(--text);
+  padding: 12px;
+  font-family: 'Monaco', 'Menlo', monospace;
+  font-size: 12px;
+  line-height: 1.4;
+  resize: vertical;
+  min-height: 120px;
+}
+
+.style-prompt-editor:focus {
+  outline: none;
+  border-color: var(--green);
+}
+
+.style-prompt-editor::placeholder {
+  color: var(--muted);
+}
+
+.style-prompt-actions {
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
+}
+
+.style-prompt-actions .shuffle-btn {
+  font-size: 12px;
+  padding: 6px 12px;
+}
+
 /* Footer */
 .footer { 
   padding: 16px 24px; 
@@ -2016,24 +2994,68 @@ html, body { margin: 0; padding: 0; background: var(--bg); color: var(--text); f
   text-align: center;
 }
 
-/* Responsive Design */
-@media (max-width: 1200px) {
-  .three-column-container {
-    grid-template-columns: 1fr;
-    gap: 20px;
-    padding: 16px;
+/* Mobile Responsive Design for Sidebar */
+@media (max-width: 768px) {
+  .menu-toggle {
+    top: 16px;
+    left: 16px;
+    padding: 10px;
   }
   
   .left-column {
-    order: 1;
+    width: 100vw;
+    padding: 16px;
+  }
+  
+  .sidebar-header {
+    margin-top: 20px;
+  }
+  
+  .sidebar-header h2 {
+    font-size: 16px;
+  }
+  
+  .three-column-container {
+    padding: 16px;
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+  
+  .three-column-container.sidebar-open {
+    grid-template-columns: 1fr;
+  }
+  
+  .shuffle-controls {
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  
+  .shuffle-btn {
+    padding: 8px 12px;
+    font-size: 12px;
+  }
+}
+
+/* Responsive Design */
+@media (max-width: 1200px) {
+  .three-column-container {
+    grid-template-columns: 1fr !important;
+    gap: 20px;
+    padding: 16px;
+    margin-left: 0 !important;
+  }
+  
+  .three-column-container.sidebar-open {
+    margin-left: 0 !important;
   }
   
   .center-column {
-    order: 2;
+    order: 1;
   }
   
   .right-column {
-    order: 3;
+    order: 2;
+    grid-column: 1 / -1;
   }
   
   .api-inputs {
@@ -2052,6 +3074,16 @@ html, body { margin: 0; padding: 0; background: var(--bg); color: var(--text); f
     width: 250px;
     height: 500px;
   }
+}
+
+/* Product Header States */
+.product-header.showing-controls {
+  background: rgba(193, 247, 50, 0.05);
+  border-radius: 8px;
+}
+
+.product-header.showing-controls .product-title-container {
+  border: 1px solid rgba(193, 247, 50, 0.3);
 }
 
 /* Utility Classes */

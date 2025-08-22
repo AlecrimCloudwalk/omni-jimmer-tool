@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Prompt Builder Demo</title>
+    <style>
+        body { 
+            font-family: system-ui; 
+            max-width: 1200px; 
+            margin: 0 auto; 
+            padding: 20px; 
+            background: #0f0f10; 
+            color: #e8e8ea; 
+        }
+        .demo-section { 
+            background: #17181a; 
+            padding: 20px; 
+            border-radius: 8px; 
+            margin: 20px 0; 
+        }
+        .example { 
+            background: #232427; 
+            padding: 15px; 
+            border-radius: 6px; 
+            margin: 10px 0; 
+        }
+        .prompt-output { 
+            background: #2a2e3a; 
+            padding: 15px; 
+            border-radius: 6px; 
+            border-left: 4px solid #c1f732; 
+            margin: 10px 0; 
+            font-family: Monaco, monospace; 
+            font-size: 14px; 
+        }
+        button { 
+            background: #c1f732; 
+            color: #0f0f10; 
+            border: none; 
+            padding: 10px 20px; 
+            border-radius: 6px; 
+            cursor: pointer; 
+            margin: 5px; 
+        }
+        .metadata { 
+            color: #a8a8ad; 
+            font-size: 12px; 
+            margin-top: 10px; 
+        }
+    </style>
+</head>
+<body>
+    <h1>🎬 Modular Prompt Builder Demo</h1>
+    <p>Testing the new MCC-based prompt generation system with randomized characteristics.</p>
+
+    <div class="demo-section">
+        <h2>Test Different MCCs</h2>
+        <button onclick="testMCC('5611', 'Restaurant')">Restaurant (MCC 5611)</button>
+        <button onclick="testMCC('5651', 'Clothing Store')">Clothing Store (MCC 5651)</button>
+        <button onclick="testMCC('7538', 'Automotive')">Automotive (MCC 7538)</button>
+        <button onclick="testMCC('8011', 'Medical')">Medical (MCC 8011)</button>
+        <button onclick="testMCC('5732', 'Electronics')">Electronics (MCC 5732)</button>
+        <button onclick="testMCC('4121', 'Transportation')">Transportation (MCC 4121)</button>
+    </div>
+
+    <div class="demo-section">
+        <h2>Test Different Product Prompts</h2>
+        <button onclick="testProduct('Hero portrait of the subject holding smartphone for payment')">Payment Portrait</button>
+        <button onclick="testProduct('Close-up of hands completing a contactless payment transaction')">Hands Payment</button>
+        <button onclick="testProduct('Professional handshake between business owner and client')">Business Handshake</button>
+        <button onclick="testProduct('Top-view of product display on counter with price tags')">Product Display</button>
+    </div>
+
+    <div class="demo-section">
+        <h2>Generated Prompts</h2>
+        <div id="prompt-examples"></div>
+    </div>
+
+    <script src="prompt-builder.js"></script>
+    <script>
+        const promptBuilder = new PromptBuilder();
+        const examplesContainer = document.getElementById('prompt-examples');
+        
+        let exampleCount = 0;
+
+        function testMCC(mccCode, businessName) {
+            const seed = Math.floor(Math.random() * 10000);
+            const productPrompt = "Hero portrait of the subject holding smartphone for payment";
+            
+            // Build input using the simplified system
+            const llmInput = promptBuilder.buildLLMInput(productPrompt, mccCode, seed);
+            
+            // Display example
+            const example = document.createElement('div');
+            example.className = 'example';
+            example.innerHTML = `
+                <h3>Example ${++exampleCount}: ${businessName}</h3>
+                <div class="prompt-output">
+                    <strong>LLM Input:</strong><br>
+                    MCC Code: ${llmInput.mccCode}<br>
+                    Product Prompt: "${llmInput.productPrompt}"<br>
+                    Time of Day: ${llmInput.timeOfDay}<br>
+                    Ethnicity: ${llmInput.ethnicity}<br>
+                    Clothing Color: ${llmInput.clothingColor}<br>
+                    Global Style: "${llmInput.globalStylePrompt.substring(0, 100)}..."
+                </div>
+                <div class="metadata">
+                    Seed: ${seed} | This gets sent to the LLM to build the final prompt
+                </div>
+            `;
+            
+            examplesContainer.insertBefore(example, examplesContainer.firstChild);
+        }
+
+        function testProduct(productPrompt) {
+            const mccCode = '5611'; // Restaurant as default
+            const seed = Math.floor(Math.random() * 10000);
+            
+            // Build input using the simplified system
+            const llmInput = promptBuilder.buildLLMInput(productPrompt, mccCode, seed);
+            
+            // Display example
+            const example = document.createElement('div');
+            example.className = 'example';
+            example.innerHTML = `
+                <h3>Example ${++exampleCount}: Custom Product Prompt</h3>
+                <div class="prompt-output">
+                    <strong>LLM Input:</strong><br>
+                    MCC Code: ${llmInput.mccCode}<br>
+                    Product Prompt: "${llmInput.productPrompt}"<br>
+                    Time of Day: ${llmInput.timeOfDay}<br>
+                    Ethnicity: ${llmInput.ethnicity}<br>
+                    Clothing Color: ${llmInput.clothingColor}<br>
+                    Global Style: "${llmInput.globalStylePrompt.substring(0, 100)}..."
+                </div>
+                <div class="metadata">
+                    Seed: ${seed} | This gets sent to the LLM to build the final prompt
+                </div>
+            `;
+            
+            examplesContainer.insertBefore(example, examplesContainer.firstChild);
+        }
+
+        // Show some initial examples
+        setTimeout(() => {
+            testMCC('5611', 'Restaurant');
+            testMCC('5651', 'Clothing Store');
+            testMCC('7538', 'Automotive');
+        }, 500);
+    </script>
+</body>
+</html>

@@ -8,6 +8,9 @@ yarn-error.log*
 dist/
 build/
 
+# Original Omni Demo
+original-omni-demo/
+
 # Environment variables
 .env
 .env.local

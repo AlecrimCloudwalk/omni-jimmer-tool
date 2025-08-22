@@ -29,8 +29,11 @@
     "url": "https://github.com/your-username/omni-jimmer-tool/issues"
   },
   "homepage": "https://github.com/your-username/omni-jimmer-tool#readme",
-  "devDependencies": {},
-  "dependencies": {},
+  "dependencies": {
+    "cors": "^2.8.5",
+    "express": "^5.1.0",
+    "node-fetch": "^2.7.0"
+  },
   "engines": {
     "node": ">=14.0.0"
   }

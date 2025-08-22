@@ -5,6 +5,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Omni Jimmer Tool - AI Video Matrix Generator</title>
     <link rel="stylesheet" href="style.css">
+    
+    <!-- Supabase Configuration -->
+    <script src="./supabase-config.js"></script>
 </head>
 <body>
     <header class="header">
@@ -14,37 +17,79 @@
         </div>
     </header>
 
+    <!-- Menu Toggle Button -->
+    <button id="menu-toggle" class="menu-toggle" title="Toggle Controls Menu">
+        <div class="hamburger">
+            <span></span>
+            <span></span>
+            <span></span>
+        </div>
+    </button>
+
     <main class="three-column-container">
-        <!-- LEFT COLUMN: Controls -->
-        <section class="left-column">
+        <!-- LEFT COLUMN: Collapsible Controls -->
+        <section class="left-column collapsed" id="controls-sidebar">
+            <div class="sidebar-header">
+                <h2>🎛️ Controls</h2>
+                <button id="close-sidebar" class="close-btn">×</button>
+            </div>
+            
             <!-- API Configuration Section -->
             <div class="controls-section">
                 <h3>🔑 API Configuration</h3>
                 <div class="api-inputs">
-                    <input type="password" id="openai-key" placeholder="OpenAI API Key" class="api-input">
-                    <input type="password" id="replicate-key" placeholder="Replicate API Key" class="api-input">
-                    <button id="save-keys" class="btn btn-secondary">Save Keys</button>
+                    <div class="key-input">
+                        <label>OpenAI API Key</label>
+                        <input type="password" id="openai-key" placeholder="Enter your OpenAI API key" class="api-input">
+                        <button type="button" id="save-openai-key" class="shuffle-btn">Save</button>
+                    </div>
+                    <div class="key-input">
+                        <label>Replicate API Key</label>
+                        <input type="password" id="replicate-key" placeholder="Enter your Replicate API key" class="api-input">
+                        <button type="button" id="save-replicate-key" class="shuffle-btn">Save</button>
+                    </div>
                 </div>
             </div>
 
             <!-- Matrix Quick Actions -->
             <div class="controls-section">
-                <h3>Quick Actions</h3>
+                <h3>Matrix Generation</h3>
                 <div class="generation-options">
-                    <button id="generate-all-row" class="btn btn-success mb-2">Generate All (by rows)</button>
-                    <button id="generate-all-col" class="btn btn-info mb-2">Generate All (by columns)</button>
+                    <label class="option-toggle">
+                        <input id="enable-batch-generation" type="checkbox" checked>
+                        <span class="checkmark"></span>
+                        <span class="option-text">Batch Generation Mode</span>
+                        <span class="option-price">Bulk</span>
+                    </label>
+                </div>
+                <div class="action-buttons">
+                    <button id="generate-all-row" class="generate-btn">🚀 Generate All</button>
+                </div>
+            </div>
+
+            <!-- Global Style Prompt -->
+            <div class="controls-section">
+                <h3>🎨 Global Style Prompt</h3>
+                <div class="style-prompt-container">
+                    <textarea id="global-style-prompt" class="style-prompt-editor" rows="6" placeholder="Enter global style and technical specifications..."></textarea>
+                    <div class="style-prompt-actions">
+                        <button id="save-style-prompt" class="shuffle-btn">💾 Save Style</button>
+                        <button id="reset-style-prompt" class="shuffle-btn">🔄 Reset</button>
+                    </div>
                 </div>
             </div>
 
             <!-- Export/Import Controls -->
             <div class="controls-section">
-                <h3>Export & Import</h3>
-                <div class="generation-options">
-                    <button id="export-config" class="btn btn-warning mb-2">Export Config</button>
-                    <button id="import-config" class="btn btn-warning mb-2">Import Config</button>
-                    <button id="download-all-images" class="btn btn-info">Download All Images</button>
-                    <input type="file" id="import-file" accept=".json" style="display: none;">
+                <h3>Data Management</h3>
+                <div class="shuffle-controls">
+                    <button id="export-config" class="shuffle-btn">📤 Export</button>
+                    <button id="import-config" class="shuffle-btn">📥 Import</button>
                 </div>
+                <div class="shuffle-controls" style="margin-top: 12px;">
+                    <button id="download-all-images" class="shuffle-btn">💾 Download All</button>
+                </div>
+                <input type="file" id="import-file" accept=".json" style="display: none;">
             </div>
         </section>
 
@@ -196,12 +241,14 @@
     </div>
 
     <footer class="footer">
-        <small>Omni Jimmer Tool - Matrix-based AI video generator for Brazilian businesses. Content: pt-BR. UI: English/Portuguese.</small>
+        <small>🎬 Omni Jimmer Tool - Matrix-based AI content generator for Brazilian businesses. Models: DALL-E 3 (image), Flux (video). Content: pt-BR. UI: English/Portuguese.</small>
     </footer>
 
     <!-- Scripts -->
     <script src="security-utils.js"></script>
+    <script src="prompt-builder.js"></script>
     <script src="auth.js"></script>
     <script src="app.js"></script>
+    <script src="dev-setup.js"></script>
 </body>
 </html>

@@ -14,7 +14,10 @@ class OmniJimmerApp {
         this.maxMatrixSize = 15; // 15x15 maximum
         this.productSeeds = {}; // Store seeds for each product
 
-        // Brazilian characteristics for random generation (original from omni-demo)
+        // Initialize new modular prompt builder
+        this.promptBuilder = new PromptBuilder();
+
+        // Legacy Brazilian characteristics for backward compatibility (can be removed later)
         this.brazilianCharacteristics = {
             ethnicities: [
                 'parda, pele morena, traços mistos',
@@ -46,26 +49,30 @@ class OmniJimmerApp {
         this.setupEventListeners();
         this.loadStoredData();
         this.renderMatrix();
+        
+        // Initialize AuthManager reference
+        this.authManager = null;
+        this.initAuthManager();
     }
 
     /**
      * Initialize with default CNAEs and products
      */
     initializeDefaults() {
-        // Default CNAEs (Brazilian business classifications) - 12 specific ones
+        // Default CNAEs with MCC codes for global business classifications
         this.defaultCnaes = [
-            { name: 'Restaurante' },
-            { name: 'Loja de Roupa' },
-            { name: 'Loja de Móvel' },
-            { name: 'Oficina Automotiva' },
-            { name: 'Clínicas / Odonto / Estética' },
-            { name: 'Salão de Beleza' },
-            { name: 'Tatuagem' },
-            { name: 'Mercadinho' },
-            { name: 'Driver / Uber' },
-            { name: 'Loja de Eletrônico' },
-            { name: 'Material Construção' },
-            { name: 'Guia Turismo' }
+            { name: 'Restaurante', mcc: '5611' },
+            { name: 'Loja de Roupa', mcc: '5651' },
+            { name: 'Loja de Móvel', mcc: '5712' },
+            { name: 'Oficina Automotiva', mcc: '7538' },
+            { name: 'Clínicas / Odonto / Estética', mcc: '8011' },
+            { name: 'Salão de Beleza', mcc: '7211' },
+            { name: 'Tatuagem', mcc: '7211' },
+            { name: 'Mercadinho', mcc: '5411' },
+            { name: 'Driver / Uber', mcc: '4121' },
+            { name: 'Loja de Eletrônico', mcc: '5732' },
+            { name: 'Material Construção', mcc: '5211' },
+            { name: 'Guia Turismo', mcc: '4511' }
         ];
 
         // Default product types
@@ -126,6 +133,21 @@ class OmniJimmerApp {
             console.log('✅ Download all images button listener added');
         }
 
+        // Global style prompt controls
+        const saveStyleBtn = document.getElementById('save-style-prompt');
+        const resetStyleBtn = document.getElementById('reset-style-prompt');
+        const styleTextarea = document.getElementById('global-style-prompt');
+        
+        if (saveStyleBtn && styleTextarea) {
+            saveStyleBtn.addEventListener('click', () => this.saveGlobalStylePrompt());
+            console.log('✅ Save style prompt button listener added');
+        }
+        
+        if (resetStyleBtn && styleTextarea) {
+            resetStyleBtn.addEventListener('click', () => this.resetGlobalStylePrompt());
+            console.log('✅ Reset style prompt button listener added');
+        }
+
         // Demo carousel
         document.getElementById('demo-cnae-select').addEventListener('change', (e) => this.loadDemoCarousel(e.target.value));
         document.getElementById('prev-slide').addEventListener('click', () => this.previousSlide());
@@ -138,6 +160,29 @@ class OmniJimmerApp {
                 if (e.key === 'ArrowRight') this.nextSlide();
             }
         });
+
+        // Click-and-hold functionality for row controls
+        this.setupClickAndHoldControls();
+        
+        // Setup collapsible sidebar functionality
+        this.setupSidebar();
+    }
+
+    /**
+     * Initialize AuthManager reference
+     */
+    initAuthManager() {
+        // Wait for AuthManager to be available
+        const waitForAuthManager = () => {
+            if (window.AuthManager) {
+                this.authManager = window.AuthManager;
+                console.log('✅ AuthManager initialized successfully');
+            } else {
+                console.log('⏳ Waiting for AuthManager...');
+                setTimeout(waitForAuthManager, 100);
+            }
+        };
+        waitForAuthManager();
     }
 
     /**
@@ -148,6 +193,7 @@ class OmniJimmerApp {
         const storedProducts = localStorage.getItem('omni_jimmer_products');
         const storedMatrix = localStorage.getItem('omni_jimmer_matrix');
         const storedSeeds = localStorage.getItem('omni_jimmer_seeds');
+        const storedGlobalStyle = localStorage.getItem('omni_jimmer_global_style');
 
         if (storedCnaes) {
             this.cnaes = JSON.parse(storedCnaes);
@@ -169,6 +215,14 @@ class OmniJimmerApp {
             this.productSeeds = JSON.parse(storedSeeds);
         }
 
+        // Load global style prompt
+        if (storedGlobalStyle) {
+            this.promptBuilder.updateGlobalStylePrompt(storedGlobalStyle);
+        }
+        
+        // Initialize the UI with the loaded global style prompt
+        this.loadGlobalStylePromptToUI();
+
         this.updateDemoSelector();
     }
 
@@ -180,6 +234,7 @@ class OmniJimmerApp {
         localStorage.setItem('omni_jimmer_products', JSON.stringify(this.products));
         localStorage.setItem('omni_jimmer_matrix', JSON.stringify(this.matrixData));
         localStorage.setItem('omni_jimmer_seeds', JSON.stringify(this.productSeeds));
+        localStorage.setItem('omni_jimmer_global_style', this.promptBuilder.getGlobalStylePrompt());
     }
 
 
@@ -219,9 +274,8 @@ class OmniJimmerApp {
                 AuthManager.showNotification(message, type);
             }
         } else {
-            // Fallback to alert if AuthManager is not available
+            // Just log to console instead of annoying alert popups
             console.log(`${type.toUpperCase()}: ${message}`);
-            alert(`${type.toUpperCase()}: ${message}`);
         }
     }
 
@@ -312,18 +366,20 @@ class OmniJimmerApp {
         }
 
         this.matrixData[cellKey].status = 'generating';
+        this.matrixData[cellKey].loadingGif = true; // Add loading state
         this.renderMatrix();
         this.saveData();
 
         try {
-            const imageOutput = await AuthManager.generateImage(cellData.prompt);
+            const imageOutput = await window.AuthManager.generateImage(cellData.prompt);
             const imageUrl = Array.isArray(imageOutput) ? imageOutput[0] : imageOutput;
 
             this.matrixData[cellKey] = {
                 ...cellData,
                 status: 'generated',
                 imageUrl: imageUrl,
-                generatedAt: new Date().toISOString()
+                generatedAt: new Date().toISOString(),
+                loadingGif: false // Clear loading state
             };
 
             this.renderMatrix();
@@ -335,7 +391,8 @@ class OmniJimmerApp {
             this.matrixData[cellKey] = { 
                 ...cellData,
                 status: 'error',
-                error: error.message 
+                error: error.message,
+                loadingGif: false // Clear loading state
             };
             this.renderMatrix();
             this.saveData();
@@ -375,9 +432,9 @@ class OmniJimmerApp {
         // Get product name from current cell key
         const [productName, cnaeName] = this.currentCellKey.split('-');
         
-        // Show dynamic characteristics (read-only)
+        // Show dynamic characteristics (read-only) using new format
         const seedInfo = this.getSeededCharacteristics(this.getProductSeed(productName));
-        characteristicsDiv.textContent = `${seedInfo.ethnicity}, ${seedInfo.city}, ${seedInfo.timeOfDay}`;
+        characteristicsDiv.textContent = `${seedInfo.ethnicity}, ${seedInfo.clothingColor} clothing, ${seedInfo.timeOfDay}`;
         
         // Reset workflow steps
         this.resetWorkflowSteps();
@@ -442,7 +499,7 @@ class OmniJimmerApp {
     async modalGeneratePrompt() {
         const btn = document.getElementById('generate-prompt-btn');
         btn.disabled = true;
-        btn.textContent = 'Generating...';
+        btn.innerHTML = '🤖 Generating... <img src="https://media.giphy.com/media/xTkcEQACH24SMPxIQg/giphy.gif" style="width: 20px; height: 20px; vertical-align: middle;">';
         this.setWorkflowStepGenerating(1);
         
         try {
@@ -498,22 +555,32 @@ class OmniJimmerApp {
      */
     async modalGenerateImage() {
         const btn = document.getElementById('generate-image-btn');
+        const imagePreview = document.getElementById('image-preview');
+        
         btn.disabled = true;
-        btn.textContent = 'Generating...';
+        btn.innerHTML = '🎨 Generating... <img src="https://media.giphy.com/media/xTkcEQACH24SMPxIQg/giphy.gif" style="width: 20px; height: 20px; vertical-align: middle;">';
         this.setWorkflowStepGenerating(2);
+        
+        // Show loading animation in image preview
+        imagePreview.innerHTML = `
+            <div style="display: flex; justify-content: center; align-items: center; height: 200px; flex-direction: column;">
+                <img src="https://media.giphy.com/media/xTkcEQACH24SMPxIQg/giphy.gif" style="width: 80px; height: 80px;">
+                <p style="margin-top: 10px; color: #a8a8ad; font-size: 14px;">Generating image...</p>
+            </div>
+        `;
         
         try {
             await this.generateImageFromPrompt(this.currentCellKey);
             const cellData = this.matrixData[this.currentCellKey];
             if (cellData && cellData.imageUrl) {
-                document.getElementById('image-preview').innerHTML = 
-                    `<img src="${cellData.imageUrl}" alt="Generated image">`;
+                imagePreview.innerHTML = `<img src="${cellData.imageUrl}" alt="Generated image">`;
                 this.setWorkflowStepCompleted(2);
                 document.getElementById('regenerate-image-btn').style.display = 'inline-block';
             }
         } catch (error) {
             this.setWorkflowStepError(2);
             this.showMessage('Failed to generate image', 'error');
+            imagePreview.innerHTML = '<div class="placeholder">Image generation failed</div>';
         }
         
         btn.disabled = false;
@@ -586,12 +653,65 @@ class OmniJimmerApp {
      * Delete cell data from modal
      */
     deleteCellData() {
-        if (confirm('Are you sure you want to delete all data for this cell?')) {
-            delete this.matrixData[this.currentCellKey];
-            this.renderMatrix();
-            this.saveData();
-            this.closeCellModal();
-            this.showMessage('Cell data deleted', 'success');
+        // Delete without confirmation
+        delete this.matrixData[this.currentCellKey];
+        this.renderMatrix();
+        this.saveData();
+        this.closeCellModal();
+        this.showMessage('Cell data deleted', 'success');
+    }
+
+    /**
+     * Mark step button as processing
+     */
+    markStepButtonProcessing(productName, cnaeName, step, isRow = true) {
+        if (isRow) {
+            // Row button - use product name
+            const button = document.querySelector(`.product-header[data-product="${productName}"] .shuffle-btn.step-${step}`);
+            if (button) {
+                button.classList.add('processing');
+            }
+        } else {
+            // Column button - find by cnae name in h3
+            const cnaeHeaders = document.querySelectorAll('.cnae-header-card');
+            for (const header of cnaeHeaders) {
+                const h3 = header.querySelector('h3');
+                if (h3 && h3.textContent.trim() === cnaeName) {
+                    const button = header.querySelector(`.shuffle-btn.step-${step}`);
+                    if (button) {
+                        button.classList.add('processing');
+                    }
+                    break;
+                }
+            }
+        }
+    }
+
+    /**
+     * Mark step button as completed
+     */
+    markStepButtonCompleted(productName, cnaeName, step, isRow = true) {
+        if (isRow) {
+            // Row button - use product name
+            const button = document.querySelector(`.product-header[data-product="${productName}"] .shuffle-btn.step-${step}`);
+            if (button) {
+                button.classList.remove('processing');
+                button.classList.add('completed');
+            }
+        } else {
+            // Column button - find by cnae name in h3
+            const cnaeHeaders = document.querySelectorAll('.cnae-header-card');
+            for (const header of cnaeHeaders) {
+                const h3 = header.querySelector('h3');
+                if (h3 && h3.textContent.trim() === cnaeName) {
+                    const button = header.querySelector(`.shuffle-btn.step-${step}`);
+                    if (button) {
+                        button.classList.remove('processing');
+                        button.classList.add('completed');
+                    }
+                    break;
+                }
+            }
         }
     }
 
@@ -601,19 +721,28 @@ class OmniJimmerApp {
     async generateColumnStep(cnaeName, step) {
         const cnaeProducts = this.products.filter(p => p.name); // Get all products
         
+        // Mark button as processing
+        this.markStepButtonProcessing(null, cnaeName, step, false);
+        
         if (step === 1) {
-            // Generate all prompts for column
-            let completed = 0;
-            for (const product of cnaeProducts) {
+            // Generate all prompts for column IN PARALLEL
+            const promises = cnaeProducts.map(async (product) => {
                 const cellKey = `${product.name}-${cnaeName}`;
                 try {
                     await this.generatePromptForCell(cellKey);
-                    completed++;
+                    return { success: true, cellKey };
                 } catch (error) {
                     console.error(`Failed to generate prompt for ${cellKey}:`, error);
+                    return { success: false, cellKey, error };
                 }
-            }
-            this.showMessage(`Generated ${completed}/${cnaeProducts.length} prompts for ${cnaeName}`, 'success');
+            });
+            
+            const results = await Promise.all(promises);
+            const completed = results.filter(r => r.success).length;
+            this.showMessage(`Generated ${completed}/${cnaeProducts.length} prompts for ${cnaeName} (parallel)`, 'success');
+            
+            // Mark column step 1 as completed
+            this.markStepButtonCompleted(null, cnaeName, 1, false);
             
         } else if (step === 2) {
             // Generate all images for column (only for cells with prompts)
@@ -632,9 +761,15 @@ class OmniJimmerApp {
             }
             this.showMessage(`Generated ${completed} images for ${cnaeName}`, 'success');
             
+            // Mark column step 2 as completed
+            this.markStepButtonCompleted(null, cnaeName, 2, false);
+            
         } else if (step === 3) {
             // Video generation - coming soon
             this.showMessage('Video generation coming soon!', 'info');
+            
+            // Mark column step 3 as completed (even though it's placeholder)
+            this.markStepButtonCompleted(null, cnaeName, 3, false);
         }
         
         this.renderMatrix();
@@ -647,19 +782,28 @@ class OmniJimmerApp {
         const product = this.products.find(p => p.name === productName);
         if (!product) return;
         
+        // Mark button as processing
+        this.markStepButtonProcessing(productName, null, step, true);
+        
         if (step === 1) {
-            // Generate all prompts for row
-            let completed = 0;
-            for (const cnae of this.cnaes) {
+            // Generate all prompts for row IN PARALLEL
+            const promises = this.cnaes.map(async (cnae) => {
                 const cellKey = `${productName}-${cnae.name}`;
                 try {
                     await this.generatePromptForCell(cellKey);
-                    completed++;
+                    return { success: true, cellKey };
                 } catch (error) {
                     console.error(`Failed to generate prompt for ${cellKey}:`, error);
+                    return { success: false, cellKey, error };
                 }
-            }
-            this.showMessage(`Generated ${completed}/${this.cnaes.length} prompts for ${productName}`, 'success');
+            });
+            
+            const results = await Promise.all(promises);
+            const completed = results.filter(r => r.success).length;
+            this.showMessage(`Generated ${completed}/${this.cnaes.length} prompts for ${productName} (parallel)`, 'success');
+            
+            // Mark row step 1 as completed
+            this.markStepButtonCompleted(productName, null, 1, true);
             
         } else if (step === 2) {
             // Generate all images for row (only for cells with prompts)
@@ -678,9 +822,15 @@ class OmniJimmerApp {
             }
             this.showMessage(`Generated ${completed} images for ${productName}`, 'success');
             
+            // Mark row step 2 as completed
+            this.markStepButtonCompleted(productName, null, 2, true);
+            
         } else if (step === 3) {
             // Video generation - coming soon
             this.showMessage('Video generation coming soon!', 'info');
+            
+            // Mark row step 3 as completed (even though it's placeholder)
+            this.markStepButtonCompleted(productName, null, 3, true);
         }
         
         this.renderMatrix();
@@ -701,21 +851,11 @@ class OmniJimmerApp {
     }
 
     /**
-     * Get Brazilian characteristics based on seed
+     * Get characteristics based on seed using new PromptBuilder
      */
     getSeededCharacteristics(seed) {
-        // Use seed to get consistent characteristics
-        const ethnicityIndex = seed % this.brazilianCharacteristics.ethnicities.length;
-        const cityIndex = Math.floor(seed / 10) % this.brazilianCharacteristics.cities.length;
-        const timeIndex = Math.floor(seed / 100) % this.brazilianCharacteristics.timesOfDay.length;
-        const environmentIndex = Math.floor(seed / 1000) % this.brazilianCharacteristics.environments.length;
-
-        return {
-            ethnicity: this.brazilianCharacteristics.ethnicities[ethnicityIndex],
-            city: this.brazilianCharacteristics.cities[cityIndex],
-            timeOfDay: this.brazilianCharacteristics.timesOfDay[timeIndex],
-            environment: this.brazilianCharacteristics.environments[environmentIndex]
-        };
+        // Use new PromptBuilder for consistent characteristics
+        return this.promptBuilder.getSeededCharacteristics(seed);
     }
 
     /**
@@ -759,44 +899,104 @@ Additional: Ambiente brasileiro, sem letreiros visíveis`;
     }
 
     /**
-     * Generate final prompt using LLM
+     * Generate final prompt using simplified approach - let LLM do the work!
      */
     async generateFinalPrompt(productName, basePrompt, cnae) {
-        const structuredInput = this.buildStructuredInput(productName, basePrompt, cnae);
+        console.log('🎯 generateFinalPrompt called with:', { productName, basePrompt, cnae: cnae.name });
+        
+        // Get MCC code and seed
+        const mccCode = cnae.mcc || '5999';
+        const seed = this.getProductSeed(productName);
+        
+        // Build simple input for LLM using PromptBuilder
+        const llmInput = this.promptBuilder.buildLLMInput(basePrompt, mccCode, seed);
+        console.log('📝 LLM input created:', llmInput);
+        
+        // Check if we have the required API keys
+        if (!this.hasRequiredKeys()) {
+            console.warn('❌ API keys not configured, falling back to simple concatenation');
+            return `${basePrompt}. ${llmInput.ethnicity}, wearing ${llmInput.clothingColor} clothing, during ${llmInput.timeOfDay}, working in ${cnae.name}`;
+        }
         
         try {
-            // Use AuthManager to call OpenAI for prompt generation
-            const promptInstructions = `You are a professional prompt engineer. Convert the structured information into a high-quality image generation prompt.
+            console.log('🤖 Attempting LLM prompt generation...');
+            
+            // Check if AuthManager and method are available
+            if (!window.AuthManager) {
+                throw new Error('AuthManager not available on window object');
+            }
+            
+            if (typeof window.AuthManager.generatePromptWithInstructions !== 'function') {
+                throw new Error(`generatePromptWithInstructions method not found on AuthManager`);
+            }
+            
+            // Get LLM instructions from PromptBuilder
+            const promptInstructions = this.promptBuilder.getLLMInstructions();
+            
+            // Create simple formatted input for LLM
+            const formattedInput = `MCC Code: ${llmInput.mccCode}
+Product Prompt: "${llmInput.productPrompt}"
+Time of Day: ${llmInput.timeOfDay}
+Ethnicity: ${llmInput.ethnicity}
+Clothing Color: ${llmInput.clothingColor}
+Global Style: "${llmInput.globalStylePrompt}"`;
 
-Use these examples as guidance:
+            console.log('🔍 Sending to LLM:', formattedInput);
 
-EXAMPLE 1 (Owner visible):
-Input: "owner at storefront showing their business"
-Output: "Brazilian restaurant owner standing proudly at their storefront, warm smile, pardo brasileiro, Belo Horizonte evening lighting, professional chef attire, traditional Brazilian restaurant facade, inviting atmosphere"
-
-EXAMPLE 2 (No owner shown):
-Input: "two hands making card payment" 
-Output: "Close-up of hands making card payment transaction, Brazilian restaurant interior background, evening lighting, card reader and receipt, professional service interaction"
-
-Key rules:
-- If scene focuses on hands/objects/details: omit person descriptions
-- If scene shows owner/people: include person characteristics
-- Always include Brazilian context and location
-- Make it flow naturally
-
-Structured input:
-${structuredInput}
-
-Generate the final prompt:`;
-
-            const finalPrompt = await AuthManager.enhancePrompt(promptInstructions, '', 'prompt_generation');
+            const finalPrompt = await window.AuthManager.generatePromptWithInstructions(promptInstructions, formattedInput);
+            console.log('✅ LLM prompt generation successful:', finalPrompt);
             return finalPrompt;
         } catch (error) {
-            console.warn('LLM prompt generation failed, falling back to simple concatenation:', error);
+            console.error('❌ LLM prompt generation failed, falling back to simple concatenation:', error);
+            // Show error to user
+            this.showMessage(`LLM prompt generation failed: ${error.message}. Using fallback.`, 'warning');
+            
             // Fallback to simple approach if LLM fails
-            const seedInfo = this.getSeededCharacteristics(this.getProductSeed(productName));
-            return `${basePrompt}. ${seedInfo.ethnicity} person in ${seedInfo.city}, during ${seedInfo.timeOfDay}, working in ${cnae.name}`;
+            const fallbackPrompt = `${basePrompt}. ${llmInput.ethnicity}, wearing ${llmInput.clothingColor} clothing, during ${llmInput.timeOfDay}, working in ${cnae.name}`;
+            console.log('🔄 Using fallback prompt:', fallbackPrompt);
+            return fallbackPrompt;
         }
+    }
+
+    /**
+     * Load global style prompt to UI
+     */
+    loadGlobalStylePromptToUI() {
+        const styleTextarea = document.getElementById('global-style-prompt');
+        if (styleTextarea) {
+            styleTextarea.value = this.promptBuilder.getGlobalStylePrompt();
+        }
+    }
+
+    /**
+     * Save global style prompt from UI
+     */
+    saveGlobalStylePrompt() {
+        const styleTextarea = document.getElementById('global-style-prompt');
+        if (styleTextarea) {
+            const newStylePrompt = styleTextarea.value.trim();
+            if (newStylePrompt) {
+                this.promptBuilder.updateGlobalStylePrompt(newStylePrompt);
+                this.saveData();
+                this.showMessage('Global style prompt saved successfully', 'success');
+            } else {
+                this.showMessage('Style prompt cannot be empty', 'error');
+            }
+        }
+    }
+
+    /**
+     * Reset global style prompt to default
+     */
+    resetGlobalStylePrompt() {
+        // Create new PromptBuilder instance to get default style prompt
+        const defaultBuilder = new PromptBuilder();
+        const defaultStylePrompt = defaultBuilder.getGlobalStylePrompt();
+        
+        this.promptBuilder.updateGlobalStylePrompt(defaultStylePrompt);
+        this.loadGlobalStylePromptToUI();
+        this.saveData();
+        this.showMessage('Global style prompt reset to default', 'success');
     }
 
     /**
@@ -835,6 +1035,295 @@ Generate the final prompt:`;
             
             console.log(`Updated Product ${index} ${field} to: ${value}`);
         }
+    }
+
+    /**
+     * Make product name editable on click
+     */
+    makeProductNameEditable(productName, element) {
+        const input = document.createElement('input');
+        input.type = 'text';
+        input.value = productName;
+        input.className = 'product-name-edit-input';
+        input.style.cssText = `
+            background: transparent;
+            border: 1px solid var(--green);
+            color: var(--text);
+            font-size: 0.9rem;
+            font-weight: 600;
+            text-align: center;
+            width: 100%;
+            padding: 4px 8px;
+            border-radius: 4px;
+        `;
+        
+        const saveEdit = () => {
+            const newName = input.value.trim();
+            if (newName && newName !== productName) {
+                const productIndex = this.products.findIndex(p => p.name === productName);
+                if (productIndex >= 0) {
+                    this.updateProduct(productIndex, 'name', newName);
+                    this.renderMatrix();
+                }
+            } else {
+                element.textContent = productName;
+                element.style.display = 'block';
+                input.remove();
+            }
+        };
+        
+        input.addEventListener('blur', saveEdit);
+        input.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                input.blur();
+            }
+        });
+        
+        element.style.display = 'none';
+        element.parentNode.insertBefore(input, element);
+        input.focus();
+        input.select();
+    }
+
+    /**
+     * Make prompt editable on click
+     */
+    makePromptEditable(productIndex, displayElement) {
+        const container = displayElement.parentNode;
+        const textarea = container.querySelector('.prompt-edit');
+        
+        displayElement.classList.add('hidden');
+        textarea.classList.remove('hidden');
+        textarea.focus();
+        textarea.select();
+    }
+
+    /**
+     * Save prompt edit
+     */
+    savePromptEdit(productIndex, textarea) {
+        const container = textarea.parentNode;
+        const displayElement = container.querySelector('.prompt-display');
+        const newValue = textarea.value.trim();
+        
+        if (newValue) {
+            this.updateProduct(productIndex, 'prompt', newValue);
+            displayElement.textContent = newValue;
+        }
+        
+        textarea.classList.add('hidden');
+        displayElement.classList.remove('hidden');
+    }
+
+    /**
+     * Setup collapsible sidebar functionality
+     */
+    setupSidebar() {
+        const menuToggle = document.getElementById('menu-toggle');
+        const closeSidebar = document.getElementById('close-sidebar');
+        const sidebar = document.getElementById('controls-sidebar');
+        const threeColumnContainer = document.querySelector('.three-column-container');
+        
+        // Menu toggle functionality
+        if (menuToggle) {
+            menuToggle.addEventListener('click', () => {
+                this.toggleSidebar();
+            });
+        }
+        
+        // Close button functionality
+        if (closeSidebar) {
+            closeSidebar.addEventListener('click', () => {
+                this.closeSidebar();
+            });
+        }
+        
+        // Close sidebar when clicking outside
+        document.addEventListener('click', (e) => {
+            if (sidebar && sidebar.classList.contains('open')) {
+                if (!sidebar.contains(e.target) && !menuToggle.contains(e.target)) {
+                    this.closeSidebar();
+                }
+            }
+        });
+        
+        // Handle ESC key to close sidebar
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape' && sidebar && sidebar.classList.contains('open')) {
+                this.closeSidebar();
+            }
+        });
+    }
+    
+    /**
+     * Toggle sidebar open/close
+     */
+    toggleSidebar() {
+        const sidebar = document.getElementById('controls-sidebar');
+        const menuToggle = document.getElementById('menu-toggle');
+        const threeColumnContainer = document.querySelector('.three-column-container');
+        
+        if (sidebar && menuToggle && threeColumnContainer) {
+            const isOpen = sidebar.classList.contains('open');
+            
+            if (isOpen) {
+                this.closeSidebar();
+            } else {
+                this.openSidebar();
+            }
+        }
+    }
+    
+    /**
+     * Open sidebar
+     */
+    openSidebar() {
+        const sidebar = document.getElementById('controls-sidebar');
+        const menuToggle = document.getElementById('menu-toggle');
+        const threeColumnContainer = document.querySelector('.three-column-container');
+        
+        if (sidebar && menuToggle && threeColumnContainer) {
+            sidebar.classList.remove('collapsed');
+            sidebar.classList.add('open');
+            menuToggle.classList.add('active');
+            threeColumnContainer.classList.add('sidebar-open');
+        }
+    }
+    
+    /**
+     * Close sidebar
+     */
+    closeSidebar() {
+        const sidebar = document.getElementById('controls-sidebar');
+        const menuToggle = document.getElementById('menu-toggle');
+        const threeColumnContainer = document.querySelector('.three-column-container');
+        
+        if (sidebar && menuToggle && threeColumnContainer) {
+            sidebar.classList.remove('open');
+            sidebar.classList.add('collapsed');
+            menuToggle.classList.remove('active');
+            threeColumnContainer.classList.remove('sidebar-open');
+        }
+    }
+
+    /**
+     * Setup click-and-hold functionality for row controls
+     */
+    setupClickAndHoldControls() {
+        let holdTimer = null;
+        let isHolding = false;
+
+        // Use event delegation to handle dynamically created elements
+        document.addEventListener('mousedown', (e) => {
+            // Handle product headers
+            const productHeader = e.target.closest('.product-header');
+            if (productHeader) {
+                const productName = productHeader.dataset.product;
+                const controls = productHeader.querySelector(`[data-controls="${productName}"]`);
+                
+                if (controls) {
+                    isHolding = false;
+                    holdTimer = setTimeout(() => {
+                        isHolding = true;
+                        controls.classList.remove('hidden');
+                        productHeader.classList.add('showing-controls');
+                    }, 500); // 500ms hold time
+                }
+                return;
+            }
+
+            // Handle CNAE headers
+            const cnaeHeader = e.target.closest('.cnae-header-card');
+            if (cnaeHeader) {
+                isHolding = false;
+                holdTimer = setTimeout(() => {
+                    isHolding = true;
+                    cnaeHeader.classList.add('showing-remove');
+                }, 500); // 500ms hold time
+            }
+        });
+
+        document.addEventListener('mouseup', (e) => {
+            if (holdTimer) {
+                clearTimeout(holdTimer);
+                holdTimer = null;
+            }
+
+            // Hide controls if not holding
+            if (!isHolding) {
+                // Hide product controls
+                const productHeaders = document.querySelectorAll('.product-header');
+                productHeaders.forEach(header => {
+                    const controls = header.querySelector('[data-controls]');
+                    if (controls) {
+                        controls.classList.add('hidden');
+                        header.classList.remove('showing-controls');
+                    }
+                });
+
+                // Hide CNAE remove buttons
+                const cnaeHeaders = document.querySelectorAll('.cnae-header-card');
+                cnaeHeaders.forEach(header => {
+                    header.classList.remove('showing-remove');
+                });
+            }
+        });
+
+        // Touch events for mobile
+        document.addEventListener('touchstart', (e) => {
+            // Handle product headers
+            const productHeader = e.target.closest('.product-header');
+            if (productHeader) {
+                const productName = productHeader.dataset.product;
+                const controls = productHeader.querySelector(`[data-controls="${productName}"]`);
+                
+                if (controls) {
+                    isHolding = false;
+                    holdTimer = setTimeout(() => {
+                        isHolding = true;
+                        controls.classList.remove('hidden');
+                        productHeader.classList.add('showing-controls');
+                    }, 500);
+                }
+                return;
+            }
+
+            // Handle CNAE headers
+            const cnaeHeader = e.target.closest('.cnae-header-card');
+            if (cnaeHeader) {
+                isHolding = false;
+                holdTimer = setTimeout(() => {
+                    isHolding = true;
+                    cnaeHeader.classList.add('showing-remove');
+                }, 500);
+            }
+        });
+
+        document.addEventListener('touchend', (e) => {
+            if (holdTimer) {
+                clearTimeout(holdTimer);
+                holdTimer = null;
+            }
+
+            if (!isHolding) {
+                // Hide product controls
+                const productHeaders = document.querySelectorAll('.product-header');
+                productHeaders.forEach(header => {
+                    const controls = header.querySelector('[data-controls]');
+                    if (controls) {
+                        controls.classList.add('hidden');
+                        header.classList.remove('showing-controls');
+                    }
+                });
+
+                // Hide CNAE remove buttons
+                const cnaeHeaders = document.querySelectorAll('.cnae-header-card');
+                cnaeHeaders.forEach(header => {
+                    header.classList.remove('showing-remove');
+                });
+            }
+        });
     }
 
     /**
@@ -922,10 +1411,8 @@ Generate the final prompt:`;
             prompts.push(`${cnae.name}: ${finalPrompt}`);
         }
         
-        const result = confirm(`Preview prompts for ${productName}:\n\n${prompts.join('\n\n')}\n\nGenerate images for this row?`);
-        if (result) {
-            await this.generateRow(productName);
-        }
+        // Auto-generate without confirmation dialog
+        await this.generateRow(productName);
     }
 
     /**
@@ -941,10 +1428,8 @@ Generate the final prompt:`;
             prompts.push(`${product.name}: ${finalPrompt}`);
         }
         
-        const result = confirm(`Preview prompts for ${cnaeName}:\n\n${prompts.join('\n\n')}\n\nGenerate images for this column?`);
-        if (result) {
-            await this.generateColumn(cnaeName);
-        }
+        // Auto-generate without confirmation dialog
+        await this.generateColumn(cnaeName);
     }
 
     /**
@@ -1030,12 +1515,12 @@ Generate the final prompt:`;
             cnaeHeader.className = 'cnae-header-card';
             cnaeHeader.innerHTML = `
                 <div class="cnae-step-buttons">
-                    <button class="step-btn step-1" onclick="app.generateColumnStep('${cnae.name}', 1)" title="Generate all prompts">1</button>
-                    <button class="step-btn step-2" onclick="app.generateColumnStep('${cnae.name}', 2)" title="Generate all images">2</button>
-                    <button class="step-btn step-3" onclick="app.generateColumnStep('${cnae.name}', 3)" title="Generate all videos">3</button>
+                    <button class="shuffle-btn step-1" onclick="app.generateColumnStep('${cnae.name}', 1)" title="Generate all prompts">1</button>
+                    <button class="shuffle-btn step-2" onclick="app.generateColumnStep('${cnae.name}', 2)" title="Generate all images">2</button>
+                    <button class="shuffle-btn step-3" onclick="app.generateColumnStep('${cnae.name}', 3)" title="Generate all videos">3</button>
                 </div>
                 <h3>${cnae.name}</h3>
-                <button class="cnae-remove-btn" onclick="app.removeCnae('${cnae.name}')" title="Remove CNAE">×</button>
+                <button class="shuffle-btn" onclick="app.removeCnae('${cnae.name}')" title="Remove CNAE">×</button>
             `;
             headerRow.appendChild(cnaeHeader);
         });
@@ -1051,15 +1536,19 @@ Generate the final prompt:`;
             const productColumn = document.createElement('div');
             productColumn.className = 'product-column';
             productColumn.innerHTML = `
-                <div class="product-step-buttons">
-                    <button class="product-step-btn step-1" onclick="app.generateRowStep('${product.name}', 1)" title="Generate all prompts for row">1</button>
-                    <button class="product-step-btn step-2" onclick="app.generateRowStep('${product.name}', 2)" title="Generate all images for row">2</button>
-                    <button class="product-step-btn step-3" onclick="app.generateRowStep('${product.name}', 3)" title="Generate all videos for row">3</button>
-                </div>
-                <div class="product-name-display">${product.name}</div>
-                <div class="product-controls">
-                    <button class="control-btn shuffle" onclick="app.shuffleProductCharacteristics('${product.name}')" title="Shuffle">🔄</button>
-                    <button class="control-btn-remove" onclick="app.removeProduct('${product.name}')" title="Remove">×</button>
+                <div class="product-header" data-product="${product.name}">
+                    <div class="product-step-buttons-strip">
+                        <button class="shuffle-btn step-1" onclick="app.generateRowStep('${product.name}', 1)" title="Generate all prompts for row">1</button>
+                        <button class="shuffle-btn step-2" onclick="app.generateRowStep('${product.name}', 2)" title="Generate all images for row">2</button>
+                        <button class="shuffle-btn step-3" onclick="app.generateRowStep('${product.name}', 3)" title="Generate all videos for row">3</button>
+                    </div>
+                    <div class="product-title-container">
+                        <div class="product-name-display" onclick="app.makeProductNameEditable('${product.name}', this)">${product.name}</div>
+                    </div>
+                    <div class="product-controls hidden" data-controls="${product.name}">
+                        <button class="shuffle-btn" onclick="app.shuffleProductCharacteristics('${product.name}')" title="Shuffle">🔄</button>
+                        <button class="shuffle-btn" onclick="app.removeProduct('${product.name}')" title="Remove">×</button>
+                    </div>
                 </div>
             `;
             productRow.appendChild(productColumn);
@@ -1069,11 +1558,13 @@ Generate the final prompt:`;
             promptColumn.className = 'prompt-column';
             const seedInfo = this.getSeededCharacteristics(this.getProductSeed(product.name));
             promptColumn.innerHTML = `
-                <textarea class="prompt-edit" 
-                          placeholder="Enter prompt description..."
-                          onblur="app.updateProduct(${productIndex}, 'prompt', this.value)"
-                          onkeypress="if(event.key==='Enter' && !event.shiftKey) { event.preventDefault(); this.blur(); }">${product.prompt || 'Professional top-view product shot on clean white background'}</textarea>
-                <div class="characteristics-display">${seedInfo.ethnicity}, ${seedInfo.city}, ${seedInfo.timeOfDay}</div>
+                <div class="prompt-display-container" data-product-index="${productIndex}">
+                    <div class="prompt-display" onclick="app.makePromptEditable(${productIndex}, this)">${product.prompt || 'Professional top-view product shot on clean white background'}</div>
+                    <textarea class="prompt-edit hidden" 
+                              onblur="app.savePromptEdit(${productIndex}, this)"
+                              onkeypress="if(event.key==='Enter' && !event.shiftKey) { event.preventDefault(); this.blur(); }">${product.prompt || 'Professional top-view product shot on clean white background'}</textarea>
+                </div>
+                <div class="characteristics-display">${seedInfo.ethnicity}, ${seedInfo.clothingColor} clothing, ${seedInfo.timeOfDay}</div>
             `;
             productRow.appendChild(promptColumn);
 
@@ -1109,7 +1600,16 @@ Generate the final prompt:`;
                 content = `<img src="${cellData.imageUrl}" alt="${product.name} - ${cnae.name}" class="cell-image">`;
             } else if (cellData.status === 'generating') {
                 statusClass = 'cell-generating';
-                content = 'Generating...';
+                if (cellData.loadingGif) {
+                    content = `
+                        <div style="display: flex; justify-content: center; align-items: center; height: 100%; flex-direction: column; padding: 10px;">
+                            <img src="https://media.giphy.com/media/xTkcEQACH24SMPxIQg/giphy.gif" style="width: 40px; height: 40px;">
+                            <p style="margin-top: 8px; color: #a8a8ad; font-size: 12px; text-align: center;">Generating...</p>
+                        </div>
+                    `;
+                } else {
+                    content = 'Generating...';
+                }
             } else if (cellData.status === 'prompt_ready') {
                 statusClass = 'cell-prompt-ready';
                 content = 'Ready to generate';
@@ -1179,7 +1679,7 @@ Generate the final prompt:`;
         const cnae = this.cnaes.find(c => c.code === cnaeCode);
 
         if (!product || !cnae) {
-            AuthManager.showError('Invalid cell reference');
+            this.showMessage('Invalid cell reference', 'error');
             return;
         }
 
@@ -1194,7 +1694,7 @@ Generate the final prompt:`;
             console.log(`Generated prompt for ${product.name} - ${cnae.name}:`, finalPrompt);
 
             // Generate image using the LLM-generated prompt
-            const imageOutput = await AuthManager.generateImage(finalPrompt);
+            const imageOutput = await window.AuthManager.generateImage(finalPrompt);
             const imageUrl = Array.isArray(imageOutput) ? imageOutput[0] : imageOutput;
 
             this.matrixData[cellKey] = {
@@ -1210,7 +1710,7 @@ Generate the final prompt:`;
             this.saveData();
             this.updateCarouselIfNeeded(cnae.name);
 
-            AuthManager.showSuccess(`Generated: ${product.name} for ${cnae.name}`);
+            this.showMessage(`Generated: ${product.name} for ${cnae.name}`, 'success');
 
         } catch (error) {
             console.error('Generation failed:', error);
@@ -1221,7 +1721,7 @@ Generate the final prompt:`;
             };
             this.renderMatrix();
             this.saveData();
-            AuthManager.showError(`Generation failed: ${error.message}`);
+            this.showMessage(`Generation failed: ${error.message}`, 'error');
         }
     }
 
@@ -1282,13 +1782,13 @@ Generate the final prompt:`;
      * Generate multiple cells with progress tracking
      */
     async generateMultipleCells(cells, progressLabel) {
-        if (!AuthManager.hasRequiredKeys()) {
-            AuthManager.showError('Please configure your API keys first');
+        if (!this.hasRequiredKeys()) {
+            this.showMessage('Please configure your API keys first', 'error');
             return;
         }
 
         if (this.isGenerating) {
-            AuthManager.showError('Generation already in progress');
+            this.showMessage('Generation already in progress', 'error');
             return;
         }
 
@@ -1335,7 +1835,7 @@ Generate the final prompt:`;
             this.isGenerating = false;
         }, 2000);
 
-        AuthManager.showSuccess(`${progressLabel} completed! Generated ${completed}/${total} items.`);
+        this.showMessage(`${progressLabel} completed! Generated ${completed}/${total} items.`, 'success');
     }
 
     /**
@@ -1391,17 +1891,16 @@ Generate the final prompt:`;
      * Delete generated content
      */
     deleteGeneration(cellKey) {
-        if (confirm('Are you sure you want to delete this generated content?')) {
-            delete this.matrixData[cellKey];
-            this.renderMatrix();
-            this.saveData();
-            
-            // Update carousel if needed
-            const cnaeName = cellKey.split('-')[1];
-            this.updateCarouselIfNeeded(cnaeName);
-            
-            AuthManager.showSuccess('Content deleted');
-        }
+        // Delete without confirmation
+        delete this.matrixData[cellKey];
+        this.renderMatrix();
+        this.saveData();
+        
+        // Update carousel if needed
+        const cnaeName = cellKey.split('-')[1];
+        this.updateCarouselIfNeeded(cnaeName);
+        
+        this.showMessage('Content deleted', 'success');
     }
 
     /**
@@ -1525,22 +2024,21 @@ Generate the final prompt:`;
      * Reset all data
      */
     resetAllData() {
-        if (confirm('Are you sure you want to reset all data? This cannot be undone.')) {
-            this.cnaes = [...this.defaultCnaes];
-            this.products = [...this.defaultProducts];
-            this.matrixData = {};
-            this.carouselData = [];
-            this.currentSlide = 0;
+        // Reset without confirmation - just do it
+        this.cnaes = [...this.defaultCnaes];
+        this.products = [...this.defaultProducts];
+        this.matrixData = {};
+        this.carouselData = [];
+        this.currentSlide = 0;
 
-            this.renderCnaeList();
-            this.renderProductList();
-            this.renderMatrix();
-            this.updateDemoSelector();
-            this.updateCarouselDisplay();
-            this.saveData();
+        this.renderCnaeList();
+        this.renderProductList();
+        this.renderMatrix();
+        this.updateDemoSelector();
+        this.updateCarouselDisplay();
+        this.saveData();
 
-            AuthManager.showSuccess('All data has been reset to defaults');
-        }
+        this.showMessage('All data has been reset to defaults', 'success');
     }
 
     /**
@@ -1569,7 +2067,7 @@ Generate the final prompt:`;
 
         const newPrompt = SecurityUtils.sanitizeInput(textarea.value);
         if (!newPrompt) {
-            AuthManager.showError('Prompt cannot be empty');
+            this.showMessage('Prompt cannot be empty', 'error');
             return;
         }
 
@@ -1577,7 +2075,7 @@ Generate the final prompt:`;
         if (product) {
             product.prompt = newPrompt;
             this.saveData();
-            AuthManager.showSuccess(`Updated prompt for ${productName}`);
+            this.showMessage(`Updated prompt for ${productName}`, 'success');
         }
     }
 
@@ -1605,7 +2103,7 @@ Generate the final prompt:`;
         document.body.removeChild(a);
         URL.revokeObjectURL(url);
 
-        AuthManager.showSuccess('Configuration exported successfully');
+        this.showMessage('Configuration exported successfully', 'success');
     }
 
     /**
@@ -1643,11 +2141,11 @@ Generate the final prompt:`;
                 this.updateDemoSelector();
                 this.saveData();
 
-                AuthManager.showSuccess(`Configuration imported successfully (${config.cnaes.length} CNAEs, ${config.products.length} products)`);
+                this.showMessage(`Configuration imported successfully (${config.cnaes.length} CNAEs, ${config.products.length} products)`, 'success');
                 
             } catch (error) {
                 console.error('Import error:', error);
-                AuthManager.showError(`Import failed: ${error.message}`);
+                this.showMessage(`Import failed: ${error.message}`, 'error');
             }
         };
         
@@ -1664,7 +2162,7 @@ Generate the final prompt:`;
         );
 
         if (generatedImages.length === 0) {
-            AuthManager.showError('No generated images to download');
+            this.showMessage('No generated images to download', 'error');
             return;
         }
 
@@ -1688,7 +2186,7 @@ Generate the final prompt:`;
             // Download each image and add to zip
             for (const [index, data] of generatedImages.entries()) {
                 try {
-                    AuthManager.showSuccess(`Downloading image ${index + 1}/${generatedImages.length}...`);
+                    this.showMessage(`Downloading image ${index + 1}/${generatedImages.length}...`, 'info');
                     
                     const response = await fetch(data.imageUrl);
                     const blob = await response.blob();
@@ -1726,11 +2224,11 @@ Generate the final prompt:`;
             document.body.removeChild(a);
             URL.revokeObjectURL(url);
 
-            AuthManager.showSuccess(`Downloaded ${generatedImages.length} images successfully`);
+            this.showMessage(`Downloaded ${generatedImages.length} images successfully`, 'success');
             
         } catch (error) {
             console.error('Download failed:', error);
-            AuthManager.showError(`Download failed: ${error.message}`);
+            this.showMessage(`Download failed: ${error.message}`, 'error');
         }
     }
 }
@@ -1738,6 +2236,16 @@ Generate the final prompt:`;
 // Initialize app when DOM is loaded
 document.addEventListener('DOMContentLoaded', () => {
     console.log('🚀 DOM Content Loaded - Initializing Omni Jimmer App...');
+    
+    // Debug AuthManager availability
+    console.log('🔍 AuthManager debug:', {
+        exists: !!window.AuthManager,
+        type: typeof window.AuthManager,
+        constructor: window.AuthManager ? window.AuthManager.constructor.name : 'N/A',
+        hasPromptMethod: window.AuthManager ? typeof window.AuthManager.generatePromptWithInstructions === 'function' : false,
+        methods: window.AuthManager ? Object.getOwnPropertyNames(Object.getPrototypeOf(window.AuthManager)) : []
+    });
+    
     try {
         window.app = new OmniJimmerApp();
         console.log('✅ Omni Jimmer App initialized successfully');
@@ -1754,9 +2262,32 @@ document.addEventListener('DOMContentLoaded', () => {
         
     } catch (error) {
         console.error('❌ Failed to initialize Omni Jimmer App:', error);
-        alert('Failed to initialize the application. Check the console for details.');
+        console.error('Failed to initialize the application. Check the console for details.');
     }
 });
 
 // Add reset functionality to window for debugging
 window.resetApp = () => app.resetAllData();
+
+// Debug function to test AuthManager
+window.testAuthManager = () => {
+    console.log('🧪 Testing AuthManager...');
+    if (!window.AuthManager) {
+        console.error('❌ AuthManager not found');
+        return;
+    }
+    
+    console.log('✅ AuthManager exists');
+    console.log('📋 Available methods:', Object.getOwnPropertyNames(Object.getPrototypeOf(window.AuthManager)));
+    
+    if (typeof window.AuthManager.generatePromptWithInstructions === 'function') {
+        console.log('✅ generatePromptWithInstructions method found');
+    } else {
+        console.error('❌ generatePromptWithInstructions method NOT found');
+    }
+    
+    console.log('🔑 API Keys status:', {
+        hasOpenAI: !!window.AuthManager.apiKeys?.openai,
+        hasReplicate: !!window.AuthManager.apiKeys?.replicate
+    });
+};
