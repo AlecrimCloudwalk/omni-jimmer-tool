@@ -738,7 +738,8 @@ Original prompt: ${basePrompt}`;
             // Development fallback: Use placeholder video
             if (this.isDevelopmentMode() && error.message.includes('CORS')) {
                 console.log('🚧 CORS error in development, using placeholder');
-                return ['https://sample-videos.com/zip/10/mp4/SampleVideo_1280x720_1mb.mp4'];
+                // Use a more reliable placeholder video source
+                return [`https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4`];
             }
             
             // Provide helpful error message for CORS issues

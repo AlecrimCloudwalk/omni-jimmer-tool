@@ -569,13 +569,13 @@
         
         if (!confirmed) return;
         
-        btn.innerHTML = '<span class="loading"></span>Generating...';
+        btn.textContent = 'Generating...';
         
         // Show loading in drop area
         if (dropArea) {
             dropArea.innerHTML = `
                 <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; height: 200px; background: #161518; border-radius: 12px;">
-                    <img src="https://media.giphy.com/media/xTkcEQACH24SMPxIQg/giphy.gif" style="max-height: 80px; width: auto; object-fit: contain; margin-bottom: 16px;">
+                    <img src="https://media.giphy.com/media/xTkcEQACH24SMPxIQg/giphy.gif" style="max-height: 80px; width: 100%; object-fit: cover; margin-bottom: 16px; border-radius: 8px;">
                     <div style="color: var(--text); font-size: 16px; font-weight: 500;">Generating image...</div>
                     <div style="color: var(--muted); font-size: 14px; margin-top: 8px;">This may take a moment</div>
                 </div>
@@ -896,6 +896,7 @@
         setTimeout(() => {
             this.updateProgress();
             this.updateVideoPricing(); // Initialize video pricing display
+            this.setupSyncedPromptSync(); // Setup synced prompt box
         }, 100);
     }
 
@@ -920,7 +921,7 @@
         
         if (!confirmed) return;
         
-        btn.innerHTML = '<span class="loading"></span>Generating...';
+        btn.textContent = 'Generating...';
         
         try {
             await this.generatePromptForCell(this.currentCellKey);
@@ -1012,14 +1013,14 @@
         
         if (!confirmed) return;
 
-        btn.innerHTML = '<span class="loading"></span>Generating...';
+        btn.textContent = 'Generating...';
         if (videoPreviewArea) {
             videoPreviewArea.classList.add('generating');
             if (videoPlaceholder) {
                 videoPlaceholder.classList.add('loading');
                 videoPlaceholder.innerHTML = `
                     <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 32px;">
-                        <img src="https://media.giphy.com/media/xTkcEQACH24SMPxIQg/giphy.gif" style="max-height: 60px; width: auto; object-fit: contain; margin-bottom: 16px;">
+                        <img src="https://media.giphy.com/media/xTkcEQACH24SMPxIQg/giphy.gif" style="width: 100%; height: 100%; object-fit: cover; border-radius: 10px; position: absolute; top: 0; left: 0; z-index: 1;">
                         <div style="font-size: 18px; font-weight: 600; color: var(--text); margin-bottom: 8px; display: flex; align-items: center; gap: 8px;">
                             🎬 Generating video...
                         </div>
@@ -1053,8 +1054,9 @@
                 videoPreviewArea.classList.add('has-video');
                 videoPlaceholder.classList.remove('loading');
                 videoPlaceholder.innerHTML = `
-                    <video controls autoplay muted style="width: 100%; height: 100%; object-fit: cover; border-radius: 10px;">
+                    <video controls autoplay muted loop style="width: 100%; height: 100%; object-fit: cover; border-radius: 10px;">
                         <source src="${videoUrl}" type="video/mp4">
+                        <img src="https://media.giphy.com/media/xTkcEQACH24SMPxIQg/giphy.gif" style="width: 100%; height: 100%; object-fit: cover; border-radius: 10px;" alt="Video loading...">
                         Your browser does not support the video tag.
                     </video>
                     <div class="video-controls">
@@ -1212,6 +1214,9 @@
         document.getElementById(`step-content-${stepNumber}`).classList.add('active');
 
         this.currentModalStep = stepNumber;
+        
+        // Update synced prompt box visibility
+        this.updateSyncedPromptBox(stepNumber);
     }
 
     /**
@@ -1240,6 +1245,60 @@
     markStepCompleted(stepNumber) {
         this.completedSteps.add(stepNumber);
         this.updateProgress();
+    }
+
+    /**
+     * Update synced prompt box visibility and content
+     */
+    updateSyncedPromptBox(stepNumber) {
+        const syncedPromptBox = document.getElementById('synced-prompt-box');
+        const syncedPromptTextarea = document.getElementById('synced-prompt-textarea');
+        const promptEditor = document.getElementById('prompt-editor');
+        
+        if (!syncedPromptBox || !syncedPromptTextarea) return;
+        
+        // Hide on step 1 (prompt step), show on steps 2 and 3
+        if (stepNumber === 1) {
+            syncedPromptBox.classList.add('hidden');
+        } else {
+            syncedPromptBox.classList.remove('hidden');
+            
+            // Sync content from main prompt editor
+            if (promptEditor) {
+                syncedPromptTextarea.value = promptEditor.value;
+                // Make it editable and sync back to main editor
+                syncedPromptTextarea.readOnly = false;
+                
+                // Setup two-way sync
+                if (!syncedPromptTextarea.hasAttribute('data-synced')) {
+                    syncedPromptTextarea.addEventListener('input', () => {
+                        if (promptEditor) {
+                            promptEditor.value = syncedPromptTextarea.value;
+                            // Auto-save prompt when user types
+                            this.autoSavePrompt(syncedPromptTextarea.value);
+                        }
+                    });
+                    syncedPromptTextarea.setAttribute('data-synced', 'true');
+                }
+            }
+        }
+    }
+
+    /**
+     * Setup modal content sync for synced prompt box
+     */
+    setupSyncedPromptSync() {
+        const promptEditor = document.getElementById('prompt-editor');
+        const syncedPromptTextarea = document.getElementById('synced-prompt-textarea');
+        
+        if (promptEditor && syncedPromptTextarea) {
+            // Setup one-way sync from main editor to synced box initially
+            promptEditor.addEventListener('input', () => {
+                if (!syncedPromptTextarea.classList.contains('hidden')) {
+                    syncedPromptTextarea.value = promptEditor.value;
+                }
+            });
+        }
     }
 
     /**
@@ -1547,7 +1606,7 @@
         try {
             // Disable the button and show progress
             doEverythingBtn.disabled = true;
-            doEverythingBtn.innerHTML = '<span class="loading"></span>Working...';
+            doEverythingBtn.textContent = 'Working...';
             
             // Step 1: Generate prompt
             this.switchToStep(1);
@@ -3353,7 +3412,8 @@ Cor Sugerida: ${characteristics.clothingColor}`;
         let content = 'Ready to generate';
         
         if (cellData) {
-            if (cellData.status === 'generated' && cellData.imageUrl) {
+            // Check for image first (regardless of status) - this fixes the bug
+            if (cellData.imageUrl) {
                 statusClass = 'cell-generated';
                 content = `<img src="${cellData.imageUrl}" alt="${product.name} - ${cnae.name}" class="cell-image">`;
             } else if (cellData.status === 'generating') {
@@ -3367,7 +3427,7 @@ Cor Sugerida: ${characteristics.clothingColor}`;
                 } else {
                     content = 'Generating...';
                 }
-            } else if (cellData.status === 'prompt_ready') {
+            } else if (cellData.status === 'prompt_ready' || cellData.prompt) {
                 statusClass = 'cell-prompt-ready';
                 content = 'Prompt ready';
             } else if (cellData.status === 'error') {

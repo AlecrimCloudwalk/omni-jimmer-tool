@@ -6,6 +6,8 @@
   "scripts": {
     "start": "python3 -m http.server 8080",
     "dev": "python3 -m http.server 3000",
+    "proxy": "node proxy-server.js",
+    "dev-full": "concurrently \"npm run start\" \"npm run proxy\"",
     "build": "echo 'No build process needed for static files'",
     "deploy": "rsync -avz --exclude node_modules --exclude .git . user@server:/path/to/deployment/",
     "lint": "echo 'Linting HTML, CSS, and JS files...'",

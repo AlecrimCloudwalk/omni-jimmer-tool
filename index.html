@@ -259,7 +259,7 @@
 
                     <div class="sidebar-actions">
                         <button class="btn btn-danger btn-full-width" onclick="app.deleteCellData()">Delete All</button>
-                        <button class="btn btn-success btn-full-width" onclick="app.doEverything()" id="do-everything-btn">Do Everything</button>
+                        <button class="btn btn-primary btn-full-width" onclick="app.doEverything()" id="do-everything-btn">Do Everything</button>
                     </div>
                 </div>
 
@@ -284,7 +284,7 @@
                             </div>
 
                             <div class="step-actions-right">
-                                <button class="btn btn-primary" id="generate-prompt-btn">
+                                <button class="btn btn-step-1" id="generate-prompt-btn">
                                     <span id="generate-prompt-text">Generate Prompt</span>
                                 </button>
                             </div>
@@ -341,13 +341,13 @@
                             </div>
 
                             <div class="step-actions-right">
-                                <button class="btn btn-secondary" id="generate-image-btn" disabled>
+                                <button class="btn btn-step-2" id="generate-image-btn" disabled>
                                     <span id="generate-image-text">Generate Image</span>
                                 </button>
                                 <button class="btn btn-secondary" id="edit-image-btn" style="display: none;">
                                     Edit Image
                                 </button>
-                                <button class="btn btn-success" id="save-image-btn" style="display: none;">
+                                <button class="btn btn-step-2" id="save-image-btn" style="display: none;">
                                     Save Changes
                                 </button>
                             </div>
@@ -404,13 +404,24 @@
                             </div>
 
                             <div class="step-actions-right">
-                                <button class="btn btn-success" id="generate-video-btn">
+                                <button class="btn btn-step-3" id="generate-video-btn">
                                     <span id="generate-video-text">Generate Video</span>
                                 </button>
                             </div>
                         </div>
                     </div>
                 </div>
+            </div>
+            
+            <!-- Synced Prompt Box (appears at bottom of all steps except step 1) -->
+            <div class="synced-prompt-box hidden" id="synced-prompt-box">
+                <div class="synced-prompt-label">Content Prompt (synced across all steps)</div>
+                <textarea 
+                    id="synced-prompt-textarea" 
+                    class="synced-prompt-textarea" 
+                    placeholder="Your generated or custom prompt will appear here..."
+                    readonly
+                ></textarea>
             </div>
         </div>
     </div>

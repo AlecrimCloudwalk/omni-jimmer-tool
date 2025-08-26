@@ -653,6 +653,43 @@ button:disabled {
   box-shadow: 0 8px 20px rgba(193, 247, 50, 0.4);
 }
 
+/* Step-specific button colors */
+.btn-step-1 {
+  background: var(--step-1-color);
+  color: white;
+  border: none;
+}
+
+.btn-step-1:hover:not(:disabled) {
+  background: rgba(114, 16, 232, 0.8);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(114, 16, 232, 0.4);
+}
+
+.btn-step-2 {
+  background: var(--step-2-color);
+  color: white;
+  border: none;
+}
+
+.btn-step-2:hover:not(:disabled) {
+  background: rgba(201, 97, 0, 0.8);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(201, 97, 0, 0.4);
+}
+
+.btn-step-3 {
+  background: var(--step-3-color);
+  color: black;
+  border: none;
+}
+
+.btn-step-3:hover:not(:disabled) {
+  background: rgba(121, 239, 4, 0.8);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(121, 239, 4, 0.4);
+}
+
 .btn-secondary {
   background: #2a2b2f;
   color: var(--text);
@@ -1719,18 +1756,59 @@ button:disabled {
   box-shadow: 0 0 0 1px rgba(114, 16, 232, 0.2);
 }
 
-.nav-step.completed {
-  background: rgba(193, 247, 50, 0.1);
-  border-color: rgba(193, 247, 50, 0.3);
+/* Step-specific active states */
+.nav-step[data-step="1"].active {
+  background: rgba(114, 16, 232, 0.15);
+  border-color: var(--step-1-color);
+  box-shadow: 0 0 0 2px rgba(114, 16, 232, 0.3);
+}
+
+.nav-step[data-step="2"].active {
+  background: rgba(201, 97, 0, 0.15);
+  border-color: var(--step-2-color);
+  box-shadow: 0 0 0 2px rgba(201, 97, 0, 0.3);
+}
+
+.nav-step[data-step="3"].active {
+  background: rgba(121, 239, 4, 0.15);
+  border-color: var(--step-3-color);
+  box-shadow: 0 0 0 2px rgba(121, 239, 4, 0.3);
+}
+
+/* Step-specific completed states */
+.nav-step[data-step="1"].completed {
+  background: rgba(114, 16, 232, 0.1);
+  border-color: var(--step-1-color);
+}
+
+.nav-step[data-step="2"].completed {
+  background: rgba(201, 97, 0, 0.1);
+  border-color: var(--step-2-color);
+}
+
+.nav-step[data-step="3"].completed {
+  background: rgba(121, 239, 4, 0.1);
+  border-color: var(--step-3-color);
 }
 
 .nav-step.completed::after {
   content: "✓";
   position: absolute;
   right: 12px;
-  color: var(--green);
   font-weight: bold;
   font-size: 14px;
+}
+
+.nav-step[data-step="1"].completed::after {
+  color: var(--step-1-color);
+}
+
+.nav-step[data-step="2"].completed::after {
+  color: var(--step-2-color);
+}
+
+.nav-step[data-step="3"].completed::after {
+  color: var(--step-3-color);
 }
 
 .step-icon {
@@ -1971,6 +2049,7 @@ button:disabled {
   min-height: 400px;
   max-width: 600px;
   aspect-ratio: 16/9; /* Standard image ratio */
+  width: 100%;
 }
 
 .image-area {
@@ -2096,6 +2175,58 @@ button:disabled {
   font-size: 12px;
 }
 
+/* Synced Prompt Box */
+.synced-prompt-box {
+  position: fixed;
+  bottom: 24px;
+  left: 320px; /* Account for sidebar width */
+  right: 24px;
+  background: rgba(23, 24, 26, 0.95);
+  border: 1px solid #333;
+  border-radius: 12px;
+  padding: 16px;
+  backdrop-filter: blur(10px);
+  z-index: 1001;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+  transition: all 0.3s ease;
+}
+
+.synced-prompt-box.hidden {
+  transform: translateY(100%);
+  opacity: 0;
+  pointer-events: none;
+}
+
+.synced-prompt-label {
+  font-size: 12px;
+  color: var(--muted);
+  margin-bottom: 8px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  font-weight: 600;
+}
+
+.synced-prompt-textarea {
+  width: 100%;
+  background: rgba(0, 0, 0, 0.4);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  padding: 12px;
+  color: var(--text);
+  font-family: inherit;
+  font-size: 14px;
+  resize: vertical;
+  min-height: 80px;
+  max-height: 120px;
+  transition: all 0.3s ease;
+}
+
+.synced-prompt-textarea:focus {
+  outline: none;
+  border-color: var(--green);
+  box-shadow: 0 0 0 2px rgba(193, 247, 50, 0.2);
+}
+
 /* Status Messages */
 .status-message {
   padding: 12px 16px;
@@ -2160,20 +2291,9 @@ button:disabled {
   opacity: 0.8;
 }
 
-/* Loading Animation */
+/* Remove loading animation from buttons - using giphy instead */
 .loading {
-  display: inline-block;
-  width: 16px;
-  height: 16px;
-  border: 2px solid rgba(255, 255, 255, 0.3);
-  border-radius: 50%;
-  border-top-color: white;
-  animation: spin 1s ease-in-out infinite;
-  margin-right: 8px;
-}
-
-@keyframes spin {
-  to { transform: rotate(360deg); }
+  display: none;
 }
 
 /* Responsive */
@@ -4322,6 +4442,8 @@ button:disabled {
     border-radius: 16px;
     background: linear-gradient(135deg, #1a1b1d 0%, #252629 100%);
     min-height: 320px;
+    aspect-ratio: 16/9;
+    width: 100%;
     display: flex;
     align-items: center;
     justify-content: center;
