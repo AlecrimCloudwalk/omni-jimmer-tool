@@ -1,142 +1,79 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>🇧🇷 Omni Jimmer Tool - Brazilian Content Generator</title>
-    
-    <!-- Security headers -->
-    <meta http-equiv="Content-Security-Policy" content="default-src 'self' 'unsafe-inline' 'unsafe-eval' https: data: blob:; img-src 'self' https: data: blob:; connect-src 'self' https: http://localhost:* ws://localhost:*;">
-    <meta http-equiv="X-Frame-Options" content="DENY">
-    <meta http-equiv="X-Content-Type-Options" content="nosniff">
-    
+    <title>Omni Jimmer Tool - AI Video Matrix Generator</title>
     <link rel="stylesheet" href="style.css">
+    
+    <!-- Supabase Configuration -->
+    <script src="./supabase-config.js"></script>
 </head>
 <body>
-    <div id="dev-notice" class="dev-notice">
-        🔧 DEV MODE: This is a development version. 
-        <button onclick="document.getElementById('dev-notice').style.display='none'">×</button>
-    </div>
+    <header class="header">
+        <div class="header-content">
+            <h1>🎬 Omni Jimmer Tool</h1>
+            <p class="sub">Gerador de conteúdo brasileiro baseado em IA. Crie imagens e vídeos autênticos com localizações, negócios e personalidades brasileiras reais com características regionais específicas.</p>
+        </div>
+        
+        <!-- Header Buttons -->
+        <div class="header-buttons">
+            <button id="prompts-toggle" class="prompts-toggle" title="Toggle Prompts Column">
+                <span class="prompts-icon">📝</span>
+            </button>
+            <button id="phone-toggle" class="phone-toggle" title="Toggle Phone Preview"></button>
+            <button id="menu-toggle" class="menu-toggle" title="Toggle Controls Menu">
+                <div class="hamburger">
+                    <span></span>
+                    <span></span>
+                    <span></span>
+                </div>
+            </button>
+        </div>
+    </header>
 
-    <main class="container">
-        <!-- Header -->
-        <section class="hero">
-            <div class="hero-content">
-                <h1 class="hero-title">🇧🇷 Omni Jimmer Tool</h1>
-                <p class="sub">Gerador de conteúdo brasileiro baseado em IA. Crie imagens e vídeos autênticos com localizações, negócios e personalidades brasileiras reais com características regionais específicas.</p>
-            </div>
-            <div class="hero-actions">
-                <button id="show-sidebar-btn" class="btn btn-secondary">⚙️ Configure</button>
-                <button id="show-phone-preview-btn" class="btn btn-primary">📱 Preview</button>
-            </div>
-        </section>
-
-        <!-- Configuration Sidebar -->
-        <div id="config-sidebar" class="config-sidebar">
+    <main class="three-column-container">
+        <!-- LEFT COLUMN: Collapsible Controls -->
+        <section class="left-column" id="controls-sidebar">
             <div class="sidebar-header">
-                <h3>⚙️ Configuration</h3>
-                <button id="close-sidebar-btn" class="close-btn">×</button>
+                <h2>🎛️ Controls</h2>
+                <button id="close-sidebar" class="close-btn">×</button>
             </div>
-            <div class="sidebar-content">
-                <div class="config-section">
-                    <h4>🔐 API Configuration</h4>
-                    <div class="api-config">
-                        <div class="form-group">
-                            <label>OpenAI API Key</label>
-                            <input type="password" id="openai-key" placeholder="sk-..." class="api-input">
-                            <button id="save-openai-key" class="save-btn">Save</button>
-                        </div>
-                        <div class="form-group">
-                            <label>Replicate API Key</label>
-                            <input type="password" id="replicate-key" placeholder="r8_..." class="api-input">
-                            <button id="save-replicate-key" class="save-btn">Save</button>
-                        </div>
+            
+            <!-- API Configuration Section -->
+            <div class="controls-section">
+                <h3>🔑 API Configuration</h3>
+                <div class="api-inputs">
+                    <div class="key-input">
+                        <label>OpenAI API Key</label>
+                        <input type="password" id="openai-key" placeholder="Enter your OpenAI API key" class="api-input">
+                        <button type="button" id="save-openai-key" class="shuffle-btn">Save</button>
                     </div>
-                </div>
-
-                <div class="config-section">
-                    <h4>🎯 Matrix Configuration</h4>
-                    <div class="matrix-config">
-                        <div class="form-group">
-                            <label>Number of Products</label>
-                            <input type="number" id="num-products" min="1" max="15" value="3" class="number-input">
-                        </div>
-                        <div class="form-group">
-                            <label>Number of CNAEs</label>
-                            <input type="number" id="num-cnaes" min="1" max="15" value="3" class="number-input">
-                        </div>
-                        <button id="update-matrix-size" class="btn btn-primary">Update Matrix</button>
-                    </div>
-                </div>
-
-                <div class="config-section">
-                    <h4>📝 Manage Lists</h4>
-                    <div class="list-management">
-                        <button id="edit-products-btn" class="manage-btn">Edit Products</button>
-                        <button id="edit-cnaes-btn" class="manage-btn">Edit CNAEs</button>
-                        <button id="reset-products-btn" class="reset-btn">Reset Products</button>
-                        <button id="reset-cnaes-btn" class="reset-btn">Reset CNAEs</button>
-                    </div>
-                </div>
-
-                <div class="config-section">
-                    <h4>💰 Pricing Calculator</h4>
-                    <div id="pricing-calculator" class="pricing-calculator">
-                        <div class="pricing-info">
-                            <div class="pricing-item">
-                                <span class="pricing-label">Prompts:</span>
-                                <span class="pricing-value" id="prompt-cost">$0.004 each</span>
-                            </div>
-                            <div class="pricing-item">
-                                <span class="pricing-label">Images:</span>
-                                <span class="pricing-value" id="image-cost">$0.039 each</span>
-                            </div>
-                            <div class="pricing-item">
-                                <span class="pricing-label">Videos:</span>
-                                <span class="pricing-value" id="video-cost">$0.18-$0.60 each</span>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                
-                <div class="config-section">
-                    <h4>🗂️ Data Management</h4>
-                    <div class="data-management">
-                        <button id="export-data-btn" class="manage-btn">📤 Export Data</button>
-                        <button id="import-data-btn" class="manage-btn">📥 Import Data</button>
-                        <input type="file" id="import-file-input" accept=".json" style="display: none;">
-                        <button id="reset-all-btn" class="danger-btn">🗑️ Reset All</button>
+                    <div class="key-input">
+                        <label>Replicate API Key</label>
+                        <input type="password" id="replicate-key" placeholder="Enter your Replicate API key" class="api-input">
+                        <button type="button" id="save-replicate-key" class="shuffle-btn">Save</button>
                     </div>
                 </div>
             </div>
-        </div>
 
-        <!-- Phone Preview Panel -->
-        <div id="phone-preview-panel" class="phone-preview-panel">
-            <div class="phone-preview-header">
-                <h3>📱 Preview</h3>
-                <div class="phone-preview-controls">
-                    <button id="prev-slide-btn" class="preview-nav-btn">‹</button>
-                    <span id="slide-counter">1 / 1</span>
-                    <button id="next-slide-btn" class="preview-nav-btn">›</button>
-                    <button id="close-phone-preview-btn" class="close-btn">×</button>
+            <!-- Matrix Quick Actions -->
+            <div class="controls-section">
+                <h3>Matrix Generation</h3>
+                <div class="generation-options">
+                    <label class="option-toggle">
+                        <input id="enable-batch-generation" type="checkbox" checked>
+                        <span class="checkmark"></span>
+                        <span class="option-text">Batch Generation Mode</span>
+                        <span class="option-price">Bulk</span>
+                    </label>
+                </div>
+                <div class="action-buttons">
+                    <button id="generate-all-row" class="generate-btn">🚀 Generate All</button>
                 </div>
             </div>
-            <div class="phone-preview-content">
-                <div class="phone-frame">
-                    <img src="iphone-frame.png" alt="iPhone Frame" class="phone-frame-img">
-                    <div class="phone-screen">
-                        <div id="phone-content" class="phone-content">
-                            <div class="phone-placeholder">
-                                📱 Generate content to see preview
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
 
-        <section class="controls">
+            <!-- Global Style Prompt -->
             <div class="controls-section">
                 <h3>🎥 Configurações de Câmera e Estilo</h3>
                 <div class="style-prompt-container">
@@ -148,44 +85,118 @@
                 </div>
             </div>
 
-            <div class="matrix-grid-section">
-                <div class="matrix-controls">
-                    <div class="row-controls">
-                        <div class="row-label">Produtos</div>
-                        <div class="row-actions">
-                            <button class="shuffle-btn" onclick="app.shuffleProducts()">🎲 Shuffle Products</button>
-                            <button class="batch-btn step-1" onclick="app.generateRowPrompts()">📝 All Prompts</button>
-                            <button class="batch-btn step-2" onclick="app.generateRowImages()">🖼️ All Images</button>
-                            <button class="batch-btn step-3" onclick="app.generateRowVideos()">🎬 All Videos</button>
+            <!-- Export/Import Controls -->
+            <div class="controls-section">
+                <h3>Data Management</h3>
+                <div class="shuffle-controls">
+                    <button id="export-config" class="shuffle-btn">📤 Export</button>
+                    <button id="import-config" class="shuffle-btn">📥 Import</button>
+                </div>
+                <div class="shuffle-controls" style="margin-top: 12px;">
+                    <button id="download-all-images" class="shuffle-btn">💾 Download All</button>
+                </div>
+                
+                <!-- Full Purge Option -->
+                <div class="shuffle-controls" style="margin-top: 12px;">
+                    <button id="full-purge" class="shuffle-btn" style="background: #8B0000; border-color: #8B0000; color: white; font-weight: bold; box-shadow: 0 0 10px rgba(139, 0, 0, 0.3);">🗑️ FULL PURGE</button>
+                </div>
+                <p style="font-size: 11px; color: var(--muted); margin: 4px 0 0 0; text-align: center; line-height: 1.3;">
+                    Clear all generated content<br>
+                    (prompts, images, videos)
+                </p>
+                
+                <!-- Granular Reset Options -->
+                <h4 style="margin: 16px 0 8px 0; color: var(--muted); font-size: 14px;">🔄 Reset Options</h4>
+                <div class="shuffle-controls">
+                    <button id="reset-prompts" class="shuffle-btn">📝 Prompts</button>
+                    <button id="reset-images" class="shuffle-btn">🖼️ Images</button>
+                </div>
+                <div class="shuffle-controls" style="margin-top: 8px;">
+                    <button id="reset-products" class="shuffle-btn">📦 Products</button>
+                    <button id="reset-cnaes" class="shuffle-btn">🏢 CNAEs</button>
+                </div>
+                <div class="shuffle-controls" style="margin-top: 8px;">
+                    <button id="reset-all-data" class="shuffle-btn" style="background: #d73027; border-color: #d73027;">🔄 Reset ALL</button>
+                </div>
+                <input type="file" id="import-file" accept=".json" style="display: none;">
+            </div>
+        </section>
+
+        <!-- PHONE PREVIEW PANEL: Right-sliding Phone Preview -->
+        <section class="phone-panel" id="phone-preview-panel">
+            <div class="phone-panel-header">
+                <h2>📱 Demo App Preview</h2>
+                <button id="close-phone-panel" class="close-btn">×</button>
+            </div>
+            
+            <div class="app-preview">
+
+                <div class="demo-controls mb-2">
+                    <select id="demo-cnae-select" class="input">
+                        <option value="">Select a CNAE to preview</option>
+                    </select>
+                </div>
+                <div class="phone-mockup">
+                    <!-- Background Video -->
+                    <video class="phone-mockup-video" id="phoneBgVideo" autoplay muted loop playsinline>
+                        <source src="./app-bg-video.mp4" type="video/mp4">
+                        <!-- Fallback background color if video fails -->
+                    </video>
+                    
+                    <!-- Video Component Overlay -->
+                    <div class="video-overlay" id="videoOverlay">
+                        <div class="video-component">
+                            <div class="video-placeholder">
+                                <span>Generated content will appear here</span>
+                            </div>
+                            <div class="video-controls">
+                                <div class="gradient-overlay"></div>
+                                <div class="content-overlay">
+                                    <div class="text-overlay">
+                                        <p id="demo-cnae-title">Select a CNAE to preview products</p>
+                                    </div>
+                                    <button class="cta-button">Saiba mais</button>
+                                </div>
+                                <div class="carousel-indicators">
+                                    <div class="indicator active"></div>
+                                    <div class="indicator"></div>
+                                    <div class="indicator"></div>
+                                    <div class="indicator"></div>
+                                    <div class="indicator"></div>
+                                    <div class="indicator"></div>
+                                </div>
+                            </div>
                         </div>
                     </div>
                     
-                    <div class="matrix-grid-container">
-                        <div class="column-controls">
-                            <div class="column-label">CNAEs</div>
-                            <div class="column-actions">
-                                <button class="shuffle-btn" onclick="app.shuffleCnaes()">🎲 Shuffle CNAEs</button>
-                                <button class="batch-btn step-1" onclick="app.generateColumnPrompts()">📝 All Prompts</button>
-                                <button class="batch-btn step-2" onclick="app.generateColumnImages()">🖼️ All Images</button>
-                                <button class="batch-btn step-3" onclick="app.generateColumnVideos()">🎬 All Videos</button>
-                            </div>
-                        </div>
-                        
-                        <div class="matrix-grid" id="matrix-grid">
-                            <!-- Matrix will be generated here -->
-                        </div>
-                    </div>
+                    <!-- iPhone Frame Overlay -->
+                    <div class="iphone-frame"></div>
+                </div>
+                
+                <!-- Carousel Info -->
+                <div class="carousel-info mt-2">
+                    <span id="slide-indicator" class="carousel-counter">0/0</span>
                 </div>
             </div>
         </section>
 
-        <!-- Status Display -->
-        <div id="status-display" class="status-display">
-            <div class="status-content">
-                <span id="status-message">Ready</span>
-                <button id="close-status" class="close-status">×</button>
+        <!-- CENTER COLUMN: Matrix Grid -->
+        <section class="center-column">
+            <!-- Matrix Grid Section -->
+            <div class="step">
+                <div id="matrix-grid" class="matrix-grid"></div>
             </div>
-        </div>
+
+            <!-- Generation Progress -->
+            <div class="step progress-section" style="display: none;">
+                <h3>⚡ Generation Progress</h3>
+                <div class="progress-bar">
+                    <div id="progress-fill" class="progress-fill"></div>
+                </div>
+                <div id="progress-text" class="progress-text">0/0 completed</div>
+            </div>
+        </section>
+
 
     </main>
 
@@ -240,8 +251,8 @@
                     </div>
 
                     <div class="sidebar-actions">
-                        <button class="btn btn-secondary btn-full-width" onclick="app.deleteCellData()">Delete All</button>
-                        <button class="btn btn-primary-green btn-full-width" onclick="app.doEverything()" id="do-everything-btn">Do Everything</button>
+                        <button class="btn btn-danger btn-full-width" onclick="app.deleteCellData()">Delete All</button>
+                        <button class="btn btn-success btn-full-width" onclick="app.doEverything()" id="do-everything-btn">Do Everything</button>
                     </div>
                 </div>
 
@@ -254,36 +265,18 @@
                             <div class="step-subtitle">Create AI-powered prompts for your Brazilian content</div>
                         </div>
 
-                        <div class="unified-step-layout">
-                            <!-- Main Content Area -->
-                            <div class="main-content-area">
-                                <label class="form-label">Generated Content Preview</label>
-                                <div class="content-preview-area aspect-16-9">
-                                    <div class="prompt-preview-content" id="prompt-preview">
-                                        <div class="preview-placeholder">
-                                            <div class="preview-icon">📝</div>
-                                            <div class="preview-text">Your AI-generated prompt will appear here</div>
-                                            <div class="preview-subtext">Click "Generate Prompt" to create professional Brazilian content prompts</div>
-                                        </div>
-                                    </div>
-                                </div>
+                        <div class="step-layout">
+                            <div class="form-group expanded-textarea">
+                                <label class="form-label">Content Prompt (editable)</label>
+                                <textarea 
+                                    id="prompt-editor" 
+                                    class="prompt-editor expanded" 
+                                    placeholder="Click 'Generate Prompt' to create an AI-powered prompt, or write your own..."
+                                ></textarea>
                                 <div class="status-message" id="prompt-status"></div>
                             </div>
 
-                            <!-- Prompt Editor Section -->
-                            <div class="prompt-section">
-                                <label class="form-label">Content Prompt (editable)</label>
-                                <div class="prompt-container-unified">
-                                    <textarea 
-                                        id="prompt-editor" 
-                                        class="prompt-editor-unified" 
-                                        placeholder="Click 'Generate Prompt' to create an AI-powered prompt, or write your own..."
-                                    ></textarea>
-                                </div>
-                            </div>
-
-                            <!-- Action Section -->
-                            <div class="action-section">
+                            <div class="step-actions-right">
                                 <button class="btn btn-primary" id="generate-prompt-btn">
                                     <span id="generate-prompt-text">Generate Prompt</span>
                                 </button>
@@ -298,28 +291,26 @@
                             <div class="step-subtitle">Upload images and crop them to perfect dimensions</div>
                         </div>
 
-                        <div class="unified-step-layout">
-                            <!-- Main Content Area -->
-                            <div class="main-content-area">
+                        <div class="step-layout">
+                            <div class="form-group image-area">
                                 <label class="form-label">Image Upload</label>
-                                <div class="content-preview-area aspect-16-9">
-                                    <div class="drag-drop-area" id="drop-area" onclick="document.getElementById('file-input').click()">
-                                        <div id="drop-text">
-                                            <div style="font-size: 16px; font-weight: 500; margin-bottom: 8px;">
-                                                Drag & drop your image here or click to browse
-                                            </div>
-                                            <div style="font-size: 12px; opacity: 0.7;">
-                                                Supports JPG, PNG, WebP up to 10MB
-                                            </div>
+                                <div class="drag-drop-area large" id="drop-area" onclick="document.getElementById('file-input').click()">
+                                    <div id="drop-text">
+                                        <div style="font-size: 16px; font-weight: 500; margin-bottom: 8px;">
+                                            Drag & drop your image here or click to browse
                                         </div>
-                                        <div class="image-overlay">
-                                            <div style="color: white; font-weight: 500;">Click to change image</div>
+                                        <div style="font-size: 12px; opacity: 0.7;">
+                                            Supports JPG, PNG, WebP up to 10MB
                                         </div>
+                                    </div>
+                                    <div class="image-overlay">
+                                        <div style="color: white; font-weight: 500;">Click to change image</div>
                                     </div>
                                 </div>
                                 <input type="file" id="file-input" class="file-input" accept="image/*">
                                 
                                 <div class="image-controls" id="image-controls" style="display: none;">
+                                    <label class="form-label">Image Adjustments</label>
                                     <div class="slider-group">
                                         <div class="slider-item">
                                             <label for="scale-slider">Scale: <span id="scale-value">1.0</span></label>
@@ -342,20 +333,7 @@
                                 <div class="status-message" id="image-status"></div>
                             </div>
 
-                            <!-- Prompt Editor Section -->
-                            <div class="prompt-section">
-                                <label class="form-label">Image Prompt (editable)</label>
-                                <div class="prompt-container-unified">
-                                    <textarea 
-                                        id="image-prompt-editor" 
-                                        class="prompt-editor-unified" 
-                                        placeholder="The image prompt will appear here when generated. You can edit it to customize your image generation..."
-                                    ></textarea>
-                                </div>
-                            </div>
-
-                            <!-- Action Section -->
-                            <div class="action-section">
+                            <div class="step-actions-right">
                                 <button class="btn btn-secondary" id="generate-image-btn" disabled>
                                     <span id="generate-image-text">Generate Image</span>
                                 </button>
@@ -376,19 +354,9 @@
                             <div class="step-subtitle">Transform your prompt and image into dynamic video content</div>
                         </div>
 
-                        <div class="unified-step-layout">
-                            <!-- Main Content Area -->
-                            <div class="main-content-area">
-                                <label class="form-label">Video Preview</label>
-                                <div class="content-preview-area aspect-16-9">
-                                    <div class="video-preview-area" id="video-preview-area">
-                                        <div id="video-placeholder" class="video-placeholder">
-                                            <div class="preview-icon">🎬</div>
-                                            <div class="preview-text">Video will appear here after generation</div>
-                                            <div class="preview-subtext">Uses your prompt and generated image to create dynamic video content</div>
-                                        </div>
-                                    </div>
-                                </div>
+                        <div class="step-layout">
+                            <div class="form-group video-area">
+                                <label class="form-label">Video Configuration</label>
                                 
                                 <!-- Video Settings -->
                                 <div class="video-settings">
@@ -414,24 +382,21 @@
                                     </div>
                                 </div>
 
+                                <label class="form-label">Video Preview</label>
+                                <div class="video-preview-area" id="video-preview-area">
+                                    <div id="video-placeholder" class="video-placeholder">
+                                        <div>
+                                            🎬 Video will appear here after generation
+                                        </div>
+                                        <div>
+                                            Uses your prompt and generated image to create dynamic video content
+                                        </div>
+                                    </div>
+                                </div>
                                 <div class="status-message" id="video-status"></div>
                             </div>
 
-                            <!-- Prompt Editor Section -->
-                            <div class="prompt-section">
-                                <label class="form-label">Video Prompt (from Step 1)</label>
-                                <div class="prompt-container-unified">
-                                    <textarea 
-                                        id="video-prompt-display" 
-                                        class="prompt-editor-unified" 
-                                        placeholder="Video will use the prompt generated in Step 1..."
-                                        readonly
-                                    ></textarea>
-                                </div>
-                            </div>
-
-                            <!-- Action Section -->
-                            <div class="action-section">
+                            <div class="step-actions-right">
                                 <button class="btn btn-success" id="generate-video-btn">
                                     <span id="generate-video-text">Generate Video</span>
                                 </button>

@@ -481,37 +481,7 @@ Original prompt: ${basePrompt}`;
         } catch (error) {
             console.error('❌ Failed to generate prompt with instructions:', error);
             console.error('Error details:', error.message);
-            
-            // Check for specific OpenAI errors
-            if (error.message.includes('insufficient_quota') || 
-                error.message.includes('billing') ||
-                error.message.includes('exceeded your current quota')) {
-                throw new Error('💳 Insufficient OpenAI credits: Your OpenAI account is out of credits. Please add funds to your OpenAI account to continue generating prompts.');
-            }
-            
-            // Check for invalid API key
-            if (error.message.includes('invalid_api_key') || 
-                error.message.includes('authentication') ||
-                error.message.includes('unauthorized')) {
-                throw new Error('🔑 Invalid API Key: Your OpenAI API key is invalid or missing. Please check your API key configuration.');
-            }
-            
-            // Check for rate limiting
-            if (error.message.includes('rate_limit') || error.message.includes('too many requests')) {
-                throw new Error('⏱️ Rate limited: Too many requests to OpenAI. Please wait a moment and try again.');
-            }
-            
-            // Check for CORS/network issues
-            const isCorsError = error.message.includes('CORS') || 
-                               error.message.includes('Failed to fetch') || 
-                               error.message.includes('blocked by the browser');
-                               
-            if (isCorsError) {
-                throw new Error('🌐 Connection error: Cannot connect to OpenAI API. Please check your network connection.');
-            }
-            
-            // Generic error with helpful context
-            throw new Error(`🚨 Prompt generation failed: ${error.message}`);
+            throw error;
         }
     }
 
@@ -531,9 +501,10 @@ Original prompt: ${basePrompt}`;
             console.log('🔍 Image generation mode check:', { isDev, isLocalhost, disableReal, willUsePlaceholder: isDev && isLocalhost && disableReal });
             
             if (isDev && isLocalhost && disableReal) {
-                console.log('🚧 Development mode: Real image generation disabled');
+                console.log('🚧 Development mode: Using placeholder image (disabled real generation)');
                 console.log('💡 To re-enable real images: window.disableRealImages = false; localStorage.removeItem("disableRealImages")');
-                throw new Error('🔧 Development mode: Real image generation is disabled. Enable it to generate images.');
+                // Return a placeholder image for development
+                return ['https://picsum.photos/1280/720?random=' + Math.floor(Math.random() * 1000)];
             }
             
             console.log('🎨 Proceeding with real image generation!');
@@ -584,37 +555,18 @@ Original prompt: ${basePrompt}`;
         } catch (error) {
             console.error('Image generation failed:', error);
             
-            // Check for specific Replicate errors
-            if (error.message.includes('insufficient funds') || 
-                error.message.includes('out of funds') ||
-                error.message.includes('billing') ||
-                error.message.includes('credits') ||
-                error.message.includes('payment')) {
-                throw new Error('💳 Insufficient funds: Your Replicate account is out of credits. Please add funds to your Replicate account to continue generating images.');
+            // Development fallback: Use placeholder image
+            if (this.isDevelopmentMode() && error.message.includes('CORS')) {
+                console.log('🚧 CORS error in development, using placeholder');
+                return ['https://picsum.photos/1280/720?random=' + Math.floor(Math.random() * 1000)];
             }
             
-            // Check for CORS/network issues
-            const isCorsError = error.message.includes('CORS') || 
-                               error.message.includes('Failed to fetch') || 
-                               error.message.includes('blocked by the browser') ||
-                               error.message.includes('violates the following Content Security Policy');
-                               
-            if (isCorsError) {
-                throw new Error('🌐 Connection error: Image generation requires a proxy server. Please start the Supabase functions with: supabase functions serve');
+            // Provide helpful error message for CORS issues
+            if (error.message.includes('CORS')) {
+                throw new Error('CORS error: Image generation requires a proxy server. Please start the Supabase functions with: supabase functions serve');
             }
             
-            // Check for rate limiting
-            if (error.message.includes('rate limit') || error.message.includes('too many requests')) {
-                throw new Error('⏱️ Rate limited: Too many requests. Please wait a moment and try again.');
-            }
-            
-            // Check for model/input errors
-            if (error.message.includes('model') || error.message.includes('input')) {
-                throw new Error('⚙️ Model error: There was an issue with the AI model or input parameters. Please try again.');
-            }
-            
-            // Generic error with helpful context
-            throw new Error(`🚨 Generation failed: ${error.message}`);
+            throw error;
         }
     }
 
@@ -728,8 +680,9 @@ Original prompt: ${basePrompt}`;
             const disableReal = window.disableRealVideos;
             
             if (isDev && isLocalhost && disableReal) {
-                console.log('🚧 Development mode: Real video generation disabled');
-                throw new Error('🔧 Development mode: Real video generation is disabled. Enable it to generate videos.');
+                console.log('🚧 Development mode: Using placeholder video');
+                // Return a placeholder video for development
+                return ['https://sample-videos.com/zip/10/mp4/SampleVideo_1280x720_1mb.mp4'];
             }
             
             console.log('🎬 Proceeding with real video generation!');
@@ -782,37 +735,18 @@ Original prompt: ${basePrompt}`;
         } catch (error) {
             console.error('❌ Video generation error:', error);
             
-            // Check for specific Replicate errors
-            if (error.message.includes('insufficient funds') || 
-                error.message.includes('out of funds') ||
-                error.message.includes('billing') ||
-                error.message.includes('credits') ||
-                error.message.includes('payment')) {
-                throw new Error('💳 Insufficient funds: Your Replicate account is out of credits. Please add funds to your Replicate account to continue generating videos.');
+            // Development fallback: Use placeholder video
+            if (this.isDevelopmentMode() && error.message.includes('CORS')) {
+                console.log('🚧 CORS error in development, using placeholder');
+                return ['https://sample-videos.com/zip/10/mp4/SampleVideo_1280x720_1mb.mp4'];
             }
             
-            // Check for CORS/network issues
-            const isCorsError = error.message.includes('CORS') || 
-                               error.message.includes('Failed to fetch') || 
-                               error.message.includes('blocked by the browser') ||
-                               error.message.includes('violates the following Content Security Policy');
-                               
-            if (isCorsError) {
-                throw new Error('🌐 Connection error: Video generation requires a proxy server. Please start the Supabase functions with: supabase functions serve');
+            // Provide helpful error message for CORS issues
+            if (error.message.includes('CORS')) {
+                throw new Error('CORS error: Video generation requires a proxy server. Please start the Supabase functions with: supabase functions serve');
             }
             
-            // Check for rate limiting
-            if (error.message.includes('rate limit') || error.message.includes('too many requests')) {
-                throw new Error('⏱️ Rate limited: Too many requests. Please wait a moment and try again.');
-            }
-            
-            // Check for model/input errors
-            if (error.message.includes('model') || error.message.includes('input')) {
-                throw new Error('⚙️ Model error: There was an issue with the AI model or input parameters. Please try again.');
-            }
-            
-            // Generic error with helpful context
-            throw new Error(`🚨 Video generation failed: ${error.message}`);
+            throw error;
         }
     }
 

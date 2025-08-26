@@ -1596,7 +1596,7 @@ button:disabled {
   opacity: 0.7;
 }
 
-/* UNIFIED MODAL SYSTEM */
+/* Modal Styles - Sidebar Design */
 .modal {
   position: fixed;
   top: 0;
@@ -1608,17 +1608,13 @@ button:disabled {
   display: none;
   align-items: center;
   justify-content: center;
-  z-index: 9999;
+  z-index: 1000;
   opacity: 0;
   transition: all 0.3s ease;
-  overflow-y: auto;
-  padding: 20px;
-  box-sizing: border-box;
 }
 
-.modal.show,
 .modal[style*="flex"] {
-  display: flex !important;
+  display: flex;
   opacity: 1;
 }
 
@@ -1628,7 +1624,7 @@ button:disabled {
   width: 95%;
   max-width: 1200px;
   height: 90vh;
-  max-height: calc(100vh - 40px);
+  max-height: 800px;
   border: 1px solid rgba(114, 16, 232, 0.3);
   box-shadow: 0 30px 60px rgba(114, 16, 232, 0.2);
   display: flex;
@@ -1636,11 +1632,8 @@ button:disabled {
   overflow: hidden;
   transform: scale(0.9);
   transition: all 0.3s ease;
-  position: relative;
-  margin: auto;
 }
 
-.modal.show .modal-content,
 .modal[style*="flex"] .modal-content {
   transform: scale(1);
 }
@@ -1652,7 +1645,6 @@ button:disabled {
   padding: 20px 24px;
   border-bottom: 1px solid #333;
   background: rgba(35, 36, 39, 0.8);
-  flex-shrink: 0;
 }
 
 .modal-header h3 {
@@ -1671,7 +1663,6 @@ button:disabled {
   padding: 8px;
   border-radius: 6px;
   transition: all 0.2s ease;
-  z-index: 10;
 }
 
 .modal-close:hover {
@@ -1685,7 +1676,6 @@ button:disabled {
   flex-direction: row;
   padding: 0;
   overflow: hidden;
-  min-height: 0;
 }
 
 /* Sidebar Styles */
@@ -1730,23 +1720,8 @@ button:disabled {
 }
 
 .nav-step.completed {
-  opacity: 0.8;
-}
-
-/* Individual step completed colors */
-.nav-step:nth-child(2).completed {
-  background: rgba(114, 16, 232, 0.15);
-  border-color: rgba(114, 16, 232, 0.4);
-}
-
-.nav-step:nth-child(3).completed {
-  background: rgba(201, 97, 0, 0.15);
-  border-color: rgba(201, 97, 0, 0.4);
-}
-
-.nav-step:nth-child(4).completed {
-  background: rgba(121, 239, 4, 0.15);
-  border-color: rgba(121, 239, 4, 0.4);
+  background: rgba(193, 247, 50, 0.1);
+  border-color: rgba(193, 247, 50, 0.3);
 }
 
 .nav-step.completed::after {
@@ -1862,17 +1837,13 @@ button:disabled {
   display: flex;
   flex-direction: column;
   overflow-y: auto;
-  min-height: 0;
-  position: relative;
 }
 
 .step-content {
   display: none;
   flex-direction: column;
-  flex: 1;
-  min-height: 0;
+  height: 100%;
   animation: fadeIn 0.3s ease;
-  overflow-y: auto;
 }
 
 .step-content.active {
@@ -1943,17 +1914,14 @@ button:disabled {
   background: rgba(0, 0, 0, 0.4);
   border: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: 10px;
-  padding: 20px;
+  padding: 16px;
   color: var(--text);
-  font-family: 'Fira Code', monospace;
+  font-family: inherit;
   font-size: 14px;
-  line-height: 1.6;
   resize: vertical;
   min-height: 120px;
   width: 100%;
   transition: all 0.3s ease;
-  word-wrap: break-word;
-  white-space: pre-wrap;
 }
 
 .prompt-editor:focus {
@@ -1978,285 +1946,6 @@ button:disabled {
   flex: 1;
   min-height: 200px;
   max-height: none;
-}
-
-/* Unified Modal Layout System */
-.unified-step-layout {
-  display: flex;
-  flex-direction: column;
-  gap: 24px;
-  height: 100%;
-}
-
-/* Main Content Area (16:9 aspect ratio) */
-.main-content-area {
-  flex: 0 0 auto;
-}
-
-.content-preview-area {
-  width: 100%;
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 12px;
-  background: rgba(0, 0, 0, 0.4);
-  overflow: hidden;
-  position: relative;
-}
-
-.aspect-16-9 {
-  aspect-ratio: 16/9;
-}
-
-/* Content Preview Styles */
-.prompt-preview-content {
-  width: 100%;
-  height: 100%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  text-align: center;
-  padding: 20px;
-}
-
-.preview-placeholder {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 12px;
-}
-
-.preview-icon {
-  font-size: 48px;
-  opacity: 0.6;
-}
-
-.preview-text {
-  font-size: 16px;
-  font-weight: 500;
-  color: var(--text);
-  margin-bottom: 4px;
-}
-
-.preview-subtext {
-  font-size: 14px;
-  color: var(--muted);
-  opacity: 0.8;
-  line-height: 1.4;
-}
-
-/* Drag and Drop in unified layout */
-.content-preview-area .drag-drop-area {
-  width: 100%;
-  height: 100%;
-  border: none;
-  border-radius: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-/* Prompt Section (Unified) */
-.prompt-section {
-  flex: 0 0 auto;
-}
-
-.prompt-container-unified {
-  height: 120px;
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 10px;
-  background: rgba(0, 0, 0, 0.4);
-  overflow: hidden;
-}
-
-.prompt-editor-unified {
-  width: 100%;
-  height: 100%;
-  border: none;
-  background: transparent;
-  color: var(--text);
-  font-family: 'Fira Code', monospace;
-  font-size: 14px;
-  line-height: 1.6;
-  padding: 16px;
-  resize: none;
-  outline: none;
-}
-
-.prompt-editor-unified:focus {
-  outline: none;
-}
-
-.prompt-editor-unified::placeholder {
-  color: var(--muted);
-  opacity: 0.7;
-}
-
-/* Action Section (Unified) */
-.action-section {
-  flex: 0 0 auto;
-  display: flex;
-  gap: 12px;
-  justify-content: flex-end;
-  align-items: center;
-}
-
-/* Video Settings in unified layout */
-.video-settings {
-  margin-top: 16px;
-  display: flex;
-  gap: 16px;
-  align-items: center;
-  flex-wrap: wrap;
-}
-
-.setting-group {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-}
-
-.setting-label {
-  font-size: 12px;
-  color: var(--muted);
-  font-weight: 500;
-}
-
-.video-setting-select {
-  background: rgba(0, 0, 0, 0.6);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 6px;
-  color: var(--text);
-  padding: 8px 12px;
-  font-size: 12px;
-  min-width: 200px;
-}
-
-.pricing-display {
-  margin-left: auto;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  background: rgba(0, 0, 0, 0.6);
-  padding: 8px 12px;
-  border-radius: 6px;
-  border: 1px solid rgba(255, 255, 255, 0.1);
-}
-
-.pricing-label {
-  font-size: 12px;
-  color: var(--muted);
-}
-
-.pricing-amount {
-  font-size: 14px;
-  font-weight: 600;
-  color: var(--green);
-}
-
-/* Video Preview Area - Clean Unified Styles */
-.video-preview-area {
-  width: 100%;
-  height: 100%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  position: relative;
-  background: transparent;
-  border: none;
-  border-radius: 0;
-  transition: all 0.3s ease;
-}
-
-.video-preview-area.generating {
-  background: linear-gradient(45deg, rgba(139, 92, 246, 0.1), rgba(139, 92, 246, 0.05), rgba(139, 92, 246, 0.1));
-  background-size: 200% 200%;
-  animation: generatePulse 2s ease-in-out infinite;
-}
-
-.video-preview-area.has-video {
-  background: transparent;
-}
-
-.video-preview-area video {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  border-radius: 12px;
-}
-
-@keyframes generatePulse {
-  0%, 100% { background-position: 0% 50%; }
-  50% { background-position: 100% 50%; }
-}
-
-.video-placeholder {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 12px;
-  text-align: center;
-  padding: 40px 20px;
-  color: var(--muted);
-  background: transparent;
-  border: none;
-  width: 100%;
-  height: 100%;
-  justify-content: center;
-}
-
-.video-placeholder.loading {
-  background: rgba(139, 92, 246, 0.05);
-  border-radius: 12px;
-}
-
-/* Image Controls in unified layout */
-.image-controls {
-  margin-top: 16px;
-  background: rgba(0, 0, 0, 0.6);
-  border-radius: 8px;
-  padding: 16px;
-  border: 1px solid rgba(255, 255, 255, 0.1);
-}
-
-.slider-group {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-}
-
-.slider-item {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-}
-
-.slider-item label {
-  min-width: 100px;
-  font-size: 12px;
-  color: var(--muted);
-}
-
-.image-slider {
-  flex: 1;
-  height: 4px;
-  background: rgba(255, 255, 255, 0.1);
-  border-radius: 2px;
-  outline: none;
-  appearance: none;
-}
-
-.image-slider::-webkit-slider-thumb {
-  appearance: none;
-  width: 16px;
-  height: 16px;
-  background: var(--step-2-color);
-  border-radius: 50%;
-  cursor: pointer;
-}
-
-.slider-actions {
-  margin-top: 8px;
-  display: flex;
-  justify-content: flex-end;
 }
 
 /* Drag and Drop Area */
@@ -2487,77 +2176,39 @@ button:disabled {
   to { transform: rotate(360deg); }
 }
 
-/* Modal Responsive Design */
+/* Responsive */
 @media (max-width: 768px) {
   .modal-content {
     width: 98%;
     height: 95vh;
-    max-height: 95vh;
-    margin: 2.5vh auto;
   }
   
   .sidebar {
-    width: 200px;
-    padding: 16px;
+    width: 240px;
   }
   
   .main-content {
     padding: 20px;
   }
-  
-  .modal-header {
-    padding: 16px 20px;
-  }
-  
-  .modal-header h3 {
-    font-size: 18px;
-  }
-  
-  .modal-close {
-    font-size: 20px;
-    padding: 6px;
-  }
 }
 
-@media (max-width: 480px) {
-  .modal-content {
-    width: 100%;
-    height: 100vh;
-    max-height: 100vh;
-    border-radius: 0;
-    margin: 0;
-  }
-  
-  .sidebar {
-    width: 100%;
-    padding: 12px;
-  }
-  
-  .modal-body {
-    flex-direction: column;
-  }
-  
-  .main-content {
-    padding: 16px;
-  }
-}
-
-/* Scroll fade for step content */
-.step-content.overflowing {
-  position: relative;
-}
-
-.step-content.overflowing::after {
+.modal-content .step-content::after {
   content: '';
   position: absolute;
-  bottom: 0;
+  bottom: 60px; /* Account for buttons and margins */
   left: 0;
   right: 0;
   height: 30px;
   background: linear-gradient(transparent, var(--card));
   pointer-events: none;
-  opacity: 1;
+  opacity: 0;
+  transition: opacity 0.2s ease;
   border-radius: 0 0 8px 8px;
+}
+
+/* Show gradient when editor content overflows */
+.modal-content .step-content.overflowing::after {
+  opacity: 1;
 }
 
 #prompt-editor:focus {
@@ -2638,8 +2289,7 @@ button:disabled {
   justify-content: flex-end;
   padding: 1.5rem;
   border-top: 1px solid #333;
-  background: rgba(35, 36, 39, 0.8);
-  flex-shrink: 0;
+  background: #2a2b2e;
 }
 
 /* Button Styles */
@@ -2680,17 +2330,6 @@ button:disabled {
 
 .btn-success:hover:not(:disabled) {
   background: #16A34A;
-}
-
-.btn-primary-green {
-  background: var(--green);
-  color: #101010;
-  font-weight: 600;
-}
-
-.btn-primary-green:hover:not(:disabled) {
-  background: #a8e32a;
-  transform: translateY(-1px);
 }
 
 .btn-warning {
@@ -4194,7 +3833,28 @@ button:disabled {
   overflow: hidden;
 }
 
-/* Old video-placeholder styles removed - using unified styles above */
+.video-placeholder {
+  width: 100%;
+  height: 100%;
+  background: #444;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  font-size: 12px;
+  color: #999;
+  padding-top: 40px;
+  position: relative;
+  overflow: hidden;
+  border-radius: 16px;
+}
+
+.video-placeholder.with-content {
+  align-items: center;
+  padding: 0;
+  background: transparent;
+  border-radius: 16px;
+  overflow: hidden;
+}
 
 /* Carousel sliding wrapper - exactly matches container size */
 .carousel-slides-wrapper {
@@ -4626,14 +4286,95 @@ button:disabled {
   100% { transform: rotate(360deg); }
 }
 
-/* Video Preview Area - Unified Clean Styles */
+/* Video Preview Area Styles */
 .video-area {
     display: flex;
     flex-direction: column;
     gap: 16px;
 }
 
-/* Remove duplicated styles - use unified layout styles only */
+.video-preview-area {
+    border: 2px dashed #4a4b4f;
+    border-radius: 16px;
+    background: linear-gradient(135deg, #1a1b1d 0%, #252629 100%);
+    min-height: 320px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    overflow: hidden;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: inset 0 2px 8px rgba(0, 0, 0, 0.3);
+}
+
+.video-preview-area:hover {
+    border-color: var(--purple);
+    background: linear-gradient(135deg, #1e1f22 0%, #2a2b2f 100%);
+    box-shadow: inset 0 2px 12px rgba(0, 0, 0, 0.4), 0 0 20px rgba(139, 92, 246, 0.1);
+}
+
+.video-placeholder {
+    text-align: center;
+    color: var(--muted);
+    padding: 32px 24px;
+    max-width: 280px;
+    background: rgba(26, 27, 29, 0.8);
+    border-radius: 12px;
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.video-placeholder > div:first-child {
+    font-size: 18px;
+    font-weight: 600;
+    color: var(--text);
+    margin-bottom: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+}
+
+.video-placeholder > div:last-child {
+    font-size: 14px;
+    color: var(--muted);
+    line-height: 1.4;
+    opacity: 0.8;
+}
+
+.video-preview-area video {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    border-radius: 12px;
+}
+
+.video-preview-area.has-video {
+    border-style: solid;
+    border-color: var(--green);
+    background: transparent;
+    box-shadow: 0 0 24px rgba(193, 247, 50, 0.2);
+}
+
+.video-preview-area.generating {
+    border-color: var(--purple);
+    background: linear-gradient(45deg, #1a1b1d, #2a2b2f, #1a1b1d);
+    background-size: 200% 200%;
+    animation: generatePulse 2s ease-in-out infinite;
+    box-shadow: inset 0 2px 12px rgba(0, 0, 0, 0.4), 0 0 24px rgba(139, 92, 246, 0.15);
+}
+
+@keyframes generatePulse {
+    0%, 100% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+}
+
+.video-placeholder.loading {
+    opacity: 1;
+    background: rgba(26, 27, 29, 0.95);
+    border: 1px solid rgba(139, 92, 246, 0.3);
+}
 
 .video-controls {
     position: absolute;
@@ -4730,26 +4471,18 @@ button:disabled {
     color: var(--green);
 }
 
-/* Pricing Modal - Part of Unified System */
+/* Batch Operation Pricing Modal */
 .pricing-modal {
     position: fixed;
     top: 0;
     left: 0;
     width: 100%;
     height: 100%;
-    background: rgba(0, 0, 0, 0.85);
-    backdrop-filter: blur(10px);
-    display: none;
+    background: rgba(0, 0, 0, 0.8);
+    display: flex;
     align-items: center;
     justify-content: center;
     z-index: 10000;
-    opacity: 0;
-    transition: all 0.3s ease;
-}
-
-.pricing-modal.show {
-    display: flex !important;
-    opacity: 1;
 }
 
 .pricing-modal-content {

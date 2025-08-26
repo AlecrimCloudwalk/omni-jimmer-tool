@@ -86,9 +86,6 @@
                     // 10% lime/avocado green
                     limeAvocado: [
                         'roupa verde lima suave',
-                        'roupa verde abacate',
-                        'roupa verde limão pálido',
-                        'roupa verde menta'
                     ],
                     // 10% soft violet/light purple
                     softViolet: [
@@ -163,22 +160,18 @@
     setupEventListeners() {
         console.log('🔧 Setting up event listeners...');
         
-        // New generation buttons (check if they exist first)
+        // New generation buttons
         const generateAllRowBtn = document.getElementById('generate-all-row');
         const generateAllColBtn = document.getElementById('generate-all-col');
         
         if (generateAllRowBtn) {
             generateAllRowBtn.addEventListener('click', () => this.generateAllByRows());
             console.log('✅ Generate all by rows button listener added');
-        } else {
-            console.log('ℹ️ Generate all rows button not found (may not be needed in current layout)');
         }
         
         if (generateAllColBtn) {
             generateAllColBtn.addEventListener('click', () => this.generateAllByColumns());
             console.log('✅ Generate all by columns button listener added');
-        } else {
-            console.log('ℹ️ Generate all columns button not found (may not be needed in current layout)');
         }
 
         // Export/Import functionality
@@ -299,10 +292,7 @@
         }
 
         // Demo carousel
-        const demoCnaeSelect = document.getElementById('demo-cnae-select');
-        if (demoCnaeSelect) {
-            demoCnaeSelect.addEventListener('change', (e) => this.loadDemoCarousel(e.target.value));
-        }
+        document.getElementById('demo-cnae-select').addEventListener('change', (e) => this.loadDemoCarousel(e.target.value));
         
         // Set up phone carousel navigation
         this.setupPhoneCarousel();
@@ -530,12 +520,8 @@
         this.saveData();
 
         try {
-            console.log('🎯 Calling AuthManager.generateImage with prompt length:', cellData.prompt.length);
             const imageOutput = await window.AuthManager.generateImage(cellData.prompt);
-            console.log('🎨 AuthManager returned image output:', imageOutput);
-            
             const imageUrl = Array.isArray(imageOutput) ? imageOutput[0] : imageOutput;
-            console.log('🔗 Extracted image URL:', imageUrl);
 
             this.matrixData[cellKey] = {
                 ...cellData,
@@ -545,13 +531,12 @@
                 loadingGif: false // Clear loading state
             };
 
-            console.log('💾 Updated cell data:', this.matrixData[cellKey]);
             this.renderMatrix();
             this.saveData();
             this.updateCarouselIfNeeded(cellData.cnae);
             
         } catch (error) {
-            console.error('❌ Image generation failed in generateImageFromPrompt:', error);
+            console.error('Image generation failed:', error);
             this.matrixData[cellKey] = { 
                 ...cellData,
                 status: 'error',
@@ -560,9 +545,7 @@
             };
             this.renderMatrix();
             this.saveData();
-            
-            // Re-throw error so modal can handle it with proper user messaging
-            throw error;
+            this.showMessage(`Image generation failed: ${error.message}`, 'error');
         }
     }
 
@@ -586,27 +569,25 @@
         
         if (!confirmed) return;
         
-        // Disable button during generation
-        btn.disabled = true;
+        btn.innerHTML = '<span class="loading"></span>Generating...';
         
         // Show loading in drop area
         if (dropArea) {
             dropArea.innerHTML = `
-                <img src="https://media.giphy.com/media/xTkcEQACH24SMPxIQg/giphy.gif" style="width: 100%; height: 100%; object-fit: cover; border-radius: 12px;">
+                <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; height: 200px; background: #161518; border-radius: 12px;">
+                    <img src="https://media.giphy.com/media/xTkcEQACH24SMPxIQg/giphy.gif" style="max-height: 80px; width: auto; object-fit: contain; margin-bottom: 16px;">
+                    <div style="color: var(--text); font-size: 16px; font-weight: 500;">Generating image...</div>
+                    <div style="color: var(--muted); font-size: 14px; margin-top: 8px;">This may take a moment</div>
+                </div>
             `;
             dropArea.classList.remove('has-image');
         }
         
         try {
-            console.log('🎨 Starting image generation for cell:', this.currentCellKey);
             await this.generateImageFromPrompt(this.currentCellKey);
             
-            console.log('✅ Image generation completed, checking cell data...');
             const cellData = this.matrixData[this.currentCellKey];
-            console.log('📊 Cell data after generation:', cellData);
-            
             if (cellData && cellData.imageUrl) {
-                console.log('🖼️ Image URL found, displaying in drop area:', cellData.imageUrl);
                 // Show generated image in drop area
                 this.showImageInDropArea(cellData.imageUrl, 'Generated image', 'Click to regenerate or upload new image');
                 
@@ -625,29 +606,9 @@
                 setTimeout(() => {
                     this.switchToStep(3);
                 }, 1500);
-            } else {
-                console.warn('⚠️ No image URL found in cell data after generation');
-                this.showStatus('image-status', '⚠️ Image generation completed but no image URL found', 'error');
             }
         } catch (error) {
-            console.error('❌ Error in modalGenerateImage:', error);
-            
-            // Show specific error message to user
-            let errorMessage = error.message;
-            if (errorMessage.includes('💳')) {
-                // Funding error - show prominently
-                this.showStatus('image-status', errorMessage, 'error');
-                this.showMessage(errorMessage.replace('💳 ', ''), 'error');
-            } else if (errorMessage.includes('🌐')) {
-                // Connection error
-                this.showStatus('image-status', errorMessage, 'error');
-            } else if (errorMessage.includes('⏱️')) {
-                // Rate limit error
-                this.showStatus('image-status', errorMessage, 'error');
-            } else {
-                // Generic error
-                this.showStatus('image-status', `❌ ${errorMessage}`, 'error');
-            }
+            this.showStatus('image-status', '❌ Error generating image', 'error');
             
             // Reset drop area to original state on error
             if (dropArea) {
@@ -663,16 +624,9 @@
                 `;
                 dropArea.classList.remove('has-image');
             }
-        } finally {
-            // Re-enable button and restore text
-            btn.disabled = false;
-            const generateImageText = document.getElementById('generate-image-text');
-            if (generateImageText) {
-                generateImageText.textContent = 'Regenerate Image';
-            } else {
-                btn.textContent = 'Regenerate Image';
-            }
         }
+        
+        btn.textContent = 'Regenerate Image';
     }
 
     /**
@@ -742,9 +696,7 @@
      */
     setupModalContent(cellData) {
         const promptEditor = document.getElementById('prompt-editor');
-        const imagePromptEditor = document.getElementById('image-prompt-editor');
-        const videoPromptDisplay = document.getElementById('video-prompt-display');
-        const promptPreview = document.getElementById('prompt-preview');
+        const imagePreview = document.getElementById('image-preview');
         const characteristicsDiv = document.getElementById('dynamic-characteristics');
         
         // Get product name from current cell key
@@ -760,16 +712,6 @@
         if (cellData) {
             if (cellData.prompt) {
                 promptEditor.value = cellData.prompt;
-                // Sync to all prompt editors and preview
-                if (imagePromptEditor) {
-                    imagePromptEditor.value = cellData.prompt;
-                }
-                if (videoPromptDisplay) {
-                    videoPromptDisplay.value = cellData.prompt;
-                }
-                if (promptPreview) {
-                    this.updatePromptPreview(cellData.prompt);
-                }
                 // Mark step as completed after reset
                 setTimeout(() => this.markStepCompleted(1), 50);
                 
@@ -812,19 +754,6 @@
                         generateImageBtn.textContent = 'Regenerate Image';
                     }
                 }
-            } else {
-                // No image exists - clear the drop area and reset image state
-                this.clearDropArea();
-                
-                // Reset image button text to default
-                const generateImageBtn = document.getElementById('generate-image-text') || document.getElementById('generate-image-btn');
-                if (generateImageBtn) {
-                    if (generateImageBtn.tagName === 'SPAN') {
-                        generateImageBtn.textContent = 'Generate Image';
-                    } else {
-                        generateImageBtn.textContent = 'Generate Image';
-                    }
-                }
             }
             
             // Handle status-based states (generating/error are now handled through status messages)
@@ -845,28 +774,7 @@
                 this.showStatus(statusId, '❌ Generation failed', 'error');
             }
         } else {
-            // No cell data exists - clear everything and reset to defaults
             promptEditor.value = '';
-            this.clearDropArea();
-            
-            // Reset button texts to defaults
-            const generatePromptBtn = document.getElementById('generate-prompt-text') || document.getElementById('generate-prompt-btn');
-            if (generatePromptBtn) {
-                if (generatePromptBtn.tagName === 'SPAN') {
-                    generatePromptBtn.textContent = 'Generate Prompt';
-                } else {
-                    generatePromptBtn.textContent = 'Generate Prompt';
-                }
-            }
-            
-            const generateImageBtn = document.getElementById('generate-image-text') || document.getElementById('generate-image-btn');
-            if (generateImageBtn) {
-                if (generateImageBtn.tagName === 'SPAN') {
-                    generateImageBtn.textContent = 'Generate Image';
-                } else {
-                    generateImageBtn.textContent = 'Generate Image';
-                }
-            }
         }
     }
 
@@ -940,46 +848,10 @@
                 fileInput.onchange = (e) => this.handleFileSelect(e);
             }
             
-            // Prompt editor auto-save and sync
+            // Prompt editor auto-save
             const promptEditor = document.getElementById('prompt-editor');
-            const imagePromptEditor = document.getElementById('image-prompt-editor');
-            const videoPromptDisplay = document.getElementById('video-prompt-display');
-            
             if (promptEditor) {
                 promptEditor.addEventListener('input', (e) => {
-                    // Sync to all prompt editors
-                    if (imagePromptEditor) {
-                        imagePromptEditor.value = e.target.value;
-                    }
-                    if (videoPromptDisplay) {
-                        videoPromptDisplay.value = e.target.value;
-                    }
-                    
-                    // Update preview
-                    this.updatePromptPreview(e.target.value);
-                    
-                    // Auto-save prompt changes after user stops typing for 1 second
-                    clearTimeout(this.promptSaveTimeout);
-                    this.promptSaveTimeout = setTimeout(() => {
-                        this.autoSavePrompt(e.target.value);
-                    }, 1000);
-                });
-            }
-            
-            // Image prompt editor sync back to main prompt
-            if (imagePromptEditor) {
-                imagePromptEditor.addEventListener('input', (e) => {
-                    // Sync back to main prompt editor and video
-                    if (promptEditor) {
-                        promptEditor.value = e.target.value;
-                    }
-                    if (videoPromptDisplay) {
-                        videoPromptDisplay.value = e.target.value;
-                    }
-                    
-                    // Update preview
-                    this.updatePromptPreview(e.target.value);
-                    
                     // Auto-save prompt changes after user stops typing for 1 second
                     clearTimeout(this.promptSaveTimeout);
                     this.promptSaveTimeout = setTimeout(() => {
@@ -998,30 +870,6 @@
             
             if (videoDurationSelect) {
                 videoDurationSelect.addEventListener('change', () => this.updateVideoPricing());
-            }
-
-            // Modal backdrop click to close
-            const modal = document.getElementById('cell-modal');
-            if (modal) {
-                modal.addEventListener('click', (e) => {
-                    // Only close if clicking on the modal backdrop, not the content
-                    if (e.target === modal) {
-                        this.closeCellModal();
-                    }
-                });
-            }
-
-            // Escape key to close modal (only add once)
-            if (!this.escapeListenerAdded) {
-                document.addEventListener('keydown', (e) => {
-                    if (e.key === 'Escape') {
-                        const modal = document.getElementById('cell-modal');
-                        if (modal && modal.style.display !== 'none') {
-                            this.closeCellModal();
-                        }
-                    }
-                });
-                this.escapeListenerAdded = true;
             }
             
             console.log('🔧 Modal event listeners setup completed');
@@ -1051,29 +899,7 @@
         }, 100);
     }
 
-    /**
-     * Update prompt preview in Step 1
-     */
-    updatePromptPreview(prompt) {
-        const promptPreview = document.getElementById('prompt-preview');
-        if (promptPreview && prompt && prompt.trim()) {
-            promptPreview.innerHTML = `
-                <div style="text-align: left; padding: 20px; line-height: 1.6; max-height: 100%; overflow-y: auto;">
-                    <div style="color: var(--text); font-size: 14px; white-space: pre-wrap; word-wrap: break-word;">
-                        ${prompt.trim()}
-                    </div>
-                </div>
-            `;
-        } else if (promptPreview) {
-            promptPreview.innerHTML = `
-                <div class="preview-placeholder">
-                    <div class="preview-icon">📝</div>
-                    <div class="preview-text">Your AI-generated prompt will appear here</div>
-                    <div class="preview-subtext">Click "Generate Prompt" to create professional Brazilian content prompts</div>
-                </div>
-            `;
-        }
-    }
+
 
     /**
      * Generate prompt from modal
@@ -1083,11 +909,7 @@
         const btn = document.getElementById('generate-prompt-text') || document.getElementById('generate-prompt-btn');
         
         // Show pricing estimate
-        console.log('💰 Getting pricing estimate...');
         const estimate = this.pricing.getOperationEstimate('prompt', 1);
-        console.log('💰 Pricing estimate:', estimate);
-        
-        console.log('🔍 Showing pricing confirmation...');
         const confirmed = await this.showPricingConfirmation('Generate Prompt', [
             {
                 title: 'Prompt Generation',
@@ -1096,25 +918,15 @@
             }
         ]);
         
-        console.log('✅ Pricing confirmation result:', confirmed);
-        if (!confirmed) {
-            console.log('❌ User cancelled pricing confirmation');
-            return;
-        }
+        if (!confirmed) return;
         
         btn.innerHTML = '<span class="loading"></span>Generating...';
         
         try {
-                    await this.generatePromptForCell(this.currentCellKey);
-        const cellData = this.matrixData[this.currentCellKey];
-        if (cellData && cellData.prompt) {
-            const promptEditor = document.getElementById('prompt-editor');
-            const imagePromptEditor = document.getElementById('image-prompt-editor');
-            const videoPromptDisplay = document.getElementById('video-prompt-display');
-            if (promptEditor) promptEditor.value = cellData.prompt;
-            if (imagePromptEditor) imagePromptEditor.value = cellData.prompt;
-            if (videoPromptDisplay) videoPromptDisplay.value = cellData.prompt;
-            this.updatePromptPreview(cellData.prompt);
+            await this.generatePromptForCell(this.currentCellKey);
+            const cellData = this.matrixData[this.currentCellKey];
+            if (cellData && cellData.prompt) {
+                document.getElementById('prompt-editor').value = cellData.prompt;
                 
                 this.markStepCompleted(1);
                 this.showStatus('prompt-status', '✅ Prompt generated successfully!', 'success');
@@ -1129,28 +941,7 @@
                 }, 1500);
             }
         } catch (error) {
-            console.error('❌ Error in modalGeneratePrompt:', error);
-            
-            // Show specific error message to user
-            let errorMessage = error.message;
-            if (errorMessage.includes('💳')) {
-                // Funding error - show prominently
-                this.showStatus('prompt-status', errorMessage, 'error');
-                this.showMessage(errorMessage.replace('💳 ', ''), 'error');
-            } else if (errorMessage.includes('🔑')) {
-                // API key error
-                this.showStatus('prompt-status', errorMessage, 'error');
-                this.showMessage(errorMessage.replace('🔑 ', ''), 'error');
-            } else if (errorMessage.includes('🌐')) {
-                // Connection error
-                this.showStatus('prompt-status', errorMessage, 'error');
-            } else if (errorMessage.includes('⏱️')) {
-                // Rate limit error
-                this.showStatus('prompt-status', errorMessage, 'error');
-            } else {
-                // Generic error
-                this.showStatus('prompt-status', `❌ ${errorMessage}`, 'error');
-            }
+            this.showStatus('prompt-status', '❌ Error generating prompt', 'error');
         }
         
         btn.textContent = 'Regenerate Prompt';
@@ -1227,7 +1018,16 @@
             if (videoPlaceholder) {
                 videoPlaceholder.classList.add('loading');
                 videoPlaceholder.innerHTML = `
-                    <img src="https://media.giphy.com/media/xTkcEQACH24SMPxIQg/giphy.gif" style="width: 100%; height: 100%; object-fit: cover; border-radius: 12px;">
+                    <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 32px;">
+                        <img src="https://media.giphy.com/media/xTkcEQACH24SMPxIQg/giphy.gif" style="max-height: 60px; width: auto; object-fit: contain; margin-bottom: 16px;">
+                        <div style="font-size: 18px; font-weight: 600; color: var(--text); margin-bottom: 8px; display: flex; align-items: center; gap: 8px;">
+                            🎬 Generating video...
+                        </div>
+                        <div style="font-size: 14px; color: var(--muted); text-align: center; line-height: 1.4;">
+                            ${this.pricing.getVideoModelName(videoModel)} - ${videoDuration}s<br/>
+                            <span style="opacity: 0.7;">This may take several minutes</span>
+                        </div>
+                    </div>
                 `;
             }
         }
@@ -1294,22 +1094,7 @@
                 }
             }
             
-            // Show specific error message to user
-            let errorMessage = error.message;
-            if (errorMessage.includes('💳')) {
-                // Funding error - show prominently
-                this.showStatus('video-status', errorMessage, 'error');
-                this.showMessage(errorMessage.replace('💳 ', ''), 'error');
-            } else if (errorMessage.includes('🌐')) {
-                // Connection error
-                this.showStatus('video-status', errorMessage, 'error');
-            } else if (errorMessage.includes('⏱️')) {
-                // Rate limit error
-                this.showStatus('video-status', errorMessage, 'error');
-            } else {
-                // Generic error
-                this.showStatus('video-status', `❌ ${errorMessage}`, 'error');
-            }
+            this.showStatus('video-status', `❌ Video generation failed: ${error.message}`, 'error');
         } finally {
             btn.textContent = 'Regenerate Video';
         }
@@ -1580,49 +1365,6 @@
     }
 
     /**
-     * Clear drop area and reset to default state
-     */
-    clearDropArea() {
-        const dropArea = document.getElementById('drop-area');
-        if (!dropArea) return;
-
-        // Reset to default drop area content
-        dropArea.innerHTML = `
-            <div id="drop-text">
-                <div style="font-size: 16px; font-weight: 500; margin-bottom: 8px;">
-                    Drag & drop your image here or click to browse
-                </div>
-                <div style="font-size: 12px; opacity: 0.7;">
-                    Supports JPG, PNG, WebP up to 10MB
-                </div>
-            </div>
-            <div class="image-overlay">
-                <div style="color: white; font-weight: 500;">Click to change image</div>
-            </div>
-        `;
-        
-        // Remove has-image class
-        dropArea.classList.remove('has-image');
-        
-        // Clear image state variables
-        this.currentImageData = null;
-        this.originalImageData = null;
-        this.processedImageData = null;
-        
-        // Reset transforms
-        this.resetImageTransform();
-        
-        // Hide image controls and edit button
-        const imageControls = document.getElementById('image-controls');
-        if (imageControls) {
-            imageControls.style.display = 'none';
-        }
-        
-        const editBtn = document.getElementById('edit-image-btn');
-        if (editBtn) editBtn.style.display = 'none';
-    }
-
-    /**
      * Setup image sliders
      */
     setupImageSliders() {
@@ -1879,10 +1621,8 @@
      * Show pricing confirmation modal
      */
     async showPricingConfirmation(operationTitle, items) {
-        console.log('💰 showPricingConfirmation called with:', operationTitle, items);
         return new Promise((resolve) => {
             // Create modal HTML
-            console.log('🔧 Creating pricing modal HTML...');
             const modalHTML = `
                 <div class="pricing-modal" id="pricing-modal">
                     <div class="pricing-modal-content">
@@ -1917,34 +1657,25 @@
             `;
             
             // Add modal to DOM
-            console.log('📝 Adding modal to DOM...');
             document.body.insertAdjacentHTML('beforeend', modalHTML);
             
             const modal = document.getElementById('pricing-modal');
             const cancelBtn = document.getElementById('pricing-cancel');
             const confirmBtn = document.getElementById('pricing-confirm');
             
-            console.log('🔍 Modal elements found:', { modal: !!modal, cancelBtn: !!cancelBtn, confirmBtn: !!confirmBtn });
-            
             const cleanup = () => {
                 if (modal) {
-                    modal.classList.remove('show');
-                    modal.style.display = 'none';
-                    setTimeout(() => {
-                        modal.remove();
-                    }, 300); // Wait for transition to complete
+                    modal.remove();
                 }
             };
             
             // Event listeners
             cancelBtn.addEventListener('click', () => {
-                console.log('❌ Cancel button clicked');
                 cleanup();
                 resolve(false);
             });
             
             confirmBtn.addEventListener('click', () => {
-                console.log('✅ Confirm button clicked');
                 cleanup();
                 resolve(true);
             });
@@ -1966,14 +1697,6 @@
                 }
             };
             document.addEventListener('keydown', escapeHandler);
-            
-            // Show the modal with proper display and transition
-            console.log('👁️ Showing pricing modal...');
-            setTimeout(() => {
-                modal.classList.add('show');
-                modal.style.display = 'flex';
-                console.log('✅ Modal should now be visible');
-            }, 10);
         });
     }
 
@@ -2811,28 +2534,33 @@ Cor Sugerida: ${characteristics.clothingColor}`;
     }
 
     /**
-     * Development helper: Populate matrix with test prompts only (no placeholder images)
-     * Call this from browser console: app.populateTestPrompts()
+     * Development helper: Populate matrix with 1280x720 placeholder images
+     * Call this from browser console: app.populateTestImages()
      */
-    populateTestPrompts() {
+    populateTestImages() {
+        let imageId = 1;
+        
         this.products.forEach(product => {
             this.cnaes.forEach(cnae => {
                 const cellKey = `${product.name}-${cnae.name}`;
                 
-                // Create test data with prompts only - no placeholder images
+                // Create test data with 1280x720 placeholder
                 this.matrixData[cellKey] = {
-                    status: 'prompt_ready',
+                    status: 'generated',
+                    imageUrl: `https://picsum.photos/1280/720?random=${imageId}`,
                     prompt: `Test prompt for ${product.name} in ${cnae.name}`,
                     product: product.name,
                     cnae: cnae.name,
                     generatedAt: new Date().toISOString()
                 };
+                
+                imageId++;
             });
         });
         
         this.renderMatrix();
         this.saveData();
-        this.showMessage('Test prompts populated for all cells (ready for image generation)', 'success');
+        this.showMessage('Test images (1280x720) populated for all cells', 'success');
         
         // Update carousel if demo is open
         const selectedCnae = document.getElementById('demo-cnae-select')?.value;
@@ -3631,7 +3359,11 @@ Cor Sugerida: ${characteristics.clothingColor}`;
             } else if (cellData.status === 'generating') {
                 statusClass = 'cell-generating';
                 if (cellData.loadingGif) {
-                    content = `<img src="https://media.giphy.com/media/xTkcEQACH24SMPxIQg/giphy.gif" style="width: 100%; height: 100%; object-fit: cover;">`;
+                    content = `
+                        <div style="display: flex; justify-content: center; align-items: center; height: 100%; background: #161518;">
+                            <img src="https://media.giphy.com/media/xTkcEQACH24SMPxIQg/giphy.gif" style="max-height: 100%; width: auto; object-fit: contain;">
+                        </div>
+                    `;
                 } else {
                     content = 'Generating...';
                 }
@@ -3933,11 +3665,6 @@ Cor Sugerida: ${characteristics.clothingColor}`;
      */
     updateDemoSelector() {
         const select = document.getElementById('demo-cnae-select');
-        if (!select) {
-            console.log('ℹ️ Demo selector not found (may not be needed in current layout)');
-            return;
-        }
-        
         select.innerHTML = '<option value="">Select a CNAE to preview</option>';
         
         this.cnaes.forEach(cnae => {
@@ -4198,8 +3925,6 @@ Cor Sugerida: ${characteristics.clothingColor}`;
         const currentItem = this.carouselData[this.currentSlide];
         if (cnaeTitle && currentItem) {
             cnaeTitle.textContent = currentItem.title;
-        } else if (!cnaeTitle) {
-            console.log('ℹ️ Demo CNAE title element not found (may not be needed in current layout)');
         }
         
         // Update counter
@@ -4213,12 +3938,7 @@ Cor Sugerida: ${characteristics.clothingColor}`;
      * Update carousel if the selected CNAE matches
      */
     updateCarouselIfNeeded(cnaeName) {
-        const demoCnaeSelect = document.getElementById('demo-cnae-select');
-        if (!demoCnaeSelect) {
-            return; // Demo selector not available
-        }
-        
-        const selectedCnae = demoCnaeSelect.value;
+        const selectedCnae = document.getElementById('demo-cnae-select').value;
         if (selectedCnae === cnaeName) {
             this.loadDemoCarousel(cnaeName);
         }
