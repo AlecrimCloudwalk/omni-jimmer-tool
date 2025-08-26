@@ -1,0 +1,632 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Opaque Glass Dot Test</title>
+    <style>
+        :root {
+            --bg: #0f0f10;
+            --text: #e8e8ea;
+            --dot-1-color: #442e85; /* Prompt */
+            --dot-2-color: #7a54c9; /* Image */
+            --dot-3-color: #89b06e; /* Video */
+        }
+
+        body {
+            margin: 0;
+            padding: 40px;
+            background: var(--bg);
+            color: var(--text);
+            font-family: Inter, ui-sans-serif, system-ui, -apple-system;
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        h1 {
+            text-align: center;
+            margin-bottom: 40px;
+            background: linear-gradient(45deg, #c1f732, #c87ef7);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            font-size: 28px;
+        }
+
+        /* Color Picker Panel */
+        .color-controls {
+            background: #17181a;
+            border-radius: 12px;
+            border: 1px solid #232427;
+            padding: 30px;
+            margin-bottom: 40px;
+            text-align: center;
+        }
+
+        .color-controls h2 {
+            margin: 0 0 25px;
+            color: var(--text);
+            font-size: 20px;
+        }
+
+        .color-pickers {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+
+        .color-picker-group {
+            background: #1a1b1d;
+            border-radius: 8px;
+            border: 1px solid #232427;
+            padding: 20px;
+        }
+
+        .color-picker-label {
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--text);
+            margin-bottom: 10px;
+            display: block;
+        }
+
+        .color-picker-input {
+            width: 100%;
+            height: 50px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            margin-bottom: 10px;
+        }
+
+        .color-hex {
+            font-size: 12px;
+            color: #a8a8ad;
+            font-family: 'Courier New', monospace;
+            background: #0f1114;
+            padding: 5px 8px;
+            border-radius: 4px;
+            border: 1px solid #232427;
+            width: 100%;
+            text-align: center;
+        }
+
+        .preset-colors {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin-top: 20px;
+            flex-wrap: wrap;
+        }
+
+        .preset-btn {
+            padding: 8px 16px;
+            background: #2a2b2f;
+            color: var(--text);
+            border: 1px solid #3a3b3f;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 12px;
+            transition: all 0.2s ease;
+        }
+
+        .preset-btn:hover {
+            background: #343539;
+            border-color: #c1f732;
+        }
+
+        /* Opaque Glass Dot Styling */
+        .base-dot {
+            width: 14px;
+            height: 14px;
+            border-radius: 50%;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+            position: relative;
+            background: radial-gradient(circle at 30% 20%, 
+                rgba(255, 255, 255, 0.4) 0%, 
+                rgba(255, 255, 255, 0.1) 50%, 
+                transparent 70%);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            box-shadow: 
+                0 2px 6px rgba(0, 0, 0, 0.8),
+                inset 0 1px 2px rgba(255, 255, 255, 0.3),
+                inset 0 -1px 3px rgba(0, 0, 0, 0.4);
+            backdrop-filter: blur(1px);
+        }
+
+        /* Opaque Glass with Custom Colors */
+        .dot-1 {
+            background: radial-gradient(circle at 30% 20%, 
+                rgba(255, 255, 255, 0.4) 0%, 
+                rgba(255, 255, 255, 0.1) 50%, 
+                transparent 70%);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            box-shadow: 
+                0 2px 6px rgba(0, 0, 0, 0.8),
+                inset 0 1px 2px rgba(255, 255, 255, 0.3),
+                inset 0 -1px 3px rgba(0, 0, 0, 0.4);
+            backdrop-filter: blur(1px);
+            background-color: var(--dot-1-color);
+        }
+
+        .dot-2 {
+            background: radial-gradient(circle at 30% 20%, 
+                rgba(255, 255, 255, 0.4) 0%, 
+                rgba(255, 255, 255, 0.1) 50%, 
+                transparent 70%);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            box-shadow: 
+                0 2px 6px rgba(0, 0, 0, 0.8),
+                inset 0 1px 2px rgba(255, 255, 255, 0.3),
+                inset 0 -1px 3px rgba(0, 0, 0, 0.4);
+            backdrop-filter: blur(1px);
+            background-color: var(--dot-2-color);
+        }
+
+        .dot-3 {
+            background: radial-gradient(circle at 30% 20%, 
+                rgba(255, 255, 255, 0.4) 0%, 
+                rgba(255, 255, 255, 0.1) 50%, 
+                transparent 70%);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            box-shadow: 
+                0 2px 6px rgba(0, 0, 0, 0.8),
+                inset 0 1px 2px rgba(255, 255, 255, 0.3),
+                inset 0 -1px 3px rgba(0, 0, 0, 0.4);
+            backdrop-filter: blur(1px);
+            background-color: var(--dot-3-color);
+        }
+
+        .base-dot:hover {
+            transform: scale(2.5);
+            box-shadow: 
+                0 4px 12px rgba(0, 0, 0, 0.9),
+                inset 0 2px 4px rgba(255, 255, 255, 0.4),
+                inset 0 -2px 6px rgba(0, 0, 0, 0.5);
+        }
+
+        /* Example Sections */
+        .examples-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+            gap: 30px;
+            margin-bottom: 40px;
+        }
+
+        .example-section {
+            background: #17181a;
+            border-radius: 12px;
+            border: 1px solid #232427;
+            padding: 25px;
+        }
+
+        .example-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: var(--text);
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        /* Example 1: Without Image */
+        .no-image-example {
+            text-align: center;
+        }
+
+        .dots-showcase {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin: 25px 0;
+        }
+
+        .dot-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .dot-label {
+            font-size: 11px;
+            color: #a8a8ad;
+            margin-top: 5px;
+        }
+
+        /* Example 2: With Image */
+        .image-example {
+            position: relative;
+        }
+
+        .preview-card {
+            position: relative;
+            background: #1a1b1d;
+            border-radius: 8px;
+            border: 1px solid #232427;
+            overflow: hidden;
+            transition: all 0.3s ease;
+        }
+
+        .preview-card:hover {
+            border-color: rgba(193, 247, 50, 0.3);
+            transform: translateY(-2px);
+        }
+
+        .preview-image {
+            width: 100%;
+            height: 200px;
+            object-fit: cover;
+            display: block;
+        }
+
+        .preview-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(
+                to bottom,
+                rgba(0, 0, 0, 0.1) 0%,
+                rgba(0, 0, 0, 0.3) 70%,
+                rgba(0, 0, 0, 0.7) 100%
+            );
+            pointer-events: none;
+        }
+
+        .preview-dots {
+            position: absolute;
+            top: 12px;
+            right: 12px;
+            display: flex;
+            gap: 6px;
+            z-index: 10;
+        }
+
+        .preview-info {
+            padding: 15px;
+            background: #1a1b1d;
+        }
+
+        .preview-title {
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--text);
+            margin-bottom: 8px;
+        }
+
+        .preview-status {
+            font-size: 12px;
+            color: #a8a8ad;
+        }
+
+        /* Test Grid */
+        .test-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin-top: 30px;
+        }
+
+        .test-card {
+            background: #1a1b1d;
+            border-radius: 8px;
+            border: 1px solid #232427;
+            padding: 20px;
+            text-align: center;
+        }
+
+        .test-card h4 {
+            margin: 0 0 15px;
+            color: var(--text);
+            font-size: 14px;
+        }
+
+        .description {
+            font-size: 13px;
+            color: #a8a8ad;
+            margin-top: 10px;
+            line-height: 1.4;
+        }
+
+        .brightness-controls {
+            margin: 20px 0;
+            text-align: center;
+        }
+
+        .brightness-slider {
+            width: 100%;
+            max-width: 300px;
+            margin: 10px;
+        }
+
+        .brightness-label {
+            display: block;
+            margin-bottom: 10px;
+            color: var(--text);
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>💎 Opaque Glass Dot Test</h1>
+
+        <!-- Color Picker Controls -->
+        <div class="color-controls">
+            <h2>🎨 Customize Your Glass Orb Colors</h2>
+            <div class="color-pickers">
+                <div class="color-picker-group">
+                    <label class="color-picker-label">Dot 1 - Prompt</label>
+                    <input type="color" class="color-picker-input" id="color1" value="#442e85">
+                    <input type="text" class="color-hex" id="hex1" value="#442e85">
+                </div>
+                <div class="color-picker-group">
+                    <label class="color-picker-label">Dot 2 - Image</label>
+                    <input type="color" class="color-picker-input" id="color2" value="#7a54c9">
+                    <input type="text" class="color-hex" id="hex2" value="#7a54c9">
+                </div>
+                <div class="color-picker-group">
+                    <label class="color-picker-label">Dot 3 - Video</label>
+                    <input type="color" class="color-picker-input" id="color3" value="#89b06e">
+                    <input type="text" class="color-hex" id="hex3" value="#89b06e">
+                </div>
+            </div>
+            
+            <div class="preset-colors">
+                <button class="preset-btn" onclick="setPreset('purple-green')">Purple/Green</button>
+                <button class="preset-btn" onclick="setPreset('rainbow')">Rainbow</button>
+                <button class="preset-btn" onclick="setPreset('traffic')">Traffic Light</button>
+                <button class="preset-btn" onclick="setPreset('ocean')">Ocean Blues</button>
+                <button class="preset-btn" onclick="setPreset('fire')">Fire</button>
+                <button class="preset-btn" onclick="setPreset('neon')">Neon</button>
+                <button class="preset-btn" onclick="setPreset('monochrome')">Monochrome</button>
+                <button class="preset-btn" onclick="setPreset('dark')">Dark Glass</button>
+            </div>
+        </div>
+
+        <!-- Main Examples -->
+        <div class="examples-grid">
+            <!-- Example 1: Without Image -->
+            <div class="example-section">
+                <h3 class="example-title">Example 1: Without Image</h3>
+                <div class="no-image-example">
+                    <div class="dots-showcase">
+                        <div class="dot-container">
+                            <div class="base-dot dot-1"></div>
+                            <div class="dot-label">Prompt</div>
+                        </div>
+                        <div class="dot-container">
+                            <div class="base-dot dot-2"></div>
+                            <div class="dot-label">Image</div>
+                        </div>
+                        <div class="dot-container">
+                            <div class="base-dot dot-3"></div>
+                            <div class="dot-label">Video</div>
+                        </div>
+                    </div>
+                    <div class="description">
+                        Opaque glass orbs with your custom colors - no transparency!
+                    </div>
+                </div>
+            </div>
+
+            <!-- Example 2: With Image -->
+            <div class="example-section">
+                <h3 class="example-title">Example 2: With Image Preview</h3>
+                <div class="image-example">
+                    <div class="preview-card">
+                        <img src="https://images.unsplash.com/photo-1556761175-b413da4baf72?w=400&h=300&fit=crop" 
+                             alt="Business scene" class="preview-image">
+                        <div class="preview-overlay"></div>
+                        <div class="preview-dots">
+                            <div class="base-dot dot-1"></div>
+                            <div class="base-dot dot-2"></div>
+                            <div class="base-dot dot-3"></div>
+                        </div>
+                        <div class="preview-info">
+                            <div class="preview-title">Business Presentation</div>
+                            <div class="preview-status">Solid glass orbs - perfect visibility</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Test Grid with Same Styling -->
+        <div class="example-section">
+            <h3 class="example-title">🎯 All Using Same Glass Style</h3>
+            <div class="test-grid">
+                <div class="test-card">
+                    <h4>Trio Set 1</h4>
+                    <div class="dots-showcase">
+                        <div class="base-dot dot-1"></div>
+                        <div class="base-dot dot-2"></div>
+                        <div class="base-dot dot-3"></div>
+                    </div>
+                    <div class="description">All three colors with glass treatment</div>
+                </div>
+
+                <div class="test-card">
+                    <h4>Trio Set 2</h4>
+                    <div class="dots-showcase">
+                        <div class="base-dot dot-2"></div>
+                        <div class="base-dot dot-3"></div>
+                        <div class="base-dot dot-1"></div>
+                    </div>
+                    <div class="description">Same styling, different order</div>
+                </div>
+
+                <div class="test-card">
+                    <h4>Trio Set 3</h4>
+                    <div class="dots-showcase">
+                        <div class="base-dot dot-3"></div>
+                        <div class="base-dot dot-1"></div>
+                        <div class="base-dot dot-2"></div>
+                    </div>
+                    <div class="description">Consistent glass orb appearance</div>
+                </div>
+
+                <div class="test-card">
+                    <h4>Mixed Sizes</h4>
+                    <div class="dots-showcase">
+                        <div class="base-dot dot-1" style="width: 12px; height: 12px;"></div>
+                        <div class="base-dot dot-2" style="width: 16px; height: 16px;"></div>
+                        <div class="base-dot dot-3" style="width: 20px; height: 20px;"></div>
+                    </div>
+                    <div class="description">Different sizes, same glass style</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Image Preview Grid -->
+        <div class="example-section">
+            <h3 class="example-title">🖼️ Multiple Image Examples</h3>
+            <div class="test-grid">
+                <div class="preview-card">
+                    <img src="https://images.unsplash.com/photo-1518709268805-4e9042af2176?w=300&h=200&fit=crop" 
+                         alt="Tech startup" class="preview-image">
+                    <div class="preview-overlay"></div>
+                    <div class="preview-dots">
+                        <div class="base-dot dot-1"></div>
+                        <div class="base-dot dot-2"></div>
+                        <div class="base-dot dot-3"></div>
+                    </div>
+                    <div class="preview-info">
+                        <div class="preview-title">Tech Startup</div>
+                        <div class="preview-status">Opaque glass styling</div>
+                    </div>
+                </div>
+
+                <div class="preview-card">
+                    <img src="https://images.unsplash.com/photo-1557804506-669a67965ba0?w=300&h=200&fit=crop" 
+                         alt="Office meeting" class="preview-image">
+                    <div class="preview-overlay"></div>
+                    <div class="preview-dots">
+                        <div class="base-dot dot-2"></div>
+                        <div class="base-dot dot-3"></div>
+                        <div class="base-dot dot-1"></div>
+                    </div>
+                    <div class="preview-info">
+                        <div class="preview-title">Office Meeting</div>
+                        <div class="preview-status">Perfect visibility</div>
+                    </div>
+                </div>
+
+                <div class="preview-card">
+                    <img src="https://images.unsplash.com/photo-1522071820081-009f0129c71c?w=300&h=200&fit=crop" 
+                         alt="Team collaboration" class="preview-image">
+                    <div class="preview-overlay"></div>
+                    <div class="preview-dots">
+                        <div class="base-dot dot-3"></div>
+                        <div class="base-dot dot-1"></div>
+                        <div class="base-dot dot-2"></div>
+                    </div>
+                    <div class="preview-info">
+                        <div class="preview-title">Team Collaboration</div>
+                        <div class="preview-status">Solid glass treatment</div>
+                    </div>
+                </div>
+
+                <div class="preview-card">
+                    <img src="https://images.unsplash.com/photo-1560472354-b33ff0c44a43?w=300&h=200&fit=crop" 
+                         alt="Product launch" class="preview-image">
+                    <div class="preview-overlay"></div>
+                    <div class="preview-dots">
+                        <div class="base-dot dot-1"></div>
+                        <div class="base-dot dot-3"></div>
+                        <div class="base-dot dot-2"></div>
+                    </div>
+                    <div class="preview-info">
+                        <div class="preview-title">Product Launch</div>
+                        <div class="preview-status">Glass orb perfection</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div style="margin-top: 60px; padding: 30px; background: #17181a; border-radius: 12px; border: 1px solid #232427; text-align: center;">
+            <h3 style="margin-top: 0; color: var(--text);">💎 Opaque Glass Orb Styling</h3>
+            <div style="color: #a8a8ad; line-height: 1.6;">
+                <p><strong>✨ Elegant glass treatment:</strong> Beautiful reflections and depth without transparency</p>
+                <p><strong>🎨 Fully customizable:</strong> Your colors get the glass orb treatment</p>
+                <p><strong>👁️ Perfect visibility:</strong> No transparency issues - colors show clearly</p>
+                <p><strong>🔍 Glass details:</strong> Highlight spots, shadows, and realistic depth</p>
+                <p><strong>⚡ Hover effects:</strong> Enhanced scaling and shadow on interaction</p>
+                <br>
+                <p><strong>💡 The perfect balance of elegance and clarity!</strong></p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Color picker functionality
+        const color1 = document.getElementById('color1');
+        const color2 = document.getElementById('color2');
+        const color3 = document.getElementById('color3');
+        const hex1 = document.getElementById('hex1');
+        const hex2 = document.getElementById('hex2');
+        const hex3 = document.getElementById('hex3');
+
+        function updateColors() {
+            document.documentElement.style.setProperty('--dot-1-color', color1.value);
+            document.documentElement.style.setProperty('--dot-2-color', color2.value);
+            document.documentElement.style.setProperty('--dot-3-color', color3.value);
+            
+            hex1.value = color1.value;
+            hex2.value = color2.value;
+            hex3.value = color3.value;
+        }
+
+        function updateFromHex() {
+            if (/^#[0-9A-F]{6}$/i.test(hex1.value)) {
+                color1.value = hex1.value;
+            }
+            if (/^#[0-9A-F]{6}$/i.test(hex2.value)) {
+                color2.value = hex2.value;
+            }
+            if (/^#[0-9A-F]{6}$/i.test(hex3.value)) {
+                color3.value = hex3.value;
+            }
+            updateColors();
+        }
+
+        color1.addEventListener('input', updateColors);
+        color2.addEventListener('input', updateColors);
+        color3.addEventListener('input', updateColors);
+        
+        hex1.addEventListener('input', updateFromHex);
+        hex2.addEventListener('input', updateFromHex);
+        hex3.addEventListener('input', updateFromHex);
+
+        function setPreset(preset) {
+            const presets = {
+                'purple-green': ['#442e85', '#7a54c9', '#89b06e'],
+                'rainbow': ['#ff0000', '#ff8000', '#ffff00'],
+                'traffic': ['#22c55e', '#eab308', '#ef4444'],
+                'ocean': ['#0ea5e9', '#06b6d4', '#10b981'],
+                'fire': ['#ff4444', '#ff8844', '#ffaa44'],
+                'neon': ['#ff00ff', '#00ffff', '#00ff00'],
+                'monochrome': ['#666666', '#888888', '#aaaaaa'],
+                'dark': ['#2a2a2a', '#3a3a3a', '#4a4a4a']
+            };
+            
+            if (presets[preset]) {
+                color1.value = presets[preset][0];
+                color2.value = presets[preset][1];
+                color3.value = presets[preset][2];
+                updateColors();
+            }
+        }
+
+        // Initialize
+        updateColors();
+    </script>
+</body>
+</html>

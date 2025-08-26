@@ -1,0 +1,1042 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Neon Glow Variations</title>
+    <style>
+        :root {
+            --bg: #0f0f10;
+            --text: #e8e8ea;
+            --step-1-color: #442e85; /* Prompt - Purple */
+            --step-2-color: #7a54c9; /* Image - Lighter Purple */
+            --step-3-color: #89b06e; /* Video - Green */
+        }
+
+        body {
+            margin: 0;
+            padding: 40px;
+            background: var(--bg);
+            color: var(--text);
+            font-family: Inter, ui-sans-serif, system-ui, -apple-system;
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        h1 {
+            text-align: center;
+            margin-bottom: 40px;
+            background: linear-gradient(45deg, #c1f732, #c87ef7);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            font-size: 28px;
+        }
+
+        .variations-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+            gap: 25px;
+            margin-bottom: 40px;
+        }
+
+        .variation-card {
+            background: #17181a;
+            border-radius: 12px;
+            border: 1px solid #232427;
+            padding: 25px;
+            text-align: center;
+            transition: all 0.3s ease;
+        }
+
+        .variation-card:hover {
+            transform: translateY(-2px);
+            border-color: rgba(193, 247, 50, 0.5);
+        }
+
+        .variation-title {
+            font-size: 16px;
+            margin-bottom: 20px;
+            color: var(--text);
+            font-weight: 600;
+        }
+
+        .dots-showcase {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 20px;
+            margin: 25px 0;
+            min-height: 70px;
+        }
+
+        .dot-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .dot-label {
+            font-size: 11px;
+            color: #a8a8ad;
+            margin-top: 5px;
+        }
+
+        .base-dot {
+            width: 14px;
+            height: 14px;
+            border-radius: 50%;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+            position: relative;
+        }
+
+        .description {
+            font-size: 13px;
+            color: #a8a8ad;
+            line-height: 1.4;
+            margin-top: 15px;
+        }
+
+        /* 1. Classic Neon Glow */
+        .classic-neon-purple {
+            background: radial-gradient(circle, #6b4bc7 30%, #442e85 70%);
+            border: 2px solid #8b6fdb;
+            box-shadow: 
+                0 0 10px #8b6fdb,
+                0 0 20px #8b6fdb,
+                0 0 40px #6b4bc7,
+                inset 0 0 10px rgba(255, 255, 255, 0.1);
+            animation: classic-neon-purple 2s ease-in-out infinite alternate;
+        }
+
+        @keyframes classic-neon-purple {
+            from {
+                box-shadow: 
+                    0 0 5px #8b6fdb,
+                    0 0 10px #8b6fdb,
+                    0 0 20px #6b4bc7;
+            }
+            to {
+                box-shadow: 
+                    0 0 10px #8b6fdb,
+                    0 0 20px #8b6fdb,
+                    0 0 40px #6b4bc7,
+                    0 0 80px #442e85;
+            }
+        }
+
+        .classic-neon-light-purple {
+            background: radial-gradient(circle, #9d7dd8 30%, #7a54c9 70%);
+            border: 2px solid #b8a0e7;
+            box-shadow: 
+                0 0 10px #b8a0e7,
+                0 0 20px #b8a0e7,
+                0 0 40px #9d7dd8,
+                inset 0 0 10px rgba(255, 255, 255, 0.1);
+            animation: classic-neon-light-purple 2.2s ease-in-out infinite alternate;
+        }
+
+        @keyframes classic-neon-light-purple {
+            from {
+                box-shadow: 
+                    0 0 5px #b8a0e7,
+                    0 0 10px #b8a0e7,
+                    0 0 20px #9d7dd8;
+            }
+            to {
+                box-shadow: 
+                    0 0 10px #b8a0e7,
+                    0 0 20px #b8a0e7,
+                    0 0 40px #9d7dd8,
+                    0 0 80px #7a54c9;
+            }
+        }
+
+        .classic-neon-green {
+            background: radial-gradient(circle, #a3c789 30%, #89b06e 70%);
+            border: 2px solid #bdd4a4;
+            box-shadow: 
+                0 0 10px #bdd4a4,
+                0 0 20px #bdd4a4,
+                0 0 40px #a3c789,
+                inset 0 0 10px rgba(255, 255, 255, 0.1);
+            animation: classic-neon-green 1.8s ease-in-out infinite alternate;
+        }
+
+        @keyframes classic-neon-green {
+            from {
+                box-shadow: 
+                    0 0 5px #bdd4a4,
+                    0 0 10px #bdd4a4,
+                    0 0 20px #a3c789;
+            }
+            to {
+                box-shadow: 
+                    0 0 10px #bdd4a4,
+                    0 0 20px #bdd4a4,
+                    0 0 40px #a3c789,
+                    0 0 80px #89b06e;
+            }
+        }
+
+        .classic-neon-purple:hover, .classic-neon-light-purple:hover, .classic-neon-green:hover {
+            transform: scale(2.5);
+            animation-duration: 0.5s;
+        }
+
+        /* 2. Plasma Core */
+        .plasma-core-purple {
+            background: radial-gradient(circle, 
+                rgba(255, 255, 255, 0.2) 0%, 
+                #8b6fdb 20%, 
+                #6b4bc7 40%, 
+                #442e85 80%, 
+                #2a1a4f 100%);
+            border: 2px solid #8b6fdb;
+            box-shadow: 
+                0 0 15px #8b6fdb,
+                inset 0 0 15px #8b6fdb,
+                inset 0 0 5px rgba(255, 255, 255, 0.3);
+            animation: plasma-pulse-purple 1.5s ease-in-out infinite alternate;
+        }
+
+        @keyframes plasma-pulse-purple {
+            0% {
+                box-shadow: 
+                    0 0 10px #8b6fdb,
+                    inset 0 0 10px #8b6fdb,
+                    inset 0 0 3px rgba(255, 255, 255, 0.3);
+                transform: scale(1);
+            }
+            100% {
+                box-shadow: 
+                    0 0 25px #8b6fdb,
+                    0 0 50px #6b4bc7,
+                    inset 0 0 20px #8b6fdb,
+                    inset 0 0 8px rgba(255, 255, 255, 0.5);
+                transform: scale(1.1);
+            }
+        }
+
+        .plasma-core-light-purple {
+            background: radial-gradient(circle, 
+                rgba(255, 255, 255, 0.2) 0%, 
+                #b8a0e7 20%, 
+                #9d7dd8 40%, 
+                #7a54c9 80%, 
+                #4a3270 100%);
+            border: 2px solid #b8a0e7;
+            box-shadow: 
+                0 0 15px #b8a0e7,
+                inset 0 0 15px #b8a0e7,
+                inset 0 0 5px rgba(255, 255, 255, 0.3);
+            animation: plasma-pulse-light-purple 1.6s ease-in-out infinite alternate;
+        }
+
+        @keyframes plasma-pulse-light-purple {
+            0% {
+                box-shadow: 
+                    0 0 10px #b8a0e7,
+                    inset 0 0 10px #b8a0e7,
+                    inset 0 0 3px rgba(255, 255, 255, 0.3);
+                transform: scale(1);
+            }
+            100% {
+                box-shadow: 
+                    0 0 25px #b8a0e7,
+                    0 0 50px #9d7dd8,
+                    inset 0 0 20px #b8a0e7,
+                    inset 0 0 8px rgba(255, 255, 255, 0.5);
+                transform: scale(1.1);
+            }
+        }
+
+        .plasma-core-green {
+            background: radial-gradient(circle, 
+                rgba(255, 255, 255, 0.2) 0%, 
+                #bdd4a4 20%, 
+                #a3c789 40%, 
+                #89b06e 80%, 
+                #526b42 100%);
+            border: 2px solid #bdd4a4;
+            box-shadow: 
+                0 0 15px #bdd4a4,
+                inset 0 0 15px #bdd4a4,
+                inset 0 0 5px rgba(255, 255, 255, 0.3);
+            animation: plasma-pulse-green 1.4s ease-in-out infinite alternate;
+        }
+
+        @keyframes plasma-pulse-green {
+            0% {
+                box-shadow: 
+                    0 0 10px #bdd4a4,
+                    inset 0 0 10px #bdd4a4,
+                    inset 0 0 3px rgba(255, 255, 255, 0.3);
+                transform: scale(1);
+            }
+            100% {
+                box-shadow: 
+                    0 0 25px #bdd4a4,
+                    0 0 50px #a3c789,
+                    inset 0 0 20px #bdd4a4,
+                    inset 0 0 8px rgba(255, 255, 255, 0.5);
+                transform: scale(1.1);
+            }
+        }
+
+        .plasma-core-purple:hover, .plasma-core-light-purple:hover, .plasma-core-green:hover {
+            transform: scale(2.5) !important;
+            animation-duration: 0.3s;
+        }
+
+        /* 3. Electric Ring */
+        .electric-ring-purple {
+            background: #442e85;
+            border: 3px solid transparent;
+            background-clip: padding-box;
+            position: relative;
+        }
+
+        .electric-ring-purple::before {
+            content: '';
+            position: absolute;
+            top: -3px;
+            left: -3px;
+            right: -3px;
+            bottom: -3px;
+            background: linear-gradient(45deg, #8b6fdb, #6b4bc7, #8b6fdb, #442e85);
+            border-radius: 50%;
+            z-index: -1;
+            animation: electric-spin-purple 2s linear infinite;
+        }
+
+        .electric-ring-purple::after {
+            content: '';
+            position: absolute;
+            inset: -6px;
+            background: radial-gradient(circle, transparent 70%, #8b6fdb 80%, transparent 90%);
+            border-radius: 50%;
+            z-index: -2;
+            animation: electric-pulse-purple 1.5s ease-in-out infinite;
+        }
+
+        @keyframes electric-spin-purple {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+
+        @keyframes electric-pulse-purple {
+            0%, 100% { opacity: 0.3; }
+            50% { opacity: 1; }
+        }
+
+        .electric-ring-light-purple {
+            background: #7a54c9;
+            border: 3px solid transparent;
+            background-clip: padding-box;
+            position: relative;
+        }
+
+        .electric-ring-light-purple::before {
+            content: '';
+            position: absolute;
+            top: -3px;
+            left: -3px;
+            right: -3px;
+            bottom: -3px;
+            background: linear-gradient(45deg, #b8a0e7, #9d7dd8, #b8a0e7, #7a54c9);
+            border-radius: 50%;
+            z-index: -1;
+            animation: electric-spin-light-purple 2.2s linear infinite;
+        }
+
+        .electric-ring-light-purple::after {
+            content: '';
+            position: absolute;
+            inset: -6px;
+            background: radial-gradient(circle, transparent 70%, #b8a0e7 80%, transparent 90%);
+            border-radius: 50%;
+            z-index: -2;
+            animation: electric-pulse-light-purple 1.6s ease-in-out infinite;
+        }
+
+        @keyframes electric-spin-light-purple {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+
+        @keyframes electric-pulse-light-purple {
+            0%, 100% { opacity: 0.3; }
+            50% { opacity: 1; }
+        }
+
+        .electric-ring-green {
+            background: #89b06e;
+            border: 3px solid transparent;
+            background-clip: padding-box;
+            position: relative;
+        }
+
+        .electric-ring-green::before {
+            content: '';
+            position: absolute;
+            top: -3px;
+            left: -3px;
+            right: -3px;
+            bottom: -3px;
+            background: linear-gradient(45deg, #bdd4a4, #a3c789, #bdd4a4, #89b06e);
+            border-radius: 50%;
+            z-index: -1;
+            animation: electric-spin-green 1.8s linear infinite;
+        }
+
+        .electric-ring-green::after {
+            content: '';
+            position: absolute;
+            inset: -6px;
+            background: radial-gradient(circle, transparent 70%, #bdd4a4 80%, transparent 90%);
+            border-radius: 50%;
+            z-index: -2;
+            animation: electric-pulse-green 1.3s ease-in-out infinite;
+        }
+
+        @keyframes electric-spin-green {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+
+        @keyframes electric-pulse-green {
+            0%, 100% { opacity: 0.3; }
+            50% { opacity: 1; }
+        }
+
+        .electric-ring-purple:hover, .electric-ring-light-purple:hover, .electric-ring-green:hover {
+            transform: scale(2.5);
+        }
+
+        /* 4. Cyberpunk Glow */
+        .cyber-purple {
+            background: 
+                radial-gradient(circle at 30% 30%, rgba(255, 255, 255, 0.3) 0%, transparent 50%),
+                linear-gradient(45deg, #442e85, #6b4bc7);
+            border: 1px solid #8b6fdb;
+            box-shadow: 
+                0 0 20px #8b6fdb,
+                0 0 40px rgba(107, 75, 199, 0.5),
+                inset 0 1px 2px rgba(255, 255, 255, 0.3);
+            animation: cyber-flicker-purple 3s ease-in-out infinite;
+        }
+
+        @keyframes cyber-flicker-purple {
+            0%, 100% { 
+                box-shadow: 
+                    0 0 15px #8b6fdb,
+                    0 0 30px rgba(107, 75, 199, 0.4),
+                    inset 0 1px 2px rgba(255, 255, 255, 0.3);
+                filter: brightness(1);
+            }
+            25% { 
+                box-shadow: 
+                    0 0 25px #8b6fdb,
+                    0 0 50px rgba(107, 75, 199, 0.8),
+                    inset 0 1px 2px rgba(255, 255, 255, 0.5);
+                filter: brightness(1.2);
+            }
+            50% { 
+                box-shadow: 
+                    0 0 10px #8b6fdb,
+                    0 0 20px rgba(107, 75, 199, 0.3),
+                    inset 0 1px 2px rgba(255, 255, 255, 0.2);
+                filter: brightness(0.8);
+            }
+            75% { 
+                box-shadow: 
+                    0 0 30px #8b6fdb,
+                    0 0 60px rgba(107, 75, 199, 0.9),
+                    inset 0 1px 2px rgba(255, 255, 255, 0.6);
+                filter: brightness(1.3);
+            }
+        }
+
+        .cyber-light-purple {
+            background: 
+                radial-gradient(circle at 70% 20%, rgba(255, 255, 255, 0.3) 0%, transparent 50%),
+                linear-gradient(135deg, #7a54c9, #9d7dd8);
+            border: 1px solid #b8a0e7;
+            box-shadow: 
+                0 0 20px #b8a0e7,
+                0 0 40px rgba(157, 125, 216, 0.5),
+                inset 0 1px 2px rgba(255, 255, 255, 0.3);
+            animation: cyber-flicker-light-purple 3.5s ease-in-out infinite;
+        }
+
+        @keyframes cyber-flicker-light-purple {
+            0%, 100% { 
+                box-shadow: 
+                    0 0 15px #b8a0e7,
+                    0 0 30px rgba(157, 125, 216, 0.4),
+                    inset 0 1px 2px rgba(255, 255, 255, 0.3);
+                filter: brightness(1);
+            }
+            33% { 
+                box-shadow: 
+                    0 0 25px #b8a0e7,
+                    0 0 50px rgba(157, 125, 216, 0.8),
+                    inset 0 1px 2px rgba(255, 255, 255, 0.5);
+                filter: brightness(1.2);
+            }
+            66% { 
+                box-shadow: 
+                    0 0 30px #b8a0e7,
+                    0 0 60px rgba(157, 125, 216, 0.9),
+                    inset 0 1px 2px rgba(255, 255, 255, 0.6);
+                filter: brightness(1.3);
+            }
+        }
+
+        .cyber-green {
+            background: 
+                radial-gradient(circle at 50% 10%, rgba(255, 255, 255, 0.3) 0%, transparent 50%),
+                linear-gradient(90deg, #89b06e, #a3c789);
+            border: 1px solid #bdd4a4;
+            box-shadow: 
+                0 0 20px #bdd4a4,
+                0 0 40px rgba(163, 199, 137, 0.5),
+                inset 0 1px 2px rgba(255, 255, 255, 0.3);
+            animation: cyber-flicker-green 2.8s ease-in-out infinite;
+        }
+
+        @keyframes cyber-flicker-green {
+            0%, 100% { 
+                box-shadow: 
+                    0 0 15px #bdd4a4,
+                    0 0 30px rgba(163, 199, 137, 0.4),
+                    inset 0 1px 2px rgba(255, 255, 255, 0.3);
+                filter: brightness(1);
+            }
+            40% { 
+                box-shadow: 
+                    0 0 25px #bdd4a4,
+                    0 0 50px rgba(163, 199, 137, 0.8),
+                    inset 0 1px 2px rgba(255, 255, 255, 0.5);
+                filter: brightness(1.2);
+            }
+            80% { 
+                box-shadow: 
+                    0 0 30px #bdd4a4,
+                    0 0 60px rgba(163, 199, 137, 0.9),
+                    inset 0 1px 2px rgba(255, 255, 255, 0.6);
+                filter: brightness(1.3);
+            }
+        }
+
+        .cyber-purple:hover, .cyber-light-purple:hover, .cyber-green:hover {
+            transform: scale(2.5);
+            animation-duration: 1s;
+        }
+
+        /* 5. Aurora Glow */
+        .aurora-purple {
+            background: radial-gradient(circle, #6b4bc7 0%, #442e85 70%);
+            border: 2px solid transparent;
+            background-clip: padding-box;
+            position: relative;
+        }
+
+        .aurora-purple::before {
+            content: '';
+            position: absolute;
+            inset: -4px;
+            background: linear-gradient(45deg, 
+                #8b6fdb 0%, #6b4bc7 25%, #442e85 50%, 
+                #6b4bc7 75%, #8b6fdb 100%);
+            border-radius: 50%;
+            z-index: -1;
+            filter: blur(2px);
+            animation: aurora-flow-purple 4s ease-in-out infinite;
+        }
+
+        @keyframes aurora-flow-purple {
+            0%, 100% { 
+                background: linear-gradient(45deg, 
+                    #8b6fdb 0%, #6b4bc7 25%, #442e85 50%, 
+                    #6b4bc7 75%, #8b6fdb 100%);
+                opacity: 0.8;
+            }
+            33% { 
+                background: linear-gradient(120deg, 
+                    #442e85 0%, #8b6fdb 25%, #6b4bc7 50%, 
+                    #8b6fdb 75%, #442e85 100%);
+                opacity: 1;
+            }
+            66% { 
+                background: linear-gradient(200deg, 
+                    #6b4bc7 0%, #442e85 25%, #8b6fdb 50%, 
+                    #442e85 75%, #6b4bc7 100%);
+                opacity: 0.9;
+            }
+        }
+
+        .aurora-light-purple {
+            background: radial-gradient(circle, #9d7dd8 0%, #7a54c9 70%);
+            border: 2px solid transparent;
+            background-clip: padding-box;
+            position: relative;
+        }
+
+        .aurora-light-purple::before {
+            content: '';
+            position: absolute;
+            inset: -4px;
+            background: linear-gradient(45deg, 
+                #b8a0e7 0%, #9d7dd8 25%, #7a54c9 50%, 
+                #9d7dd8 75%, #b8a0e7 100%);
+            border-radius: 50%;
+            z-index: -1;
+            filter: blur(2px);
+            animation: aurora-flow-light-purple 4.5s ease-in-out infinite;
+        }
+
+        @keyframes aurora-flow-light-purple {
+            0%, 100% { 
+                background: linear-gradient(45deg, 
+                    #b8a0e7 0%, #9d7dd8 25%, #7a54c9 50%, 
+                    #9d7dd8 75%, #b8a0e7 100%);
+                opacity: 0.8;
+            }
+            50% { 
+                background: linear-gradient(225deg, 
+                    #7a54c9 0%, #b8a0e7 25%, #9d7dd8 50%, 
+                    #b8a0e7 75%, #7a54c9 100%);
+                opacity: 1;
+            }
+        }
+
+        .aurora-green {
+            background: radial-gradient(circle, #a3c789 0%, #89b06e 70%);
+            border: 2px solid transparent;
+            background-clip: padding-box;
+            position: relative;
+        }
+
+        .aurora-green::before {
+            content: '';
+            position: absolute;
+            inset: -4px;
+            background: linear-gradient(45deg, 
+                #bdd4a4 0%, #a3c789 25%, #89b06e 50%, 
+                #a3c789 75%, #bdd4a4 100%);
+            border-radius: 50%;
+            z-index: -1;
+            filter: blur(2px);
+            animation: aurora-flow-green 3.5s ease-in-out infinite;
+        }
+
+        @keyframes aurora-flow-green {
+            0%, 100% { 
+                background: linear-gradient(45deg, 
+                    #bdd4a4 0%, #a3c789 25%, #89b06e 50%, 
+                    #a3c789 75%, #bdd4a4 100%);
+                opacity: 0.8;
+            }
+            50% { 
+                background: linear-gradient(135deg, 
+                    #89b06e 0%, #bdd4a4 25%, #a3c789 50%, 
+                    #bdd4a4 75%, #89b06e 100%);
+                opacity: 1;
+            }
+        }
+
+        .aurora-purple:hover, .aurora-light-purple:hover, .aurora-green:hover {
+            transform: scale(2.5);
+        }
+
+        /* 6. Laser Beam */
+        .laser-purple {
+            background: #442e85;
+            border: 1px solid #8b6fdb;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .laser-purple::before {
+            content: '';
+            position: absolute;
+            top: -2px;
+            left: -20px;
+            width: 2px;
+            height: calc(100% + 4px);
+            background: linear-gradient(to bottom, 
+                transparent 0%, #ffffff 30%, #8b6fdb 50%, #ffffff 70%, transparent 100%);
+            animation: laser-scan-purple 2s linear infinite;
+            box-shadow: 0 0 10px #8b6fdb;
+        }
+
+        @keyframes laser-scan-purple {
+            0% { transform: translateX(-10px) scaleX(0); }
+            10% { transform: translateX(-10px) scaleX(1); }
+            90% { transform: translateX(25px) scaleX(1); }
+            100% { transform: translateX(25px) scaleX(0); }
+        }
+
+        .laser-light-purple {
+            background: #7a54c9;
+            border: 1px solid #b8a0e7;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .laser-light-purple::before {
+            content: '';
+            position: absolute;
+            top: -2px;
+            left: -20px;
+            width: 2px;
+            height: calc(100% + 4px);
+            background: linear-gradient(to bottom, 
+                transparent 0%, #ffffff 30%, #b8a0e7 50%, #ffffff 70%, transparent 100%);
+            animation: laser-scan-light-purple 2.3s linear infinite;
+            box-shadow: 0 0 10px #b8a0e7;
+        }
+
+        @keyframes laser-scan-light-purple {
+            0% { transform: translateX(-10px) scaleX(0); }
+            10% { transform: translateX(-10px) scaleX(1); }
+            90% { transform: translateX(25px) scaleX(1); }
+            100% { transform: translateX(25px) scaleX(0); }
+        }
+
+        .laser-green {
+            background: #89b06e;
+            border: 1px solid #bdd4a4;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .laser-green::before {
+            content: '';
+            position: absolute;
+            top: -2px;
+            left: -20px;
+            width: 2px;
+            height: calc(100% + 4px);
+            background: linear-gradient(to bottom, 
+                transparent 0%, #ffffff 30%, #bdd4a4 50%, #ffffff 70%, transparent 100%);
+            animation: laser-scan-green 1.8s linear infinite;
+            box-shadow: 0 0 10px #bdd4a4;
+        }
+
+        @keyframes laser-scan-green {
+            0% { transform: translateX(-10px) scaleX(0); }
+            10% { transform: translateX(-10px) scaleX(1); }
+            90% { transform: translateX(25px) scaleX(1); }
+            100% { transform: translateX(25px) scaleX(0); }
+        }
+
+        .laser-purple:hover, .laser-light-purple:hover, .laser-green:hover {
+            transform: scale(2.5);
+        }
+
+        /* Matrix Demo */
+        .matrix-demo {
+            background: #0f1114;
+            padding: 30px;
+            border-radius: 8px;
+            margin-top: 40px;
+        }
+
+        .matrix-row {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin: 20px 0;
+            padding: 15px;
+            background: #17181a;
+            border-radius: 6px;
+        }
+
+        .row-label {
+            min-width: 120px;
+            font-size: 14px;
+            color: var(--text);
+            font-weight: 600;
+        }
+
+        .dots-row {
+            display: flex;
+            gap: 12px;
+            flex: 1;
+        }
+
+        .controls {
+            text-align: center;
+            margin: 30px 0;
+        }
+
+        .control-btn {
+            padding: 10px 20px;
+            margin: 0 10px;
+            background: #2a2b2f;
+            color: var(--text);
+            border: 1px solid #3a3b3f;
+            border-radius: 8px;
+            cursor: pointer;
+            font-family: inherit;
+            transition: all 0.2s ease;
+        }
+
+        .control-btn:hover {
+            background: #343539;
+            border-color: #c1f732;
+        }
+
+        .paused * {
+            animation-play-state: paused !important;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>⚡ Neon & Glow Variations</h1>
+        
+        <div class="controls">
+            <button class="control-btn" onclick="toggleAnimations()">⏸️ Pause Animations</button>
+        </div>
+
+        <div class="variations-grid" id="variationsGrid">
+            <!-- 1. Classic Neon Glow -->
+            <div class="variation-card">
+                <div class="variation-title">⚡ Classic Neon Glow</div>
+                <div class="dots-showcase">
+                    <div class="dot-container">
+                        <div class="base-dot classic-neon-purple"></div>
+                        <div class="dot-label">Prompt</div>
+                    </div>
+                    <div class="dot-container">
+                        <div class="base-dot classic-neon-light-purple"></div>
+                        <div class="dot-label">Image</div>
+                    </div>
+                    <div class="dot-container">
+                        <div class="base-dot classic-neon-green"></div>
+                        <div class="dot-label">Video</div>
+                    </div>
+                </div>
+                <div class="description">
+                    Traditional neon tube effect with pulsing outer glow and inner radiance
+                </div>
+            </div>
+
+            <!-- 2. Plasma Core -->
+            <div class="variation-card">
+                <div class="variation-title">⚛️ Plasma Core</div>
+                <div class="dots-showcase">
+                    <div class="dot-container">
+                        <div class="base-dot plasma-core-purple"></div>
+                        <div class="dot-label">Prompt</div>
+                    </div>
+                    <div class="dot-container">
+                        <div class="base-dot plasma-core-light-purple"></div>
+                        <div class="dot-label">Image</div>
+                    </div>
+                    <div class="dot-container">
+                        <div class="base-dot plasma-core-green"></div>
+                        <div class="dot-label">Video</div>
+                    </div>
+                </div>
+                <div class="description">
+                    Intense energy cores with pulsing plasma effects and bright inner light
+                </div>
+            </div>
+
+            <!-- 3. Electric Ring -->
+            <div class="variation-card">
+                <div class="variation-title">🔌 Electric Ring</div>
+                <div class="dots-showcase">
+                    <div class="dot-container">
+                        <div class="base-dot electric-ring-purple"></div>
+                        <div class="dot-label">Prompt</div>
+                    </div>
+                    <div class="dot-container">
+                        <div class="base-dot electric-ring-light-purple"></div>
+                        <div class="dot-label">Image</div>
+                    </div>
+                    <div class="dot-container">
+                        <div class="base-dot electric-ring-green"></div>
+                        <div class="dot-label">Video</div>
+                    </div>
+                </div>
+                <div class="description">
+                    Spinning electromagnetic fields with rotating energy rings and pulse halos
+                </div>
+            </div>
+
+            <!-- 4. Cyberpunk Glow -->
+            <div class="variation-card">
+                <div class="variation-title">🌃 Cyberpunk Glow</div>
+                <div class="dots-showcase">
+                    <div class="dot-container">
+                        <div class="base-dot cyber-purple"></div>
+                        <div class="dot-label">Prompt</div>
+                    </div>
+                    <div class="dot-container">
+                        <div class="base-dot cyber-light-purple"></div>
+                        <div class="dot-label">Image</div>
+                    </div>
+                    <div class="dot-container">
+                        <div class="base-dot cyber-green"></div>
+                        <div class="dot-label">Video</div>
+                    </div>
+                </div>
+                <div class="description">
+                    Flickering cyberpunk aesthetic with irregular brightness and surface highlights
+                </div>
+            </div>
+
+            <!-- 5. Aurora Glow -->
+            <div class="variation-card">
+                <div class="variation-title">🌌 Aurora Glow</div>
+                <div class="dots-showcase">
+                    <div class="dot-container">
+                        <div class="base-dot aurora-purple"></div>
+                        <div class="dot-label">Prompt</div>
+                    </div>
+                    <div class="dot-container">
+                        <div class="base-dot aurora-light-purple"></div>
+                        <div class="dot-label">Image</div>
+                    </div>
+                    <div class="dot-container">
+                        <div class="base-dot aurora-green"></div>
+                        <div class="dot-label">Video</div>
+                    </div>
+                </div>
+                <div class="description">
+                    Flowing aurora-like effects with smooth color transitions and blurred halos
+                </div>
+            </div>
+
+            <!-- 6. Laser Beam -->
+            <div class="variation-card">
+                <div class="variation-title">🔦 Laser Scanner</div>
+                <div class="dots-showcase">
+                    <div class="dot-container">
+                        <div class="base-dot laser-purple"></div>
+                        <div class="dot-label">Prompt</div>
+                    </div>
+                    <div class="dot-container">
+                        <div class="base-dot laser-light-purple"></div>
+                        <div class="dot-label">Image</div>
+                    </div>
+                    <div class="dot-container">
+                        <div class="base-dot laser-green"></div>
+                        <div class="dot-label">Video</div>
+                    </div>
+                </div>
+                <div class="description">
+                    Sci-fi laser scanning beams that sweep across the surface with bright trails
+                </div>
+            </div>
+        </div>
+
+        <div class="matrix-demo">
+            <h2 style="text-align: center; color: var(--text); margin-bottom: 20px;">Matrix Context Preview</h2>
+            <p style="color: #a8a8ad; text-align: center; margin-bottom: 25px;">
+                See how different glow effects look in your matrix layout
+            </p>
+            
+            <div class="matrix-row">
+                <div class="row-label">Classic Neon</div>
+                <div class="dots-row">
+                    <div class="base-dot classic-neon-purple"></div>
+                    <div class="base-dot classic-neon-light-purple"></div>
+                    <div class="base-dot classic-neon-green"></div>
+                </div>
+            </div>
+            
+            <div class="matrix-row">
+                <div class="row-label">Plasma Core</div>
+                <div class="dots-row">
+                    <div class="base-dot plasma-core-purple"></div>
+                    <div class="base-dot plasma-core-light-purple"></div>
+                    <div class="base-dot plasma-core-green"></div>
+                </div>
+            </div>
+            
+            <div class="matrix-row">
+                <div class="row-label">Electric Ring</div>
+                <div class="dots-row">
+                    <div class="base-dot electric-ring-purple"></div>
+                    <div class="base-dot electric-ring-light-purple"></div>
+                    <div class="base-dot electric-ring-green"></div>
+                </div>
+            </div>
+
+            <div class="matrix-row">
+                <div class="row-label">Cyberpunk</div>
+                <div class="dots-row">
+                    <div class="base-dot cyber-purple"></div>
+                    <div class="base-dot cyber-light-purple"></div>
+                    <div class="base-dot cyber-green"></div>
+                </div>
+            </div>
+
+            <div class="matrix-row">
+                <div class="row-label">Aurora Flow</div>
+                <div class="dots-row">
+                    <div class="base-dot aurora-purple"></div>
+                    <div class="base-dot aurora-light-purple"></div>
+                    <div class="base-dot aurora-green"></div>
+                </div>
+            </div>
+
+            <div class="matrix-row">
+                <div class="row-label">Laser Scan</div>
+                <div class="dots-row">
+                    <div class="base-dot laser-purple"></div>
+                    <div class="base-dot laser-light-purple"></div>
+                    <div class="base-dot laser-green"></div>
+                </div>
+            </div>
+        </div>
+
+        <div style="margin-top: 60px; padding: 30px; background: #17181a; border-radius: 12px; border: 1px solid #232427; text-align: center;">
+            <h3 style="margin-top: 0; color: var(--text);">⚡ Glow Effect Breakdown</h3>
+            <div style="color: #a8a8ad; line-height: 1.6;">
+                <p><strong>🔆 Classic Neon:</strong> Traditional tube lighting with steady pulse</p>
+                <p><strong>⚛️ Plasma Core:</strong> High-energy center with expanding fields</p>
+                <p><strong>🔌 Electric Ring:</strong> Rotating energy with electromagnetic effects</p>
+                <p><strong>🌃 Cyberpunk:</strong> Irregular flickering for futuristic feel</p>
+                <p><strong>🌌 Aurora:</strong> Smooth flowing gradients like northern lights</p>
+                <p><strong>🔦 Laser Scanner:</strong> Sci-fi scanning beam animation</p>
+                <br>
+                <p><strong>All maintain your purple/green color coding while adding energy!</strong></p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let animationsPaused = false;
+
+        function toggleAnimations() {
+            const grid = document.getElementById('variationsGrid');
+            const matrixDemo = document.querySelector('.matrix-demo');
+            animationsPaused = !animationsPaused;
+            
+            if (animationsPaused) {
+                grid.classList.add('paused');
+                matrixDemo.classList.add('paused');
+                event.target.textContent = '▶️ Resume Animations';
+            } else {
+                grid.classList.remove('paused');
+                matrixDemo.classList.remove('paused');
+                event.target.textContent = '⏸️ Pause Animations';
+            }
+        }
+    </script>
+</body>
+</html>

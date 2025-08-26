@@ -1,4 +1,5 @@
 // Simple CORS proxy for Replicate API
+require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
 const fetch = require('node-fetch');
@@ -18,6 +19,13 @@ app.get('/', (req, res) => {
 // Proxy endpoint for Replicate API - handles original app format with polling
 app.all('/api/replicate', async (req, res) => {
   try {
+    // Get API key from environment variable
+    const replicateApiKey = process.env.REPLICATE_API_KEY;
+    if (!replicateApiKey) {
+      console.error('❌ REPLICATE_API_KEY not found in environment variables');
+      return res.status(500).json({ error: 'API key not configured' });
+    }
+    
     // Get the model from the request body like the original app
     const model = req.body.model || 'bytedance/seedream-3';
     const replicateUrl = `https://api.replicate.com/v1/models/${model}/predictions`;
@@ -35,7 +43,7 @@ app.all('/api/replicate', async (req, res) => {
     const response = await fetch(replicateUrl, {
       method: req.method,
       headers: {
-        'Authorization': req.headers.authorization,
+        'Authorization': `Bearer ${replicateApiKey}`,
         'Content-Type': 'application/json',
       },
       body: req.method !== 'GET' ? JSON.stringify(requestBody) : undefined
@@ -63,7 +71,7 @@ app.all('/api/replicate', async (req, res) => {
         
         const pollResponse = await fetch(`https://api.replicate.com/v1/predictions/${predictionId}`, {
           headers: {
-            'Authorization': req.headers.authorization,
+            'Authorization': `Bearer ${replicateApiKey}`,
           },
         });
         

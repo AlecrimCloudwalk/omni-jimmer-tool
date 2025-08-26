@@ -1,0 +1,452 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>3D Colored Dots Test</title>
+    <style>
+        :root {
+            --bg: #0f0f10;
+            --text: #e8e8ea;
+            --step-1-color: #442e85; /* Prompt - Purple */
+            --step-2-color: #7a54c9; /* Image - Lighter Purple */
+            --step-3-color: #89b06e; /* Video - Green */
+        }
+
+        body {
+            margin: 0;
+            padding: 40px;
+            background: var(--bg);
+            color: var(--text);
+            font-family: Inter, ui-sans-serif, system-ui, -apple-system;
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        h1 {
+            text-align: center;
+            margin-bottom: 40px;
+            background: linear-gradient(45deg, #c1f732, #c87ef7);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .comparison-section {
+            margin-bottom: 60px;
+            padding: 30px;
+            background: #17181a;
+            border-radius: 12px;
+            border: 1px solid #232427;
+        }
+
+        .section-title {
+            font-size: 24px;
+            margin-bottom: 20px;
+            color: var(--text);
+        }
+
+        .dots-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 40px;
+            margin-bottom: 40px;
+        }
+
+        .dot-example {
+            text-align: center;
+            padding: 20px;
+        }
+
+        .dot-example h3 {
+            margin-bottom: 20px;
+            font-size: 16px;
+            color: var(--text);
+        }
+
+        .dots-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 20px;
+            margin-bottom: 20px;
+            min-height: 60px;
+        }
+
+        /* Current Flat Dots */
+        .flat-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.4);
+        }
+
+        .flat-dot.prompt { background: var(--step-1-color); }
+        .flat-dot.image { background: var(--step-2-color); }
+        .flat-dot.video { background: var(--step-3-color); }
+
+        .flat-dot:hover {
+            transform: scale(3.5);
+            border-radius: 3px;
+        }
+
+        /* 3D Ball Dots */
+        .ball-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+            position: relative;
+            background: radial-gradient(circle at 30% 30%, 
+                rgba(255, 255, 255, 0.8) 0%, 
+                rgba(255, 255, 255, 0.4) 20%, 
+                transparent 45%),
+                radial-gradient(circle at 70% 70%, 
+                rgba(0, 0, 0, 0.3) 0%, 
+                transparent 50%);
+            box-shadow: 
+                0 2px 6px rgba(0, 0, 0, 0.6),
+                inset 0 1px 2px rgba(255, 255, 255, 0.3),
+                inset 0 -1px 2px rgba(0, 0, 0, 0.4);
+        }
+
+        .ball-dot.prompt { 
+            background-color: var(--step-1-color);
+            background-image: 
+                radial-gradient(circle at 25% 25%, 
+                    rgba(255, 255, 255, 0.9) 0%, 
+                    rgba(255, 255, 255, 0.5) 15%, 
+                    transparent 40%),
+                radial-gradient(circle at 75% 75%, 
+                    rgba(0, 0, 0, 0.4) 0%, 
+                    transparent 60%);
+        }
+
+        .ball-dot.image { 
+            background-color: var(--step-2-color);
+            background-image: 
+                radial-gradient(circle at 25% 25%, 
+                    rgba(255, 255, 255, 0.9) 0%, 
+                    rgba(255, 255, 255, 0.5) 15%, 
+                    transparent 40%),
+                radial-gradient(circle at 75% 75%, 
+                    rgba(0, 0, 0, 0.4) 0%, 
+                    transparent 60%);
+        }
+
+        .ball-dot.video { 
+            background-color: var(--step-3-color);
+            background-image: 
+                radial-gradient(circle at 25% 25%, 
+                    rgba(255, 255, 255, 0.9) 0%, 
+                    rgba(255, 255, 255, 0.5) 15%, 
+                    transparent 40%),
+                radial-gradient(circle at 75% 75%, 
+                    rgba(0, 0, 0, 0.4) 0%, 
+                    transparent 60%);
+        }
+
+        .ball-dot:hover {
+            transform: scale(3);
+            box-shadow: 
+                0 6px 20px rgba(0, 0, 0, 0.8),
+                inset 0 2px 4px rgba(255, 255, 255, 0.4),
+                inset 0 -2px 4px rgba(0, 0, 0, 0.5),
+                0 0 15px rgba(199, 126, 247, 0.4);
+        }
+
+        /* Enhanced 3D Ball Dots with stronger reflections */
+        .enhanced-ball-dot {
+            width: 14px;
+            height: 14px;
+            border-radius: 50%;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+            position: relative;
+            box-shadow: 
+                0 3px 8px rgba(0, 0, 0, 0.7),
+                inset 0 2px 3px rgba(255, 255, 255, 0.4),
+                inset 0 -2px 3px rgba(0, 0, 0, 0.5);
+        }
+
+        .enhanced-ball-dot::before {
+            content: '';
+            position: absolute;
+            top: 2px;
+            left: 2px;
+            width: 4px;
+            height: 4px;
+            background: rgba(255, 255, 255, 0.9);
+            border-radius: 50%;
+            filter: blur(0.5px);
+            z-index: 1;
+        }
+
+        .enhanced-ball-dot::after {
+            content: '';
+            position: absolute;
+            bottom: 1px;
+            right: 1px;
+            width: 3px;
+            height: 3px;
+            background: rgba(0, 0, 0, 0.6);
+            border-radius: 50%;
+            filter: blur(1px);
+        }
+
+        .enhanced-ball-dot.prompt { 
+            background: radial-gradient(circle at 35% 35%, 
+                #8B73D9 0%, 
+                var(--step-1-color) 60%, 
+                #2A1B4B 100%);
+        }
+
+        .enhanced-ball-dot.image { 
+            background: radial-gradient(circle at 35% 35%, 
+                #A788E0 0%, 
+                var(--step-2-color) 60%, 
+                #4A3270 100%);
+        }
+
+        .enhanced-ball-dot.video { 
+            background: radial-gradient(circle at 35% 35%, 
+                #B5D199 0%, 
+                var(--step-3-color) 60%, 
+                #526B42 100%);
+        }
+
+        .enhanced-ball-dot:hover {
+            transform: scale(2.8);
+            box-shadow: 
+                0 8px 25px rgba(0, 0, 0, 0.9),
+                inset 0 3px 6px rgba(255, 255, 255, 0.5),
+                inset 0 -3px 6px rgba(0, 0, 0, 0.6),
+                0 0 20px rgba(199, 126, 247, 0.5);
+        }
+
+        /* Interactive Demo */
+        .interactive-demo {
+            background: #1a1b1d;
+            padding: 30px;
+            border-radius: 8px;
+            margin-top: 40px;
+        }
+
+        .demo-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 40px;
+            margin-top: 20px;
+        }
+
+        .demo-column {
+            text-align: center;
+        }
+
+        .demo-dots {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 12px;
+            margin: 20px 0;
+            padding: 20px;
+            background: #0f1114;
+            border-radius: 6px;
+        }
+
+        .description {
+            font-size: 14px;
+            color: #a8a8ad;
+            margin-top: 10px;
+            line-height: 1.4;
+        }
+
+        .pros-cons {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-top: 30px;
+        }
+
+        .pros, .cons {
+            background: #1a1b1d;
+            padding: 20px;
+            border-radius: 8px;
+            border: 1px solid #232427;
+        }
+
+        .pros h4, .cons h4 {
+            margin-top: 0;
+            color: var(--text);
+        }
+
+        .pros {
+            border-left: 3px solid #22C55E;
+        }
+
+        .cons {
+            border-left: 3px solid #EF4444;
+        }
+
+        ul {
+            padding-left: 20px;
+            color: #a8a8ad;
+        }
+
+        .processing-demo {
+            margin-top: 20px;
+        }
+
+        .processing-dot {
+            animation: pulse-3d 1.5s ease-in-out infinite;
+        }
+
+        @keyframes pulse-3d {
+            0%, 100% { 
+                transform: scale(1);
+                box-shadow: 
+                    0 3px 8px rgba(0, 0, 0, 0.7),
+                    inset 0 2px 3px rgba(255, 255, 255, 0.4),
+                    inset 0 -2px 3px rgba(0, 0, 0, 0.5);
+            }
+            50% { 
+                transform: scale(1.3);
+                box-shadow: 
+                    0 6px 15px rgba(0, 0, 0, 0.8),
+                    inset 0 3px 5px rgba(255, 255, 255, 0.5),
+                    inset 0 -3px 5px rgba(0, 0, 0, 0.6),
+                    0 0 12px rgba(199, 126, 247, 0.6);
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>3D Colored Dots Comparison</h1>
+        
+        <div class="comparison-section">
+            <h2 class="section-title">Current vs 3D Versions</h2>
+            
+            <div class="dots-grid">
+                <div class="dot-example">
+                    <h3>Current Flat Dots</h3>
+                    <div class="dots-container">
+                        <div class="flat-dot prompt"></div>
+                        <div class="flat-dot image"></div>
+                        <div class="flat-dot video"></div>
+                    </div>
+                    <div class="description">
+                        Simple flat circles with basic drop shadow. Clean and minimalist.
+                    </div>
+                </div>
+
+                <div class="dot-example">
+                    <h3>3D Ball Dots (Gradient)</h3>
+                    <div class="dots-container">
+                        <div class="ball-dot prompt"></div>
+                        <div class="ball-dot image"></div>
+                        <div class="ball-dot video"></div>
+                    </div>
+                    <div class="description">
+                        Uses radial gradients for highlights and shadows. Creates depth with CSS only.
+                    </div>
+                </div>
+
+                <div class="dot-example">
+                    <h3>Enhanced 3D Balls (Pseudo-elements)</h3>
+                    <div class="dots-container">
+                        <div class="enhanced-ball-dot prompt"></div>
+                        <div class="enhanced-ball-dot image"></div>
+                        <div class="enhanced-ball-dot video"></div>
+                    </div>
+                    <div class="description">
+                        Combines gradients with pseudo-elements for more realistic reflections and shadows.
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="interactive-demo">
+            <h2 class="section-title">Interactive Demo</h2>
+            <p style="color: #a8a8ad; margin-bottom: 0;">Hover over the dots to see their scaling effects:</p>
+            
+            <div class="demo-grid">
+                <div class="demo-column">
+                    <h3>Current Style</h3>
+                    <div class="demo-dots">
+                        <div class="flat-dot prompt"></div>
+                        <div class="flat-dot image"></div>
+                        <div class="flat-dot video"></div>
+                    </div>
+                </div>
+
+                <div class="demo-column">
+                    <h3>3D Gradient Style</h3>
+                    <div class="demo-dots">
+                        <div class="ball-dot prompt"></div>
+                        <div class="ball-dot image"></div>
+                        <div class="ball-dot video"></div>
+                    </div>
+                </div>
+
+                <div class="demo-column">
+                    <h3>Enhanced 3D Style</h3>
+                    <div class="demo-dots">
+                        <div class="enhanced-ball-dot prompt"></div>
+                        <div class="enhanced-ball-dot image"></div>
+                        <div class="enhanced-ball-dot video"></div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="processing-demo">
+                <h3>Processing Animation Example</h3>
+                <div style="text-align: center; margin: 20px 0;">
+                    <div class="enhanced-ball-dot prompt processing-dot"></div>
+                </div>
+                <p style="color: #a8a8ad; text-align: center; font-size: 14px;">
+                    Enhanced 3D dot with pulsing animation for processing states
+                </p>
+            </div>
+        </div>
+
+        <div class="pros-cons">
+            <div class="pros">
+                <h4>✅ Pros of 3D Dots</h4>
+                <ul>
+                    <li>More visually appealing and modern</li>
+                    <li>Better depth perception</li>
+                    <li>Enhanced user engagement</li>
+                    <li>Still CSS-only (no images needed)</li>
+                    <li>Maintains accessibility</li>
+                    <li>Works well with existing animations</li>
+                </ul>
+            </div>
+            
+            <div class="cons">
+                <h4>❌ Considerations</h4>
+                <ul>
+                    <li>Slightly more complex CSS</li>
+                    <li>Minimal performance impact (gradients)</li>
+                    <li>May need tweaking for different screen densities</li>
+                    <li>Could be distracting if overused</li>
+                </ul>
+            </div>
+        </div>
+
+        <div style="margin-top: 40px; padding: 20px; background: #1a1b1d; border-radius: 8px; text-align: center;">
+            <p style="color: #a8a8ad; margin: 0;">
+                💡 <strong>Recommendation:</strong> The Enhanced 3D style provides the best balance of visual appeal and performance. 
+                The pseudo-element highlights create convincing 3D effects with minimal code complexity.
+            </p>
+        </div>
+    </div>
+</body>
+</html>

@@ -1,0 +1,585 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Color-Coded Holographic Dots</title>
+    <style>
+        :root {
+            --bg: #0f0f10;
+            --text: #e8e8ea;
+            --step-1-color: #442e85; /* Prompt - Purple */
+            --step-2-color: #7a54c9; /* Image - Lighter Purple */
+            --step-3-color: #89b06e; /* Video - Green */
+        }
+
+        body {
+            margin: 0;
+            padding: 40px;
+            background: var(--bg);
+            color: var(--text);
+            font-family: Inter, ui-sans-serif, system-ui, -apple-system;
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        h1 {
+            text-align: center;
+            margin-bottom: 40px;
+            background: linear-gradient(45deg, #c1f732, #c87ef7);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            font-size: 28px;
+        }
+
+        .comparison-section {
+            margin-bottom: 40px;
+            padding: 30px;
+            background: #17181a;
+            border-radius: 12px;
+            border: 1px solid #232427;
+        }
+
+        .section-title {
+            font-size: 22px;
+            margin-bottom: 20px;
+            color: var(--text);
+            text-align: center;
+        }
+
+        .variations-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 30px;
+            margin-bottom: 30px;
+        }
+
+        .variation-card {
+            background: #1a1b1d;
+            border-radius: 8px;
+            border: 1px solid #232427;
+            padding: 25px;
+            text-align: center;
+        }
+
+        .variation-title {
+            font-size: 16px;
+            margin-bottom: 20px;
+            color: var(--text);
+            font-weight: 600;
+        }
+
+        .dots-showcase {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 20px;
+            margin: 25px 0;
+            min-height: 60px;
+        }
+
+        .dot-label {
+            font-size: 12px;
+            color: #a8a8ad;
+            margin-top: 8px;
+        }
+
+        .base-dot {
+            width: 14px;
+            height: 14px;
+            border-radius: 50%;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+            position: relative;
+        }
+
+        .description {
+            font-size: 13px;
+            color: #a8a8ad;
+            line-height: 1.4;
+            margin-top: 15px;
+        }
+
+        /* Original flat dots for comparison */
+        .flat-dot {
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.4);
+        }
+
+        .flat-dot.prompt { background: var(--step-1-color); }
+        .flat-dot.image { background: var(--step-2-color); }
+        .flat-dot.video { background: var(--step-3-color); }
+
+        .flat-dot:hover {
+            transform: scale(3.5);
+        }
+
+        /* Purple Holographic (for prompt) */
+        .holo-purple {
+            background: linear-gradient(45deg, 
+                #2a1a4f, #442e85, #6b4bc7, #8b6fdb, 
+                #a584ef, #8b6fdb, #6b4bc7, #442e85, #2a1a4f);
+            background-size: 300% 300%;
+            animation: holo-purple-shift 3s ease-in-out infinite;
+            border: 1px solid rgba(107, 75, 199, 0.6);
+            box-shadow: 
+                0 0 15px rgba(107, 75, 199, 0.4),
+                inset 0 1px 3px rgba(255, 255, 255, 0.3),
+                inset 0 -1px 3px rgba(0, 0, 0, 0.2);
+        }
+
+        @keyframes holo-purple-shift {
+            0% { 
+                background-position: 0% 50%; 
+                filter: hue-rotate(0deg) saturate(1) brightness(1);
+                box-shadow: 0 0 10px rgba(107, 75, 199, 0.4), inset 0 1px 3px rgba(255, 255, 255, 0.3);
+            }
+            25% { 
+                background-position: 50% 0%; 
+                filter: hue-rotate(15deg) saturate(1.2) brightness(1.1);
+                box-shadow: 0 0 15px rgba(139, 111, 219, 0.5), inset 0 1px 3px rgba(255, 255, 255, 0.4);
+            }
+            50% { 
+                background-position: 100% 50%; 
+                filter: hue-rotate(-10deg) saturate(1.3) brightness(1.2);
+                box-shadow: 0 0 20px rgba(165, 132, 239, 0.6), inset 0 1px 3px rgba(255, 255, 255, 0.5);
+            }
+            75% { 
+                background-position: 50% 100%; 
+                filter: hue-rotate(20deg) saturate(1.1) brightness(1.05);
+                box-shadow: 0 0 15px rgba(107, 75, 199, 0.5), inset 0 1px 3px rgba(255, 255, 255, 0.4);
+            }
+            100% { 
+                background-position: 0% 50%; 
+                filter: hue-rotate(0deg) saturate(1) brightness(1);
+                box-shadow: 0 0 10px rgba(107, 75, 199, 0.4), inset 0 1px 3px rgba(255, 255, 255, 0.3);
+            }
+        }
+
+        .holo-purple:hover {
+            transform: scale(2.8);
+            animation-duration: 1s;
+            box-shadow: 
+                0 0 30px rgba(107, 75, 199, 0.8),
+                0 0 60px rgba(165, 132, 239, 0.4),
+                inset 0 2px 6px rgba(255, 255, 255, 0.6);
+        }
+
+        /* Lighter Purple Holographic (for image) */
+        .holo-light-purple {
+            background: linear-gradient(45deg, 
+                #4a3270, #7a54c9, #9d7dd8, #b8a0e7, 
+                #d4c3f6, #b8a0e7, #9d7dd8, #7a54c9, #4a3270);
+            background-size: 300% 300%;
+            animation: holo-light-purple-shift 3.5s ease-in-out infinite;
+            border: 1px solid rgba(157, 125, 216, 0.6);
+            box-shadow: 
+                0 0 15px rgba(157, 125, 216, 0.4),
+                inset 0 1px 3px rgba(255, 255, 255, 0.3),
+                inset 0 -1px 3px rgba(0, 0, 0, 0.2);
+        }
+
+        @keyframes holo-light-purple-shift {
+            0% { 
+                background-position: 0% 50%; 
+                filter: hue-rotate(0deg) saturate(1) brightness(1);
+                box-shadow: 0 0 12px rgba(157, 125, 216, 0.4), inset 0 1px 3px rgba(255, 255, 255, 0.3);
+            }
+            33% { 
+                background-position: 100% 0%; 
+                filter: hue-rotate(-15deg) saturate(1.3) brightness(1.15);
+                box-shadow: 0 0 18px rgba(184, 160, 231, 0.6), inset 0 1px 3px rgba(255, 255, 255, 0.4);
+            }
+            66% { 
+                background-position: 0% 100%; 
+                filter: hue-rotate(25deg) saturate(1.2) brightness(1.1);
+                box-shadow: 0 0 22px rgba(212, 195, 246, 0.5), inset 0 1px 3px rgba(255, 255, 255, 0.5);
+            }
+            100% { 
+                background-position: 0% 50%; 
+                filter: hue-rotate(0deg) saturate(1) brightness(1);
+                box-shadow: 0 0 12px rgba(157, 125, 216, 0.4), inset 0 1px 3px rgba(255, 255, 255, 0.3);
+            }
+        }
+
+        .holo-light-purple:hover {
+            transform: scale(2.8);
+            animation-duration: 1s;
+            box-shadow: 
+                0 0 35px rgba(157, 125, 216, 0.8),
+                0 0 70px rgba(212, 195, 246, 0.4),
+                inset 0 2px 6px rgba(255, 255, 255, 0.6);
+        }
+
+        /* Green Holographic (for video) */
+        .holo-green {
+            background: linear-gradient(45deg, 
+                #526b42, #89b06e, #a3c789, #bdd4a4, 
+                #d8e1bf, #bdd4a4, #a3c789, #89b06e, #526b42);
+            background-size: 300% 300%;
+            animation: holo-green-shift 2.8s ease-in-out infinite;
+            border: 1px solid rgba(163, 199, 137, 0.6);
+            box-shadow: 
+                0 0 15px rgba(163, 199, 137, 0.4),
+                inset 0 1px 3px rgba(255, 255, 255, 0.3),
+                inset 0 -1px 3px rgba(0, 0, 0, 0.2);
+        }
+
+        @keyframes holo-green-shift {
+            0% { 
+                background-position: 0% 50%; 
+                filter: hue-rotate(0deg) saturate(1) brightness(1);
+                box-shadow: 0 0 12px rgba(163, 199, 137, 0.4), inset 0 1px 3px rgba(255, 255, 255, 0.3);
+            }
+            30% { 
+                background-position: 70% 30%; 
+                filter: hue-rotate(20deg) saturate(1.2) brightness(1.1);
+                box-shadow: 0 0 18px rgba(189, 212, 164, 0.5), inset 0 1px 3px rgba(255, 255, 255, 0.4);
+            }
+            60% { 
+                background-position: 30% 70%; 
+                filter: hue-rotate(-15deg) saturate(1.3) brightness(1.15);
+                box-shadow: 0 0 20px rgba(216, 225, 191, 0.6), inset 0 1px 3px rgba(255, 255, 255, 0.5);
+            }
+            100% { 
+                background-position: 0% 50%; 
+                filter: hue-rotate(0deg) saturate(1) brightness(1);
+                box-shadow: 0 0 12px rgba(163, 199, 137, 0.4), inset 0 1px 3px rgba(255, 255, 255, 0.3);
+            }
+        }
+
+        .holo-green:hover {
+            transform: scale(2.8);
+            animation-duration: 1s;
+            box-shadow: 
+                0 0 30px rgba(163, 199, 137, 0.8),
+                0 0 60px rgba(216, 225, 191, 0.4),
+                inset 0 2px 6px rgba(255, 255, 255, 0.6);
+        }
+
+        /* Enhanced versions with more prismatic effects */
+        .holo-prismatic-purple {
+            background: 
+                linear-gradient(45deg, 
+                    #2a1a4f, #442e85, #6b4bc7, #8b6fdb, 
+                    #a584ef, #c599ff, #a584ef, #8b6fdb, 
+                    #6b4bc7, #442e85, #2a1a4f),
+                radial-gradient(circle at 30% 30%, 
+                    rgba(255, 255, 255, 0.3) 0%, 
+                    transparent 50%);
+            background-size: 400% 400%, 100% 100%;
+            animation: prismatic-purple-shift 4s ease-in-out infinite;
+            border: 1px solid rgba(197, 153, 255, 0.7);
+            box-shadow: 
+                0 0 20px rgba(107, 75, 199, 0.5),
+                inset 0 2px 4px rgba(255, 255, 255, 0.4),
+                inset 0 -1px 3px rgba(0, 0, 0, 0.2);
+            position: relative;
+        }
+
+        .holo-prismatic-purple::before {
+            content: '';
+            position: absolute;
+            top: 1px;
+            left: 2px;
+            width: 3px;
+            height: 3px;
+            background: rgba(255, 255, 255, 0.9);
+            border-radius: 50%;
+            animation: sparkle 2s ease-in-out infinite;
+        }
+
+        @keyframes prismatic-purple-shift {
+            0% { 
+                background-position: 0% 50%, 50% 50%; 
+                filter: hue-rotate(0deg) saturate(1.1) brightness(1);
+            }
+            25% { 
+                background-position: 50% 0%, 30% 30%; 
+                filter: hue-rotate(30deg) saturate(1.4) brightness(1.2);
+            }
+            50% { 
+                background-position: 100% 50%, 70% 70%; 
+                filter: hue-rotate(-20deg) saturate(1.5) brightness(1.3);
+            }
+            75% { 
+                background-position: 50% 100%, 20% 80%; 
+                filter: hue-rotate(15deg) saturate(1.2) brightness(1.1);
+            }
+            100% { 
+                background-position: 0% 50%, 50% 50%; 
+                filter: hue-rotate(0deg) saturate(1.1) brightness(1);
+            }
+        }
+
+        .holo-prismatic-green {
+            background: 
+                linear-gradient(45deg, 
+                    #526b42, #89b06e, #a3c789, #bdd4a4, 
+                    #d8e1bf, #e8f0d5, #d8e1bf, #bdd4a4, 
+                    #a3c789, #89b06e, #526b42),
+                radial-gradient(circle at 70% 20%, 
+                    rgba(255, 255, 255, 0.3) 0%, 
+                    transparent 50%);
+            background-size: 400% 400%, 100% 100%;
+            animation: prismatic-green-shift 3.5s ease-in-out infinite;
+            border: 1px solid rgba(232, 240, 213, 0.7);
+            box-shadow: 
+                0 0 20px rgba(163, 199, 137, 0.5),
+                inset 0 2px 4px rgba(255, 255, 255, 0.4),
+                inset 0 -1px 3px rgba(0, 0, 0, 0.2);
+            position: relative;
+        }
+
+        .holo-prismatic-green::before {
+            content: '';
+            position: absolute;
+            top: 1px;
+            right: 2px;
+            width: 2px;
+            height: 4px;
+            background: rgba(255, 255, 255, 0.8);
+            border-radius: 50%;
+            animation: sparkle 1.8s ease-in-out infinite;
+        }
+
+        @keyframes prismatic-green-shift {
+            0% { 
+                background-position: 0% 50%, 50% 50%; 
+                filter: hue-rotate(0deg) saturate(1.1) brightness(1);
+            }
+            33% { 
+                background-position: 80% 20%, 70% 30%; 
+                filter: hue-rotate(-25deg) saturate(1.3) brightness(1.15);
+            }
+            66% { 
+                background-position: 20% 80%, 30% 70%; 
+                filter: hue-rotate(40deg) saturate(1.4) brightness(1.25);
+            }
+            100% { 
+                background-position: 0% 50%, 50% 50%; 
+                filter: hue-rotate(0deg) saturate(1.1) brightness(1);
+            }
+        }
+
+        @keyframes sparkle {
+            0%, 100% { opacity: 0.3; transform: scale(1); }
+            50% { opacity: 1; transform: scale(1.5); }
+        }
+
+        /* Matrix Rows */
+        .matrix-demo {
+            background: #0f1114;
+            padding: 30px;
+            border-radius: 8px;
+            margin-top: 30px;
+        }
+
+        .matrix-row {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin: 20px 0;
+            padding: 15px;
+            background: #17181a;
+            border-radius: 6px;
+        }
+
+        .row-label {
+            min-width: 100px;
+            font-size: 14px;
+            color: var(--text);
+            font-weight: 600;
+        }
+
+        .dots-row {
+            display: flex;
+            gap: 12px;
+            flex: 1;
+        }
+
+        .dot-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .controls {
+            text-align: center;
+            margin: 30px 0;
+        }
+
+        .control-btn {
+            padding: 10px 20px;
+            margin: 0 10px;
+            background: #2a2b2f;
+            color: var(--text);
+            border: 1px solid #3a3b3f;
+            border-radius: 8px;
+            cursor: pointer;
+            font-family: inherit;
+            transition: all 0.2s ease;
+        }
+
+        .control-btn:hover {
+            background: #343539;
+            border-color: #c1f732;
+        }
+
+        .paused * {
+            animation-play-state: paused !important;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🌈 Color-Coded Holographic Dots</h1>
+        
+        <div class="controls">
+            <button class="control-btn" onclick="toggleAnimations()">⏸️ Pause Animations</button>
+        </div>
+
+        <div class="comparison-section">
+            <h2 class="section-title">Original vs Holographic Comparison</h2>
+            
+            <div class="variations-grid">
+                <!-- Original Flat Dots -->
+                <div class="variation-card">
+                    <div class="variation-title">Current Flat Dots</div>
+                    <div class="dots-showcase">
+                        <div class="dot-container">
+                            <div class="base-dot flat-dot prompt"></div>
+                            <div class="dot-label">Prompt</div>
+                        </div>
+                        <div class="dot-container">
+                            <div class="base-dot flat-dot image"></div>
+                            <div class="dot-label">Image</div>
+                        </div>
+                        <div class="dot-container">
+                            <div class="base-dot flat-dot video"></div>
+                            <div class="dot-label">Video</div>
+                        </div>
+                    </div>
+                    <div class="description">
+                        Simple flat colors - clear distinction but basic appearance
+                    </div>
+                </div>
+
+                <!-- Color-Specific Holographic -->
+                <div class="variation-card">
+                    <div class="variation-title">Color-Coded Holographic</div>
+                    <div class="dots-showcase">
+                        <div class="dot-container">
+                            <div class="base-dot holo-purple prompt"></div>
+                            <div class="dot-label">Prompt</div>
+                        </div>
+                        <div class="dot-container">
+                            <div class="base-dot holo-light-purple image"></div>
+                            <div class="dot-label">Image</div>
+                        </div>
+                        <div class="dot-container">
+                            <div class="base-dot holo-green video"></div>
+                            <div class="dot-label">Video</div>
+                        </div>
+                    </div>
+                    <div class="description">
+                        Holographic effect within each color family - maintains distinction with iridescent beauty
+                    </div>
+                </div>
+
+                <!-- Enhanced Prismatic -->
+                <div class="variation-card">
+                    <div class="variation-title">Enhanced Prismatic</div>
+                    <div class="dots-showcase">
+                        <div class="dot-container">
+                            <div class="base-dot holo-prismatic-purple prompt"></div>
+                            <div class="dot-label">Prompt</div>
+                        </div>
+                        <div class="dot-container">
+                            <div class="base-dot holo-light-purple image"></div>
+                            <div class="dot-label">Image</div>
+                        </div>
+                        <div class="dot-container">
+                            <div class="base-dot holo-prismatic-green video"></div>
+                            <div class="dot-label">Video</div>
+                        </div>
+                    </div>
+                    <div class="description">
+                        Maximum holographic effect with sparkles and prismatic reflections while keeping color coding
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="matrix-demo">
+            <h2 class="section-title">Matrix Context Demo</h2>
+            <p style="color: #a8a8ad; text-align: center; margin-bottom: 25px;">
+                See how they look in your actual matrix layout context
+            </p>
+            
+            <div class="matrix-row">
+                <div class="row-label">Product 1</div>
+                <div class="dots-row">
+                    <div class="base-dot holo-purple prompt"></div>
+                    <div class="base-dot holo-light-purple image"></div>
+                    <div class="base-dot holo-green video"></div>
+                </div>
+            </div>
+            
+            <div class="matrix-row">
+                <div class="row-label">Product 2</div>
+                <div class="dots-row">
+                    <div class="base-dot holo-prismatic-purple prompt"></div>
+                    <div class="base-dot holo-light-purple image"></div>
+                    <div class="base-dot holo-prismatic-green video"></div>
+                </div>
+            </div>
+            
+            <div class="matrix-row">
+                <div class="row-label">Product 3</div>
+                <div class="dots-row">
+                    <div class="base-dot holo-purple prompt"></div>
+                    <div class="base-dot holo-light-purple image"></div>
+                    <div class="base-dot holo-green video"></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="comparison-section">
+            <h3 style="text-align: center; color: var(--text); margin-bottom: 20px;">
+                ✨ Perfect Balance Solution
+            </h3>
+            <div style="text-align: center; color: #a8a8ad; line-height: 1.6;">
+                <p><strong>🎯 Color Coding Maintained:</strong> Purple family for prompt/image, green for video</p>
+                <p><strong>🌈 Holographic Magic:</strong> Iridescent shifting within each color family</p>
+                <p><strong>🔮 Visual Hierarchy:</strong> Still easy to distinguish between dot types</p>
+                <p><strong>⚡ Performance:</strong> Pure CSS with smooth animations</p>
+                <br>
+                <p><strong>💡 Recommendation:</strong> Use the "Color-Coded Holographic" version for the perfect balance of functionality and visual appeal!</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let animationsPaused = false;
+
+        function toggleAnimations() {
+            const container = document.querySelector('.container');
+            animationsPaused = !animationsPaused;
+            
+            if (animationsPaused) {
+                container.classList.add('paused');
+                event.target.textContent = '▶️ Resume Animations';
+            } else {
+                container.classList.remove('paused');
+                event.target.textContent = '⏸️ Pause Animations';
+            }
+        }
+    </script>
+</body>
+</html>

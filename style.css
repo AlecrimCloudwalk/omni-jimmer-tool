@@ -8,11 +8,11 @@
   --accent: #ffffff;
   
   /* Step Button Colors - Consistent across app */
-  --step-1-color: #442e85;
+  --step-1-color: #7210e8;
   --step-1-text: #2a1a50;
-  --step-2-color: #7a54c9;
+  --step-2-color: #c96100;
   --step-2-text: #4a3270;
-  --step-3-color: #89b06e;
+  --step-3-color: #79ef04;
   --step-3-text: #526b42;
   
   /* Legacy Stage Colors (being phased out) */
@@ -23,7 +23,7 @@
 }
 
 * { box-sizing: border-box; }
-html, body { margin: 0; padding: 0; background: var(--bg); color: var(--text); font-family: Inter, ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, Apple Color Emoji, Segoe UI Emoji; }
+html, body { margin: 0; padding: 0; background: var(--bg); color: var(--text); font-family: Inter, ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, Apple Color Emoji, Segoe UI Emoji; overflow-x: visible; /* Allow dots to show outside page bounds */ }
 
 /* Header */
 .header {
@@ -32,31 +32,31 @@ html, body { margin: 0; padding: 0; background: var(--bg); color: var(--text); f
   background: #101113;
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  position: relative;
+  justify-content: space-between; /* Space between content and buttons */
+  position: fixed; /* Fixed to top so it doesn't disappear when scrolling */
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 1000; /* Ensure it stays above other content */
 }
 
 .header-content {
-  text-align: center;
-  flex: 1;
+  text-align: left;
+  flex: none;
 }
 
 .header-content h1 {
-  margin: 0 0 8px;
-  font-size: 24px;
+  margin: 0;
+  font-size: 20px;
   background: linear-gradient(45deg, var(--green), var(--purple));
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
+  display: inline-block;
 }
 
 .header-content .sub {
-  margin: 0;
-  color: var(--muted);
-  font-size: 14px;
-  max-width: 600px;
-  margin: 0 auto;
-  line-height: 1.4;
+  display: none;
 }
 
 /* User Info - Compact header display */
@@ -134,41 +134,68 @@ html, body { margin: 0; padding: 0; background: var(--bg); color: var(--text); f
   border-color: var(--purple);
 }
 
-/* Menu Toggle Button */
-.menu-toggle {
-  position: fixed;
-  top: 20px;
-  left: 20px;
-  z-index: 1001;
+/* Header Buttons Container */
+.header-buttons {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  flex-shrink: 0; /* Prevent buttons from shrinking */
+}
+
+/* Header Toggle Buttons */
+.menu-toggle, .phone-toggle, .prompts-toggle {
   background: var(--card);
   border: 1px solid #3a3b3f;
-  border-radius: 8px;
-  padding: 12px;
+  border-radius: 6px;
+  padding: 8px;
   cursor: pointer;
   transition: all 0.2s ease;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
 }
 
-.menu-toggle:hover {
+.menu-toggle:hover, .phone-toggle:hover, .prompts-toggle:hover {
   background: #343539;
   transform: translateY(-1px);
+}
+
+/* Phone icon styling */
+.phone-toggle {
+  font-size: 16px;
+}
+
+.phone-toggle::after {
+  content: "📱";
+}
+
+/* Prompts toggle styling */
+.prompts-toggle {
+  font-size: 16px;
+}
+
+.prompts-icon {
+  font-size: 16px;
 }
 
 .hamburger {
   display: flex;
   flex-direction: column;
-  gap: 3px;
+  gap: 2px;
 }
 
 .hamburger span {
-  width: 20px;
+  width: 16px;
   height: 2px;
   background: var(--text);
   transition: all 0.3s ease;
 }
 
 .menu-toggle.active .hamburger span:nth-child(1) {
-  transform: rotate(45deg) translate(5px, 5px);
+  transform: rotate(45deg) translate(4px, 4px);
 }
 
 .menu-toggle.active .hamburger span:nth-child(2) {
@@ -176,43 +203,45 @@ html, body { margin: 0; padding: 0; background: var(--bg); color: var(--text); f
 }
 
 .menu-toggle.active .hamburger span:nth-child(3) {
-  transform: rotate(-45deg) translate(7px, -6px);
+  transform: rotate(-45deg) translate(5px, -5px);
+}
+
+.phone-toggle.active, .prompts-toggle.active {
+  background: #343539;
+  transform: translateY(-1px);
 }
 
 .three-column-container {
-  max-width: 1600px;
-  margin: 0 auto;
-  padding: 24px;
+  width: 100%;
+  margin: 0;
+  padding: 24px; /* Restored reasonable padding */
+  padding-top: 80px; /* Add space for fixed header (80px) */
   display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 24px;
+  grid-template-columns: 1fr;
+  gap: 24px; /* Restored reasonable gap */
   align-items: start;
-  min-height: calc(100vh - 160px);
+  min-height: 100vh; /* At least viewport height, can grow with content */
   transition: all 0.3s ease;
 }
 
-.three-column-container.sidebar-open {
-  margin-left: 320px;
-}
-
-/* LEFT COLUMN: Collapsible Controls */
+/* CONTROLS PANEL: Right-sliding Controls */
 .left-column {
   position: fixed !important;
-  top: 0;
-  left: 0;
+  top: 80px; /* Account for fixed header height */
+  right: 0;
   width: 320px;
-  height: 100vh;
+  height: calc(100vh - 80px); /* Subtract header height from full height */
   background: var(--bg);
-  border-right: 1px solid #232427;
+  border-left: 1px solid #232427;
   display: flex;
   flex-direction: column;
   gap: 20px;
   padding: 20px;
-  transform: translateX(-100%);
+  transform: translateX(100%);
   transition: transform 0.3s ease;
-  z-index: 1000;
+  z-index: 1002;
   overflow-y: auto;
-  box-shadow: 2px 0 10px rgba(0, 0, 0, 0.3);
+  box-shadow: -2px 0 20px rgba(0, 0, 0, 0.5);
   /* Remove from grid flow */
   grid-column: auto;
   grid-row: auto;
@@ -223,7 +252,51 @@ html, body { margin: 0; padding: 0; background: var(--bg); color: var(--text); f
 }
 
 .left-column.collapsed {
-  transform: translateX(-100%);
+  transform: translateX(100%);
+}
+
+/* PHONE PREVIEW PANEL: Right-sliding Phone Preview */
+.phone-panel {
+  position: fixed !important;
+  top: 80px; /* Account for fixed header height */
+  right: 0;
+  width: 480px;
+  height: calc(100vh - 80px); /* Subtract header height from full height */
+  background: var(--bg);
+  border-left: 1px solid #232427;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  padding: 20px;
+  transform: translateX(100%);
+  transition: transform 0.3s ease;
+  z-index: 1003;
+  overflow-y: auto;
+  box-shadow: -2px 0 20px rgba(0, 0, 0, 0.5);
+}
+
+.phone-panel.open {
+  transform: translateX(0);
+}
+
+.phone-panel.collapsed {
+  transform: translateX(100%);
+}
+
+.phone-panel-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-bottom: 20px;
+  border-bottom: 1px solid #232427;
+  margin-bottom: 20px;
+  margin-top: 0; /* Remove margin since panel is now positioned below header */
+}
+
+.phone-panel-header h2 {
+  margin: 0;
+  color: var(--text);
+  font-size: 18px;
 }
 
 .sidebar-header {
@@ -233,7 +306,7 @@ html, body { margin: 0; padding: 0; background: var(--bg); color: var(--text); f
   padding-bottom: 20px;
   border-bottom: 1px solid #232427;
   margin-bottom: 20px;
-  margin-top: 40px;
+  margin-top: 0; /* Remove margin since panel is now positioned below header */
 }
 
 .sidebar-header h2 {
@@ -684,14 +757,14 @@ button:disabled {
   flex-direction: column;
   gap: 16px;
   width: 100%;
-  min-height: 400px;
+  min-height: 100vh; /* At least viewport height, can grow with content */
 }
 
 .center-column .step { 
-  background: var(--card); 
-  border: 1px solid #232427; 
-  padding: 16px; 
-  border-radius: 12px; 
+  background: transparent; 
+  border: none; 
+  padding: 0; 
+  border-radius: 0; 
 }
 
 .center-column h3 { margin: 0 0 8px; font-size: 16px; }
@@ -738,12 +811,12 @@ button:disabled {
 
 /* Matrix Styles - Enhanced from Original */
 .matrix-section {
-  background: var(--card);
-  border: 1px solid #232427;
-  border-radius: 12px;
-  padding: 20px;
+  background: transparent;
+  border: none;
+  border-radius: 0;
+  padding: 0;
   margin-bottom: 24px;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  box-shadow: none;
 }
 
 /* Generated Texts Styling - From Original */
@@ -859,11 +932,155 @@ button:disabled {
 }
 
 .matrix-grid {
-  overflow-x: auto;
-  border: 2px solid #232427;
-  border-radius: 8px;
-  min-height: 300px;
+  overflow: auto;
   width: 100%;
+  height: calc(100vh - 80px); /* Subtract only the main header (80px) */
+  position: fixed; /* Fix matrix to viewport to avoid container padding effects */
+  top: 80px; /* Position directly below main header */
+  left: 0;
+  right: 0;
+  padding: 0; /* Remove any padding */
+  margin: 0; /* Remove any margin */
+  z-index: 50; /* Below header but above page content */
+}
+
+/* Fixed Header Frame - scrolls horizontally, fixed vertically */
+.matrix-header-frame {
+  position: absolute;
+  top: 0; /* Position at top of matrix-grid container */
+  left: 685px; /* Start after full left frame */
+  right: 0;
+  height: 80px; /* Increased height for dots + headers */
+  background: var(--bg);
+  z-index: 100;
+  border-bottom: 2px solid #232427;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+  overflow-x: auto;
+  overflow-y: visible;
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* IE/Edge */
+  transition: left 0.3s ease; /* Smooth transition when left frame changes */
+}
+
+.matrix-header-frame::-webkit-scrollbar {
+  display: none; /* Chrome/Safari */
+}
+
+/* Fixed Left Frame - contains three separate columns */
+.matrix-left-frame {
+  position: absolute;
+  top: 80px; /* Below matrix header frame (80px) within matrix-grid */
+  left: 0;
+  width: 685px; /* Full width to contain all three columns */
+  height: calc(100% - 80px); /* Full height minus matrix header frame */
+  background: var(--bg);
+  z-index: 90;
+  border-right: 2px solid #232427;
+  box-shadow: none; /* Remove box-shadow that might cause visual issues */
+  overflow-y: auto; /* Allow vertical scrolling to sync with content area */
+  overflow-x: hidden; /* Remove horizontal scroll completely */
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* IE/Edge */
+  display: flex; /* Three columns side by side */
+  flex-direction: row;
+  align-items: stretch; /* Ensure columns stretch to full height */
+  transition: width 0.3s ease; /* Smooth width transition when collapsing */
+}
+
+.matrix-left-frame::-webkit-scrollbar {
+  display: none; /* Chrome/Safari */
+}
+
+/* Collapsed state for left frame */
+.matrix-left-frame.collapsed {
+  width: 258px; /* Dots column (50px) + products column (208px) */
+}
+
+/* Adjust header frame when left frame is collapsed */
+.matrix-header-frame.collapsed {
+  left: 260px; /* Start after collapsed left frame (258px) + border (2px) */
+}
+
+/* Adjust content area when left frame is collapsed */
+.matrix-content-area.collapsed {
+  left: 260px; /* Start after collapsed left frame (258px) + border (2px) */
+}
+
+/* Adjust corner frame when left frame is collapsed */
+.matrix-corner-frame.collapsed {
+  width: 258px; /* Dots column (50px) + products column (208px) */
+}
+
+/* Fixed Corner Frame - covers both blue and red sections */
+.matrix-corner-frame {
+  position: absolute;
+  top: 0; /* Position at top of matrix-grid container */
+  left: 0;
+  width: 685px; /* Full width to match left frame */
+  height: 80px; /* Match header height */
+  background: var(--bg);
+  z-index: 110;
+  border-right: 2px solid #222222;
+  border-bottom: 2px solid #ffffff;
+  box-shadow: 2px 2px 8px rgba(0, 0, 0, 0.3);
+  transition: width 0.3s ease; /* Smooth width transition when collapsing */
+}
+
+/* Scrollable Content Area */
+.matrix-content-area {
+  position: absolute;
+  top: 80px; /* Below matrix header frame within matrix-grid */
+  left: 685px; /* Space for full left frame */
+  right: 0;
+  height: calc(100% - 80px); /* Fill remaining space after matrix header */
+  overflow: auto;
+  padding: 0;
+  background: var(--bg); /* Add consistent background */
+  transition: left 0.3s ease; /* Smooth transition when left frame changes */
+}
+
+/* Dedicated border elements that match content area height exactly */
+.matrix-border-products {
+  position: absolute; /* Position relative to matrix-grid */
+  top: 80px; /* Below matrix header within matrix-grid */
+  left: 258px; /* After dots (50px) + products (208px) columns */
+  width: 1px; /* Back to normal width - not clickable */
+  height: calc(100% - 80px); /* Remaining height after matrix header */
+  background: #232427; /* Proper border color */
+  z-index: 95; /* Above everything */
+  pointer-events: none; /* Not clickable anymore */
+  transition: opacity 0.3s ease; /* Smooth fade transition */
+}
+
+/* Clickable area that follows the right edge of prompts column */
+.matrix-prompts-border {
+  position: absolute; /* Position relative to matrix-grid */
+  top: 80px; /* Below matrix header within matrix-grid */
+  left: 685px; /* Initial position - will be updated by JavaScript */
+  width: 8px; /* Wide enough for easy clicking and visibility */
+  height: calc(100% - 80px); /* Remaining height after matrix header */
+  background: rgba(200, 126, 247, 0.1); /* Slightly visible for testing - will be transparent later */
+  z-index: 999; /* High z-index to ensure visibility */
+  cursor: pointer;
+  transition: left 0.3s ease, background-color 0.2s ease, width 0.2s ease;
+}
+
+/* Show border on hover in both states */
+.matrix-prompts-border:hover {
+  background: rgba(200, 126, 247, 0.6); /* More visible on hover */
+  width: 10px; /* Wider on hover */
+}
+
+/* Border adapts when collapsed - should be controlled by JavaScript */
+
+/* Matrix container for proper scroll behavior */
+.matrix-container {
+  position: relative;
+  min-width: max-content;
+  width: 100%;
+  /* Force container to be tall enough for content */
+  min-height: calc(80px + (15 * var(--matrix-row-height))); /* Max 15 products × row height each + header */
+  height: max-content; /* Grow with content */
 }
 
 .matrix-table {
@@ -942,6 +1159,23 @@ button:disabled {
   min-height: 40px;
   line-height: 1.2;
   word-wrap: break-word;
+  position: relative;
+}
+
+.cnae-name-edit::after {
+  content: '||||';
+  position: absolute;
+  right: -20px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--muted);
+  font-size: 0.8rem;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+
+.cnae-name-edit:hover::after {
+  opacity: 0.7;
 }
 
 .cnae-name-edit:focus {
@@ -1021,19 +1255,25 @@ button:disabled {
 }
 
 .product-name-edit {
-  background: #121316;
-  border: 1px solid #2a2b2f;
-  border-radius: 4px;
-  padding: 0.5rem;
-  color: var(--text);
-  font-size: 0.9rem;
+  font-size: 1.08rem;
   font-weight: 600;
-  text-align: center;
+  color: var(--text);
+  line-height: 1.2;
+  background: transparent;
+  border: none;
+  padding: 4px 8px;
+  border-radius: 4px;
+  transition: all 0.2s ease;
+  text-align: left;
+  width: 100%;
+  margin: 0;
+  position: relative;
 }
 
 .product-name-edit:focus {
   outline: none;
-  border-color: var(--green);
+  color: rgba(200, 126, 247, 0.9);
+  background: rgba(200, 126, 247, 0.05);
 }
 
 .product-seed-info {
@@ -1356,45 +1596,69 @@ button:disabled {
   opacity: 0.7;
 }
 
-/* Modal Styles - Workflow Design */
+/* UNIFIED MODAL SYSTEM */
 .modal {
   position: fixed;
   top: 0;
   left: 0;
   width: 100%;
   height: 100%;
-  background: rgba(0, 0, 0, 0.8);
-  display: flex;
+  background: rgba(0, 0, 0, 0.85);
+  backdrop-filter: blur(10px);
+  display: none;
   align-items: center;
   justify-content: center;
-  z-index: 1000;
+  z-index: 9999;
+  opacity: 0;
+  transition: all 0.3s ease;
+  overflow-y: auto;
+  padding: 20px;
+  box-sizing: border-box;
+}
+
+.modal.show,
+.modal[style*="flex"] {
+  display: flex !important;
+  opacity: 1;
 }
 
 .modal-content {
   background: var(--card);
-  border-radius: 12px;
-  width: 90%;
-  max-width: 700px;
-  max-height: 90vh;
-  overflow-y: auto;
-  border: 1px solid #333;
-  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5);
+  border-radius: 18px;
+  width: 95%;
+  max-width: 1200px;
+  height: 90vh;
+  max-height: calc(100vh - 40px);
+  border: 1px solid rgba(114, 16, 232, 0.3);
+  box-shadow: 0 30px 60px rgba(114, 16, 232, 0.2);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  transform: scale(0.9);
+  transition: all 0.3s ease;
+  position: relative;
+  margin: auto;
 }
 
-/* Modal Header */
+.modal.show .modal-content,
+.modal[style*="flex"] .modal-content {
+  transform: scale(1);
+}
+
 .modal-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 1.5rem;
+  padding: 20px 24px;
   border-bottom: 1px solid #333;
-  background: #2a2b2e;
+  background: rgba(35, 36, 39, 0.8);
+  flex-shrink: 0;
 }
 
 .modal-header h3 {
   margin: 0;
   color: var(--text);
-  font-size: 1.5rem;
+  font-size: 20px;
   font-weight: 600;
 }
 
@@ -1402,124 +1666,898 @@ button:disabled {
   background: none;
   border: none;
   color: var(--muted);
-  font-size: 2rem;
+  font-size: 24px;
   cursor: pointer;
-  padding: 0;
-  width: 30px;
-  height: 30px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  padding: 8px;
+  border-radius: 6px;
+  transition: all 0.2s ease;
+  z-index: 10;
 }
 
 .modal-close:hover {
   color: var(--text);
+  background: rgba(255, 255, 255, 0.1);
 }
 
-/* Modal Body */
 .modal-body {
-  padding: 2rem;
+  flex: 1;
+  display: flex;
+  flex-direction: row;
+  padding: 0;
+  overflow: hidden;
+  min-height: 0;
 }
 
-/* Step Workflow */
-.step-workflow {
+/* Sidebar Styles */
+.sidebar {
+  width: 280px;
+  background: rgba(35, 36, 39, 0.8);
+  border-right: 1px solid #333;
+  padding: 24px;
   display: flex;
   flex-direction: column;
-  gap: 2rem;
-  margin-bottom: 2rem;
 }
 
-.workflow-step {
+.sidebar h4 {
+  margin: 0 0 24px 0;
+  color: var(--text);
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.nav-step {
+  padding: 16px;
+  border-radius: 10px;
+  margin-bottom: 12px;
+  cursor: pointer;
+  transition: all 0.3s ease;
   display: flex;
-  gap: 1rem;
-  padding: 1.5rem;
-  border-radius: 8px;
-  border: 1px solid #333;
-  transition: all 0.2s ease;
-}
-
-.workflow-step.completed {
-  background: rgba(34, 197, 94, 0.1);
-  border-color: rgba(34, 197, 94, 0.3);
-}
-
-.workflow-step.generating {
-  background: rgba(200, 126, 247, 0.1);
-  border-color: rgba(200, 126, 247, 0.3);
-}
-
-.workflow-step.error {
-  background: rgba(239, 68, 68, 0.1);
-  border-color: rgba(239, 68, 68, 0.3);
-}
-
-.step-indicator {
-  display: flex;
-  flex-direction: column;
   align-items: center;
-  gap: 0.5rem;
-  min-width: 60px;
+  gap: 14px;
+  border: 1px solid transparent;
+  position: relative;
 }
 
-.step-number {
-  width: 40px;
-  height: 40px;
+.nav-step:hover {
+  background: rgba(255, 255, 255, 0.05);
+  border-color: rgba(255, 255, 255, 0.1);
+}
+
+.nav-step.active {
+  background: rgba(114, 16, 232, 0.15);
+  border-color: rgba(114, 16, 232, 0.4);
+  box-shadow: 0 0 0 1px rgba(114, 16, 232, 0.2);
+}
+
+.nav-step.completed {
+  opacity: 0.8;
+}
+
+/* Individual step completed colors */
+.nav-step:nth-child(2).completed {
+  background: rgba(114, 16, 232, 0.15);
+  border-color: rgba(114, 16, 232, 0.4);
+}
+
+.nav-step:nth-child(3).completed {
+  background: rgba(201, 97, 0, 0.15);
+  border-color: rgba(201, 97, 0, 0.4);
+}
+
+.nav-step:nth-child(4).completed {
+  background: rgba(121, 239, 4, 0.15);
+  border-color: rgba(121, 239, 4, 0.4);
+}
+
+.nav-step.completed::after {
+  content: "✓";
+  position: absolute;
+  right: 12px;
+  color: var(--green);
+  font-weight: bold;
+  font-size: 14px;
+}
+
+.step-icon {
+  width: 32px;
+  height: 32px;
   border-radius: 50%;
-  background: var(--muted);
-  color: var(--bg);
   display: flex;
   align-items: center;
   justify-content: center;
   font-weight: 600;
-  font-size: 1.2rem;
+  font-size: 14px;
+  flex-shrink: 0;
 }
 
-.workflow-step.completed .step-number {
-  background: var(--green);
-  color: #101010;
+.nav-step:nth-child(2) .step-icon { background: var(--step-1-color); color: white; }
+.nav-step:nth-child(3) .step-icon { background: var(--step-2-color); color: white; }
+.nav-step:nth-child(4) .step-icon { background: var(--step-3-color); color: black; }
+
+.step-info {
+  flex: 1;
 }
 
-.workflow-step.generating .step-number {
-  background: var(--purple);
-  color: #101010;
-  animation: pulse 1.5s infinite;
+.step-title {
+  font-weight: 600;
+  color: var(--text);
+  margin-bottom: 2px;
+  font-size: 14px;
 }
 
-.workflow-step.error .step-number {
-  background: #EF4444;
-  color: white;
-}
-
-.step-label {
-  font-size: 0.8rem;
+.step-description {
+  font-size: 12px;
   color: var(--muted);
-  font-weight: 500;
-  text-align: center;
+  line-height: 1.3;
+}
+
+/* Progress Section */
+.progress-section {
+  margin-top: auto;
+  padding-top: 24px;
+  border-top: 1px solid #333;
+  margin-bottom: 20px;
+}
+
+.progress-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text);
+  margin-bottom: 12px;
+}
+
+.progress-bar {
+  background: #333;
+  height: 8px;
+  border-radius: 4px;
+  overflow: hidden;
+  margin-bottom: 8px;
+}
+
+.progress-fill {
+  background: linear-gradient(90deg, var(--step-1-color), var(--step-2-color), var(--step-3-color));
+  height: 100%;
+  width: 0%;
+  transition: width 0.5s ease;
+}
+
+.progress-text {
+  font-size: 12px;
+  color: var(--muted);
+}
+
+/* Sidebar Actions */
+.sidebar-actions {
+  margin-top: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.btn-full-width {
+  width: 100%;
+}
+
+/* Characteristics Info in Sidebar */
+.characteristics-info {
+  margin-top: 16px;
+  padding: 16px;
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  font-size: 12px;
+  line-height: 1.4;
+}
+
+.characteristics-info strong {
+  color: var(--text);
+  display: block;
+  margin-bottom: 4px;
+}
+
+/* Main Content Area */
+.main-content {
+  flex: 1;
+  padding: 32px;
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
+  min-height: 0;
+  position: relative;
 }
 
 .step-content {
+  display: none;
+  flex-direction: column;
   flex: 1;
+  min-height: 0;
+  animation: fadeIn 0.3s ease;
+  overflow-y: auto;
+}
+
+.step-content.active {
+  display: flex;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.step-header {
+  margin-bottom: 24px;
+}
+
+.step-header h3 {
+  margin: 0 0 8px 0;
+  color: var(--text);
+  font-size: 24px;
+  font-weight: 600;
+}
+
+.step-subtitle {
+  color: var(--muted);
+  font-size: 14px;
+}
+
+/* Form Elements */
+.form-group {
+  margin-bottom: 24px;
+}
+
+.form-label {
+  display: block;
+  margin-bottom: 8px;
+  font-weight: 500;
+  color: var(--text);
+  font-size: 14px;
+}
+
+/* New step layout with buttons on the right */
+.step-layout {
+  display: flex;
+  gap: 24px;
+  height: 100%;
+  flex: 1;
+}
+
+.step-actions-right {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  min-width: 160px;
+  max-width: 200px;
+  justify-content: flex-start;
+  padding-top: 32px; /* Align with content */
 }
 
 .step-actions {
   display: flex;
-  gap: 0.5rem;
-  margin-top: 1rem;
+  gap: 12px;
+  margin-top: auto;
+  padding-top: 24px;
   flex-wrap: wrap;
 }
 
-#prompt-editor {
-  width: 100%;
-  min-height: 120px;
-  background: #1a1b1e;
-  border: 1px solid #333;
-  border-radius: 8px;
-  padding: 1rem;
+.prompt-editor {
+  background: rgba(0, 0, 0, 0.4);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 10px;
+  padding: 20px;
   color: var(--text);
-  font-family: inherit;
-  font-size: 0.9rem;
+  font-family: 'Fira Code', monospace;
+  font-size: 14px;
+  line-height: 1.6;
   resize: vertical;
-  margin-bottom: 1rem;
+  min-height: 120px;
+  width: 100%;
+  transition: all 0.3s ease;
+  word-wrap: break-word;
+  white-space: pre-wrap;
+}
+
+.prompt-editor:focus {
+  outline: none;
+  border-color: var(--step-1-color);
+  box-shadow: 0 0 0 3px rgba(114, 16, 232, 0.1);
+}
+
+.prompt-editor:read-only {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+/* Expanded textarea for better prompt editing */
+.expanded-textarea {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.prompt-editor.expanded {
+  flex: 1;
+  min-height: 200px;
+  max-height: none;
+}
+
+/* Unified Modal Layout System */
+.unified-step-layout {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  height: 100%;
+}
+
+/* Main Content Area (16:9 aspect ratio) */
+.main-content-area {
+  flex: 0 0 auto;
+}
+
+.content-preview-area {
+  width: 100%;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+  background: rgba(0, 0, 0, 0.4);
+  overflow: hidden;
+  position: relative;
+}
+
+.aspect-16-9 {
+  aspect-ratio: 16/9;
+}
+
+/* Content Preview Styles */
+.prompt-preview-content {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 20px;
+}
+
+.preview-placeholder {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+}
+
+.preview-icon {
+  font-size: 48px;
+  opacity: 0.6;
+}
+
+.preview-text {
+  font-size: 16px;
+  font-weight: 500;
+  color: var(--text);
+  margin-bottom: 4px;
+}
+
+.preview-subtext {
+  font-size: 14px;
+  color: var(--muted);
+  opacity: 0.8;
+  line-height: 1.4;
+}
+
+/* Drag and Drop in unified layout */
+.content-preview-area .drag-drop-area {
+  width: 100%;
+  height: 100%;
+  border: none;
+  border-radius: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Prompt Section (Unified) */
+.prompt-section {
+  flex: 0 0 auto;
+}
+
+.prompt-container-unified {
+  height: 120px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 10px;
+  background: rgba(0, 0, 0, 0.4);
+  overflow: hidden;
+}
+
+.prompt-editor-unified {
+  width: 100%;
+  height: 100%;
+  border: none;
+  background: transparent;
+  color: var(--text);
+  font-family: 'Fira Code', monospace;
+  font-size: 14px;
+  line-height: 1.6;
+  padding: 16px;
+  resize: none;
+  outline: none;
+}
+
+.prompt-editor-unified:focus {
+  outline: none;
+}
+
+.prompt-editor-unified::placeholder {
+  color: var(--muted);
+  opacity: 0.7;
+}
+
+/* Action Section (Unified) */
+.action-section {
+  flex: 0 0 auto;
+  display: flex;
+  gap: 12px;
+  justify-content: flex-end;
+  align-items: center;
+}
+
+/* Video Settings in unified layout */
+.video-settings {
+  margin-top: 16px;
+  display: flex;
+  gap: 16px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.setting-group {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.setting-label {
+  font-size: 12px;
+  color: var(--muted);
+  font-weight: 500;
+}
+
+.video-setting-select {
+  background: rgba(0, 0, 0, 0.6);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 6px;
+  color: var(--text);
+  padding: 8px 12px;
+  font-size: 12px;
+  min-width: 200px;
+}
+
+.pricing-display {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: rgba(0, 0, 0, 0.6);
+  padding: 8px 12px;
+  border-radius: 6px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.pricing-label {
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.pricing-amount {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--green);
+}
+
+/* Video Preview Area - Clean Unified Styles */
+.video-preview-area {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  background: transparent;
+  border: none;
+  border-radius: 0;
+  transition: all 0.3s ease;
+}
+
+.video-preview-area.generating {
+  background: linear-gradient(45deg, rgba(139, 92, 246, 0.1), rgba(139, 92, 246, 0.05), rgba(139, 92, 246, 0.1));
+  background-size: 200% 200%;
+  animation: generatePulse 2s ease-in-out infinite;
+}
+
+.video-preview-area.has-video {
+  background: transparent;
+}
+
+.video-preview-area video {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 12px;
+}
+
+@keyframes generatePulse {
+  0%, 100% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+}
+
+.video-placeholder {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  text-align: center;
+  padding: 40px 20px;
+  color: var(--muted);
+  background: transparent;
+  border: none;
+  width: 100%;
+  height: 100%;
+  justify-content: center;
+}
+
+.video-placeholder.loading {
+  background: rgba(139, 92, 246, 0.05);
+  border-radius: 12px;
+}
+
+/* Image Controls in unified layout */
+.image-controls {
+  margin-top: 16px;
+  background: rgba(0, 0, 0, 0.6);
+  border-radius: 8px;
+  padding: 16px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.slider-group {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.slider-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.slider-item label {
+  min-width: 100px;
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.image-slider {
+  flex: 1;
+  height: 4px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 2px;
+  outline: none;
+  appearance: none;
+}
+
+.image-slider::-webkit-slider-thumb {
+  appearance: none;
+  width: 16px;
+  height: 16px;
+  background: var(--step-2-color);
+  border-radius: 50%;
+  cursor: pointer;
+}
+
+.slider-actions {
+  margin-top: 8px;
+  display: flex;
+  justify-content: flex-end;
+}
+
+/* Drag and Drop Area */
+.drag-drop-area {
+  border: 2px dashed rgba(255, 255, 255, 0.2);
+  border-radius: 12px;
+  padding: 48px 24px;
+  text-align: center;
+  color: var(--muted);
+  transition: all 0.3s ease;
+  cursor: pointer;
+  background: rgba(0, 0, 0, 0.2);
+  position: relative;
+  overflow: hidden;
+  min-height: 200px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Large drag area for proper image sizing */
+.drag-drop-area.large {
+  min-height: 400px;
+  max-width: 600px;
+  aspect-ratio: 16/9; /* Standard image ratio */
+}
+
+.image-area {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.drag-drop-area:hover,
+.drag-drop-area.dragover {
+  border-color: var(--step-2-color);
+  background: rgba(201, 97, 0, 0.1);
+  color: var(--text);
+}
+
+.drag-drop-area.has-image {
+  padding: 0;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.uploaded-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 10px;
+  transform-origin: center;
+  transition: transform 0.3s ease;
+}
+
+.image-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.7);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.drag-drop-area.has-image:hover .image-overlay {
+  opacity: 1;
+}
+
+
+
+/* Image Controls */
+.image-controls {
+  background: rgba(0, 0, 0, 0.2);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 10px;
+  padding: 20px;
+  margin-top: 16px;
+}
+
+.image-controls.show {
+  display: block !important;
+}
+
+.slider-group {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.slider-item {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.slider-item label {
+  font-size: 12px;
+  color: var(--text);
+  font-weight: 500;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.image-slider {
+  width: 100%;
+  height: 6px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 3px;
+  outline: none;
+  -webkit-appearance: none;
+  appearance: none;
+}
+
+.image-slider::-webkit-slider-thumb {
+  appearance: none;
+  width: 18px;
+  height: 18px;
+  background: var(--step-2-color);
+  cursor: pointer;
+  border-radius: 50%;
+  border: 2px solid white;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+}
+
+.image-slider::-moz-range-thumb {
+  width: 18px;
+  height: 18px;
+  background: var(--step-2-color);
+  cursor: pointer;
+  border-radius: 50%;
+  border: 2px solid white;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+}
+
+.slider-actions {
+  margin-top: 12px;
+  display: flex;
+  justify-content: center;
+}
+
+.btn-sm {
+  padding: 6px 12px;
+  font-size: 12px;
+}
+
+/* Status Messages */
+.status-message {
+  padding: 12px 16px;
+  border-radius: 8px;
+  margin: 12px 0;
+  font-size: 14px;
+  display: none;
+  animation: slideIn 0.3s ease;
+}
+
+.status-message.success {
+  background: rgba(34, 197, 94, 0.1);
+  border: 1px solid rgba(34, 197, 94, 0.3);
+  color: #22c55e;
+}
+
+.status-message.error {
+  background: rgba(239, 68, 68, 0.1);
+  border: 1px solid rgba(239, 68, 68, 0.3);
+  color: #ef4444;
+}
+
+.status-message.show {
+  display: block;
+}
+
+@keyframes slideIn {
+  from { opacity: 0; transform: translateY(-10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* Hidden file input */
+.file-input {
+  display: none;
+}
+
+/* Coming Soon */
+.coming-soon {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  color: var(--muted);
+  text-align: center;
+}
+
+.coming-soon-icon {
+  font-size: 64px;
+  margin-bottom: 24px;
+  opacity: 0.5;
+}
+
+.coming-soon h4 {
+  margin: 0 0 8px 0;
+  font-size: 20px;
+}
+
+.coming-soon p {
+  margin: 0;
+  font-size: 14px;
+  opacity: 0.8;
+}
+
+/* Loading Animation */
+.loading {
+  display: inline-block;
+  width: 16px;
+  height: 16px;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-radius: 50%;
+  border-top-color: white;
+  animation: spin 1s ease-in-out infinite;
+  margin-right: 8px;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+/* Modal Responsive Design */
+@media (max-width: 768px) {
+  .modal-content {
+    width: 98%;
+    height: 95vh;
+    max-height: 95vh;
+    margin: 2.5vh auto;
+  }
+  
+  .sidebar {
+    width: 200px;
+    padding: 16px;
+  }
+  
+  .main-content {
+    padding: 20px;
+  }
+  
+  .modal-header {
+    padding: 16px 20px;
+  }
+  
+  .modal-header h3 {
+    font-size: 18px;
+  }
+  
+  .modal-close {
+    font-size: 20px;
+    padding: 6px;
+  }
+}
+
+@media (max-width: 480px) {
+  .modal-content {
+    width: 100%;
+    height: 100vh;
+    max-height: 100vh;
+    border-radius: 0;
+    margin: 0;
+  }
+  
+  .sidebar {
+    width: 100%;
+    padding: 12px;
+  }
+  
+  .modal-body {
+    flex-direction: column;
+  }
+  
+  .main-content {
+    padding: 16px;
+  }
+}
+
+/* Scroll fade for step content */
+.step-content.overflowing {
+  position: relative;
+}
+
+.step-content.overflowing::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 30px;
+  background: linear-gradient(transparent, var(--card));
+  pointer-events: none;
+  opacity: 1;
+  border-radius: 0 0 8px 8px;
 }
 
 #prompt-editor:focus {
@@ -1527,15 +2565,21 @@ button:disabled {
   border-color: var(--green);
 }
 
+#prompt-editor:hover {
+  background: rgba(200, 126, 247, 0.1);
+  border-color: rgba(200, 126, 247, 0.3);
+  transform: translateY(-1px);
+}
+
 .image-preview {
-  width: 320px;
-  height: 180px;
+  width: 427px;
+  height: var(--matrix-row-height);
   border: none;
   border-radius: 0;
   display: flex;
   align-items: center;
   justify-content: center;
-  background: #1a1b1e;
+  background: #161518;
   margin-bottom: 1rem;
   overflow: hidden;
 }
@@ -1570,10 +2614,21 @@ button:disabled {
   padding: 1rem;
   font-size: 0.9rem;
   color: var(--text);
+  margin-top: auto;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  position: relative;
 }
 
 .characteristics-info strong {
   color: var(--green);
+}
+
+.characteristics-info:hover {
+  background: rgba(200, 126, 247, 0.1);
+  border-color: rgba(200, 126, 247, 0.3);
+  padding-left: 1.25rem;
+  transform: translateY(-1px);
 }
 
 /* Modal Footer */
@@ -1583,7 +2638,8 @@ button:disabled {
   justify-content: flex-end;
   padding: 1.5rem;
   border-top: 1px solid #333;
-  background: #2a2b2e;
+  background: rgba(35, 36, 39, 0.8);
+  flex-shrink: 0;
 }
 
 /* Button Styles */
@@ -1597,6 +2653,8 @@ button:disabled {
   text-decoration: none;
   display: inline-flex;
   align-items: center;
+  justify-content: center;
+  text-align: center;
   gap: 0.5rem;
 }
 
@@ -1622,6 +2680,17 @@ button:disabled {
 
 .btn-success:hover:not(:disabled) {
   background: #16A34A;
+}
+
+.btn-primary-green {
+  background: var(--green);
+  color: #101010;
+  font-weight: 600;
+}
+
+.btn-primary-green:hover:not(:disabled) {
+  background: #a8e32a;
+  transform: translateY(-1px);
 }
 
 .btn-warning {
@@ -1733,38 +2802,45 @@ button:disabled {
   background-color: rgba(200, 126, 247, 0.1);
 }
 
-/* Content Matrix - Card Layout */
-.content-matrix {
-  background: #1a1b1e;
-  border-radius: 12px;
-  overflow: hidden;
-  border: 1px solid #333;
-  width: 100%;
-  min-height: 200px;
-}
 
-/* Matrix Header Row */
+
+/* Matrix Header Row - now in fixed frame */
 .matrix-header-row {
   display: flex;
-  background: #2a2b2e;
-  padding: 1rem;
-  border-bottom: 1px solid #333;
+  background: var(--bg);
+  padding: 0;
+  border: none;
   align-items: center;
-  gap: 1rem;
+  width: 100%;
+  height: 60px;
+  position: relative;
+  z-index: 101;
+  overflow: visible; /* Allow dots to show above header row */
 }
 
 .column-spacer {
-  width: 160px;
+  width: 208px;
+  min-width: 208px;
   margin-right: 0;
+  flex-shrink: 0;
+  /* Removed border-right - vertical dividers handled by left frame columns */
+  background: var(--bg);
+  z-index: 102;
 }
 
 .column-spacer:nth-child(2) {
-  width: 320px;
+  width: 427px;
+  min-width: 427px;
   margin-right: 0;
+  flex-shrink: 0;
+  /* Removed border-right - vertical dividers handled by left frame columns */
+  background: var(--bg);
+  z-index: 102;
 }
 
 .cnae-header-card {
-  width: 320px;
+  flex: 1;
+  min-width: 427px;
   padding: 0;
   text-align: center;
   margin-right: 0;
@@ -1773,99 +2849,169 @@ button:disabled {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  background: var(--card);
+  background: var(--bg);
   border-radius: 0;
-  overflow: hidden;
+  overflow: visible; /* Allow dots to show above header */
+  /* Removed border-right - vertical dividers handled by left frame columns */
+  z-index: 40;
+  height: 100%;
+  padding-top: 15px;
 }
 
-.cnae-step-buttons {
-  display: flex;
-  width: 100%;
-  gap: 0;
-  margin-bottom: 0;
-  border-radius: 0;
-  overflow: hidden;
-}
+/* Removed cnae-result-column border rules - dividers handled by left frame */
+/* Removed cnae-header-card:last-child border rule - no longer needed */
 
-.cnae-step-buttons .shuffle-btn {
-  flex: 1;
-  height: 2px;
-  border-radius: 0;
-  border: none;
-  color: transparent;
-  font-weight: 600;
-  font-size: 0.8rem;
-  cursor: pointer;
-  transition: all 0.3s ease;
+/* Dedicated Row Dots Column */
+.row-dots-column {
+  width: 50px;
+  min-width: 50px;
+  height: var(--matrix-row-height); /* Use consistent variable */
   display: flex;
   align-items: center;
   justify-content: center;
-  overflow: hidden;
+  background: var(--bg); /* Add background to match blue section */
+  z-index: 91;
+  overflow: visible;
 }
 
-/* Column button colors using CSS variables */
-.cnae-step-buttons .shuffle-btn.step-1 {
-  background: var(--step-1-color);
+.matrix-row-dots {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 8px 4px;
+  background: transparent;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.3s ease;
 }
 
-.cnae-step-buttons .shuffle-btn.step-2 {
+.matrix-row-dots:hover {
+  gap: 8px;
+  background: rgba(193, 247, 50, 0.1);
+  transform: scale(1.1);
+}
+
+.row-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+  opacity: 1;
+  position: relative;
+  display: block;
+  background: rgba(255,255,255,0.2);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.4);
+}
+
+.row-dot.prompt { 
+  background: var(--step-1-color); 
+  box-shadow: 0 0 6px var(--step-1-color);
+}
+.row-dot.image { 
   background: var(--step-2-color);
+  box-shadow: 0 0 6px var(--step-2-color);
 }
-
-.cnae-step-buttons .shuffle-btn.step-3 {
+.row-dot.video { 
   background: var(--step-3-color);
+  box-shadow: 0 0 6px var(--step-3-color);
 }
 
-/* Hover over entire column header expands all buttons - with darker text */
-.cnae-header-card:hover .shuffle-btn {
-  height: 24px;
+.matrix-row-dots:hover .row-dot {
+  transform: scale(2);
+  opacity: 0.8;
 }
 
-.cnae-header-card:hover .shuffle-btn.step-1 {
-  color: var(--step-1-text);
+.row-dot:hover {
+  transform: scale(3.5) !important;
+  opacity: 1 !important;
+  border-radius: 3px;
+  z-index: 10;
+  box-shadow: 0 0 12px rgba(199, 126, 247, 0.4);
 }
 
-.cnae-header-card:hover .shuffle-btn.step-2 {
-  color: var(--step-2-text);
+/* Column dots positioned above each header */
+.matrix-col-dots {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 4px 8px;
+  background: transparent;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  margin-bottom: 8px;
+  width: fit-content;
 }
 
-.cnae-header-card:hover .shuffle-btn.step-3 {
-  color: var(--step-3-text);
+.matrix-col-dots:hover {
+  gap: 8px;
+  background: rgba(193, 247, 50, 0.1);
+  transform: scale(1.1);
 }
 
-  /* Column header processing states */
-  .cnae-step-buttons .shuffle-btn.processing {
-    animation: pulse 1.5s ease-in-out infinite;
-    height: 24px;
-  }
-  
-  /* Column header completed states using CSS variables */
-  .cnae-step-buttons .shuffle-btn.step-1.completed {
-    background: var(--step-1-color);
-    color: var(--step-1-text);
-    height: 24px;
-  }
-  
-  .cnae-step-buttons .shuffle-btn.step-2.completed {
-    background: var(--step-2-color);
-    color: var(--step-2-text);
-    height: 24px;
-  }
-  
-  .cnae-step-buttons .shuffle-btn.step-3.completed {
-    background: var(--step-3-color);
-    color: var(--step-3-text);
-    height: 24px;
-  }
-
-/* Column completed buttons stay expanded */
-.cnae-step-buttons .shuffle-btn.completed {
-  height: 24px !important;
+.col-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+  opacity: 1;
+  position: relative;
+  display: block;
+  background: rgba(255,255,255,0.2);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.4);
 }
 
-.cnae-step-buttons .shuffle-btn.completed:hover {
+.col-dot.prompt { 
+  background: var(--step-1-color);
+  box-shadow: 0 0 6px var(--step-1-color);
+}
+.col-dot.image { 
+  background: var(--step-2-color);
+  box-shadow: 0 0 6px var(--step-2-color);
+}
+.col-dot.video { 
+  background: var(--step-3-color);
+  box-shadow: 0 0 6px var(--step-3-color);
+}
+
+.matrix-col-dots:hover .col-dot {
+  transform: scale(2);
+  opacity: 0.8;
+}
+
+.col-dot:hover {
+  transform: scale(3.5) !important;
+  opacity: 1 !important;
+  border-radius: 3px;
+  z-index: 10;
+  box-shadow: 0 0 12px rgba(199, 126, 247, 0.4);
+}
+
+/* Old button strip code removed - using margin dots now */
+
+/* Processing and completed states for dots */
+.row-dot.processing, .col-dot.processing {
+  animation: pulse 1.5s ease-in-out infinite;
+  opacity: 1;
+  transform: scale(2);
+}
+
+.row-dot.completed, .col-dot.completed {
+  opacity: 1;
+  transform: scale(1.5);
+}
+
+.row-dot.completed:hover, .col-dot.completed:hover {
   opacity: 0.9;
 }
+
+/* Position dots for each row/column in main app matrix */
+/* Row positioning and column positioning use relative positioning with transforms for centering */
 
 .cnae-header-card h3 {
   margin: 0;
@@ -1880,94 +3026,104 @@ button:disabled {
   display: flex;
   align-items: center;
   justify-content: center;
+  background: var(--bg);
+  z-index: 40;
+  position: relative;
+  height: 100%;
 }
 
-.cnae-remove-btn {
-  width: 24px;
-  height: 24px;
-  background: #EF4444;
-  border: none;
-  color: white;
-  font-size: 0.8rem;
-  cursor: pointer;
-  transition: all 0.2s;
-  display: none;
-  align-items: center;
+/* CNAE Controls - Same as product controls */
+.cnae-header-card .cnae-controls {
+  display: flex;
+  gap: 0.25rem;
   justify-content: center;
+  align-items: center;
   position: absolute;
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
-  border-radius: 50%;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+  z-index: 100;
 }
 
-.cnae-header-card.showing-remove .cnae-remove-btn {
-  display: flex;
+.cnae-controls.hidden {
+  display: none;
 }
 
-.cnae-remove-btn:hover {
-  background: #DC2626;
-  transform: translate(-50%, -50%) scale(1.1);
+.cnae-header-card.showing-controls {
+  background: rgba(193, 247, 50, 0.05);
+  border-radius: 8px;
 }
 
 /* Product Row Cards */
 .product-row-card {
   display: flex;
   align-items: stretch;
-  border-bottom: 1px solid #333;
-  min-height: 180px;
-  max-height: 180px;
-  gap: 1rem;
-  padding: 0 1rem;
+  border: none;
+  border-bottom: 1px solid #232427; /* Re-add horizontal borders between rows */
+  height: var(--matrix-row-height); /* Use consistent variable */
+  min-height: var(--matrix-row-height);
+  /* Removed max-height to allow flexible content area */
+  gap: 0;
+  padding: 0rem; /* Add padding to match CNAE columns */
+  position: relative;
+  overflow: visible; /* Allow dots to show left of row */
+  width: 100%;
+  background: var(--bg); /* Add consistent background */
+  box-sizing: border-box; /* Ensure padding is included in height calculation */
 }
 
-.product-row-card:last-child {
-  border-bottom: none;
-}
+/* Removed last-child rule since we removed all borders */
 
 .product-column {
-  width: 160px;
-  padding: 0;
-  background: transparent;
+  width: 208px;
+  min-width: 208px;
+  padding: 0; /* No padding here since .product-row-card has the padding */
+  margin: 0;
+  flex-shrink: 0;
+  background: var(--bg); /* Add background so prompt slides under */
   display: flex;
   flex-direction: column;
-  align-items: center;
+  align-items: stretch;
   justify-content: center;
   text-align: center;
-  margin-right: 0;
-  height: 100%;
+  height: var(--matrix-row-height); /* Use consistent variable */
+  /* Removed border-right - handled by parent column container */
+  z-index: 91;
+  overflow: visible; /* Allow dots to show left of column */
 }
 
 /* Product Header - Sharp corners, fill cell */
 .product-header {
   width: 100%;
-  height: 100%;
+  height: var(--matrix-row-height); /* Use consistent variable */
   position: relative;
   border-radius: 0;
-  overflow: hidden;
+  overflow: visible; /* Allow dots to show left of header */
   box-shadow: none;
   display: flex;
-  flex-direction: column;
-  background: var(--card);
+  flex-direction: row;
+  background: transparent;
+  align-items: center;
 }
 
 .product-title-container {
-  background: var(--card);
+  background: transparent;
   border-radius: 0;
-  padding: 0 0.75rem;
+  padding: 0; /* Remove padding since parent .product-row-card now has it */
   position: relative;
   border: none;
-  height: calc(180px - 2px);
+  flex: 1;
+  height: 100%; /* Fill the padded parent container */
   display: flex;
   flex-direction: column;
   justify-content: center;
   align-items: flex-start;
+  z-index: 1;
 }
 
 /* Product Name Display - Borderless by default */
 .product-name-display {
-  font-size: 0.9rem;
+  font-size: 1.08rem;
   font-weight: 600;
   color: var(--text);
   line-height: 1.2;
@@ -1980,28 +3136,22 @@ button:disabled {
   text-align: left;
   width: 100%;
   margin: 0;
+  position: relative;
 }
 
-.product-name-display:hover {
-  background: rgba(193, 247, 50, 0.1);
-  border: 1px solid rgba(193, 247, 50, 0.3);
+.product-name-display:hover,
+.product-name-display:focus {
+  color: rgba(200, 126, 247, 0.9);
+  transform: translateX(8px);
 }
 
-/* Step Buttons Strip - Horizontal Bar */
-.product-step-buttons-strip {
-  display: flex;
-  width: 100%;
-  border-radius: 0;
-  overflow: hidden;
-  margin-bottom: 0;
-  border: none;
-  gap: 0;
-}
+/* Old product step buttons strip removed - using margin dots now */
 
 /* Strip Button Styling - Interactive compact design */
 .shuffle-btn {
   flex: 1;
   height: 2px;
+  padding: 0;
   border: none;
   border-radius: 0;
   color: transparent;
@@ -2029,27 +3179,11 @@ button:disabled {
   background: var(--step-3-color);
 }
 
-/* Hover over entire product header expands all buttons - with darker text */
-.product-header:hover .shuffle-btn {
-  height: 24px;
-}
-
-.product-header:hover .shuffle-btn.step-1 {
-  color: var(--step-1-text);
-}
-
-.product-header:hover .shuffle-btn.step-2 {
-  color: var(--step-2-text);
-}
-
-.product-header:hover .shuffle-btn.step-3 {
-  color: var(--step-3-text);
-}
+/* Old product button hover effects removed - using margin dots now */
 
 /* Processing animation when clicked */
 .shuffle-btn.processing {
   animation: pulse-processing 1.5s ease-in-out infinite;
-  height: 24px !important;
   color: #fff !important;
 }
 
@@ -2074,7 +3208,7 @@ button:disabled {
   /* Processing states - pulsing animation */
   .shuffle-btn.processing {
     animation: pulse 1.5s ease-in-out infinite;
-    height: 24px;
+    height: 24px !important;
   }
   
   @keyframes pulse {
@@ -2087,43 +3221,62 @@ button:disabled {
   .shuffle-btn.step-1.completed {
     background: var(--step-1-color);
     color: var(--step-1-text);
-    height: 24px;
   }
   
   .shuffle-btn.step-2.completed {
     background: var(--step-2-color);
     color: var(--step-2-text);
-    height: 24px;
   }
   
   .shuffle-btn.step-3.completed {
     background: var(--step-3-color);
     color: var(--step-3-text);
-    height: 24px;
   }
 
-/* When completed, always show full height and numbers */
-.shuffle-btn.completed {
-  height: 24px !important;
-}
+/* When completed, buttons keep full area coverage */
 
 .shuffle-btn.completed:hover {
   opacity: 0.9;
 }
 
 /* Product Controls - Hidden by default */
-.product-controls {
+.product-header .product-controls {
   display: flex;
   gap: 0.25rem;
   justify-content: center;
   align-items: center;
   position: absolute;
-  bottom: 0.25rem;
-  right: 0.25rem;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 100;
 }
 
 .product-controls.hidden {
   display: none;
+}
+
+.delete-btn {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  border: none;
+  background: #EF4444;
+  color: white;
+  font-size: 1.5rem;
+  font-weight: bold;
+  cursor: pointer;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 12px rgba(239, 68, 68, 0.4);
+}
+
+.delete-btn:hover {
+  background: #DC2626;
+  transform: scale(1.1);
+  box-shadow: 0 6px 16px rgba(239, 68, 68, 0.6);
 }
 
 .control-btn {
@@ -2205,15 +3358,146 @@ button:disabled {
   opacity: 0.9;
 }
 
-.prompt-column {
-  width: 320px;
-  padding: 1rem 0.75rem;
+/* Global row height for consistency across all columns */
+:root {
+  --matrix-row-height: 240px;
+}
+
+/* Column 1: Dots Column */
+.full-dots-column {
+  width: 50px;
+  min-width: 50px;
+  height: 100%; /* Full height of parent container */
+  min-height: 100vh; /* At least viewport height */
+  background: var(--bg);
   display: flex;
   flex-direction: column;
-  justify-content: center;
-  align-items: flex-start;
-  margin-right: 0;
+  border-right: none; /* Remove border - will be handled by dedicated element */
+  z-index: 91;
+  transition: all 0.2s ease;
+  /* Remove absolute positioning - let it flow with content */
 }
+
+/* Add flex spacer to fill remaining space after content */
+.full-dots-column::after {
+  content: '';
+  flex: 1;
+  background: var(--bg);
+}
+
+.full-dots-column:hover {
+  background: rgba(193, 247, 50, 0.02);
+}
+
+.dot-row-container {
+  height: var(--matrix-row-height); /* Use global row height */
+  min-height: var(--matrix-row-height);
+  /* Removed max-height to allow column to extend beyond content */
+  padding: 1rem 0.75rem; /* Add padding to match other columns */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0; /* Prevent shrinking */
+  border: none; /* Remove any borders */
+  border-bottom: 1px solid #232427; /* Add horizontal divider between rows */
+  background: var(--bg); /* Add consistent background */
+  box-sizing: border-box; /* Ensure padding is included in height calculation */
+}
+
+/* Column 2: Products Column */
+.full-products-column {
+  width: 208px;
+  min-width: 208px;
+  height: 100%; /* Full height of parent container */
+  min-height: 100vh; /* At least viewport height */
+  background: var(--bg);
+  display: flex;
+  flex-direction: column;
+  border-right: none; /* Remove border - will be handled by dedicated element */
+  z-index: 91;
+  transition: width 0.3s ease, background 0.2s ease; /* Smooth width transition */
+  /* Remove absolute positioning - let it flow with content */
+}
+
+/* Keep products column same width when collapsed - don't expand */
+
+/* Add flex spacer to fill remaining space after content */
+.full-products-column::after {
+  content: '';
+  flex: 1;
+  background: var(--bg);
+}
+
+.full-products-column:hover {
+  background: rgba(193, 247, 50, 0.02);
+}
+
+.product-row-container {
+  height: var(--matrix-row-height); /* Use global row height */
+  min-height: var(--matrix-row-height);
+  /* Removed max-height to allow column to extend beyond content */
+  padding: 1rem 0.75rem; /* Add padding to match other columns */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0; /* Prevent shrinking */
+  border: none; /* Remove any borders */
+  border-bottom: 1px solid #232427; /* Add horizontal divider between rows */
+  background: var(--bg); /* Add consistent background */
+  box-sizing: border-box; /* Ensure padding is included in height calculation */
+}
+
+/* Column 3: Prompts Column (the one that slides) */
+.full-prompts-column {
+  width: 427px;
+  min-width: 427px;
+  height: 100%; /* Full height of parent container */
+  min-height: 100vh; /* At least viewport height */
+  background: var(--bg); /* Use consistent background like other columns */
+  border: none; /* Remove the border that creates the visible edge */
+  display: flex;
+  flex-direction: column;
+  position: relative; /* Keep relative for sliding functionality */
+  z-index: 91; /* Same z-index as other columns */
+  transition: transform 0.3s ease, z-index 0s linear 0.3s, background 0.2s ease; /* Delay z-index change until after transform */
+  overflow-x: visible;
+  box-shadow: none; /* Remove box-shadow that creates visual divide */
+}
+
+/* Add flex spacer to fill remaining space after content */
+.full-prompts-column::after {
+  content: '';
+  flex: 1;
+  background: var(--bg);
+}
+
+.full-prompts-column:hover {
+  background: rgba(193, 247, 50, 0.02);
+}
+
+.prompt-row-container {
+  height: var(--matrix-row-height); /* Use global row height */
+  min-height: var(--matrix-row-height);
+  /* Removed max-height to allow column to extend beyond content */
+  padding: 1rem 0.75rem;
+  border: none; /* Remove all borders */
+  border-bottom: 1px solid #232427; /* Add horizontal divider between rows */
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  flex-shrink: 0; /* Prevent shrinking */
+  box-sizing: border-box; /* Include padding in height calculation */
+  background: var(--bg); /* Add consistent background */
+}
+
+/* Collapsed state - slide horizontally left under blue columns */
+.matrix-left-frame.collapsed .full-prompts-column {
+  transform: translateX(-427px); /* Slide left under blue columns */
+  z-index: 80; /* Lower z-index to go UNDER blue columns */
+  transition: transform 0.3s ease, z-index 0s linear 0s, background 0.2s ease; /* Immediate z-index change when collapsing */
+}
+
+/* Old prompts tab CSS removed - using header button now */
 
 /* Prompt Display Container */
 .prompt-display-container {
@@ -2228,21 +3512,48 @@ button:disabled {
 .prompt-display {
   width: 100%;
   min-height: 60px;
+  max-height: 120px; /* Limit to approximately 6 lines */
   background: transparent;
   border: 1px solid transparent;
   border-radius: 6px;
   padding: 0.5rem;
   color: var(--text);
   font-family: inherit;
-  font-size: 0.85rem;
+  font-size: 0.75rem;
   line-height: 1.3;
   cursor: pointer;
   transition: all 0.2s ease;
   word-wrap: break-word;
-  display: flex;
-  align-items: flex-start;
+  display: block;
   text-align: left;
   box-sizing: border-box;
+  overflow: hidden;
+  position: relative;
+}
+
+.prompt-display:hover,
+.prompt-display:focus {
+  background: rgba(200, 126, 247, 0.1);
+  border-color: rgba(200, 126, 247, 0.3);
+}
+
+/* Gradient fade for prompt display */
+.prompt-display::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 30px;
+  background: linear-gradient(transparent, var(--card));
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.5s ease 0.1s;
+}
+
+/* Show gradient only when text overflows */
+.prompt-display.overflowing::after {
+  opacity: 1;
 }
 
 /* Hover effect removed */
@@ -2272,33 +3583,61 @@ button:disabled {
 
 .characteristics-display {
   color: var(--muted);
-  font-size: 0.75rem;
+  font-size: 0.7rem;
   font-style: italic;
-  border-top: 1px solid #333;
+  /* Removed border-top that created visual horizontal lines */
   padding-top: 0.4rem;
   padding-left: 0.5rem;
   text-align: left;
   width: 100%;
   margin: 0;
   box-sizing: border-box;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  border-radius: 0 0 4px 4px;
+  position: relative;
 }
 
+.characteristics-display:hover {
+  background: rgba(200, 126, 247, 0.1);
+  color: var(--purple);
+  padding-left: 0.75rem;
+}
+
+
+
 .cnae-result-column {
-  width: 320px;
-  padding: 1rem 0.75rem;
+  flex: 1;
+  min-width: 427px;
+  height: var(--matrix-row-height); /* Use global row height */
+  min-height: var(--matrix-row-height);
+  /* Removed max-height to allow flexible content area */
+  padding: 0rem;
   margin-right: 0;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
+  border-right: 1px solid #232427; /* Add vertical divider between main matrix columns */
+  border-bottom: 1px solid #232427; /* Add horizontal divider between main matrix rows */
+  background: var(--bg);
+  z-index: 10;
+  position: relative;
+  flex-shrink: 0; /* Prevent shrinking */
+  box-sizing: border-box; /* Include padding in height calculation */
+}
+
+/* Remove right border from last column to avoid double border */
+.cnae-result-column:last-child {
+  border-right: none;
 }
 
 /* CNAE Cell Content - Exact 16:9 dimensions, no border, status top bar */
 .cnae-cell-content {
-  background: #2a2b2e;
+  background: transparent;
   border-radius: 0;
-  width: 320px;
-  height: 180px;
+  width: 100%; /* Use full width of padded parent */
+  height: 100%; /* Use full height of padded parent */
   cursor: pointer;
   transition: all 0.2s;
   border: none;
@@ -2308,10 +3647,11 @@ button:disabled {
   text-align: center;
   color: var(--muted);
   font-size: 0.8rem;
-  padding: 0.5rem;
+  padding: 0; /* Remove padding since parent .cnae-result-column has it */
   box-sizing: border-box;
   position: relative;
   overflow: hidden;
+  z-index: 5;
 }
 
 .cnae-cell-content:hover {
@@ -2319,37 +3659,64 @@ button:disabled {
   box-shadow: var(--shadow);
 }
 
-/* Status-based top bars */
-.cnae-cell-content::before {
+/* Status-based corner triangles */
+.cnae-cell-content::after {
   content: '';
   position: absolute;
   top: 0;
-  left: 0;
   right: 0;
-  height: 5px;
-  background: transparent;
-  z-index: 1;
+  width: 16px;
+  height: 16px;
+  clip-path: polygon(100% 0%, 0% 0%, 100% 100%);
+  background: rgba(255,255,255,0.2);
+  z-index: 10;
+  transition: all 0.3s ease;
 }
 
-.cnae-cell-content.cell-empty::before {
-  background: #555;
+.cnae-cell-content.cell-empty::after {
+  background: rgba(255,255,255,0.1);
 }
 
-.cnae-cell-content.cell-prompt-ready::before {
+.cnae-cell-content.cell-prompt-ready::after {
   background: var(--step-1-color);
+  box-shadow: 0 0 6px var(--step-1-color);
 }
 
-.cnae-cell-content.cell-generating::before {
+.cnae-cell-content.cell-generating::after {
   background: var(--step-2-color);
-  animation: pulse 1.5s infinite;
+  box-shadow: 0 0 6px var(--step-2-color);
+  animation: triangle-pulse 1.5s infinite;
 }
 
-.cnae-cell-content.cell-generated::before {
+/* Loading state background */
+.cnae-cell-content.cell-generating {
+  background: #161518 !important;
+}
+
+.cnae-cell-content.cell-generated::after {
   background: var(--step-2-color);
+  box-shadow: 0 0 6px var(--step-2-color);
 }
 
-.cnae-cell-content.cell-error::before {
+.cnae-cell-content.cell-error::after {
   background: #EF4444;
+  box-shadow: 0 0 6px #EF4444;
+}
+
+/* Triangle pulse animation */
+@keyframes triangle-pulse {
+  0% { 
+    opacity: 1; 
+    transform: scale(1);
+  }
+  50% { 
+    opacity: 0.7; 
+    transform: scale(1.1);
+  }
+  100% { 
+    opacity: 1; 
+    transform: scale(1);
+  }
 }
 
 .cnae-cell-content.cell-generated {
@@ -2673,8 +4040,8 @@ button:disabled {
   flex-direction: column;
   align-items: center;
   width: 100%;
-  max-width: 320px;
   margin: 0 auto;
+  padding: 20px;
 }
 
 .app-preview h3 {
@@ -2740,6 +4107,42 @@ button:disabled {
   overflow: visible;
 }
 
+/* Phone Navigation Arrows */
+.phone-nav-arrow {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  background: rgba(0, 0, 0, 0.7);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  color: white;
+  border-radius: 50%;
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  z-index: 25;
+  backdrop-filter: blur(5px);
+}
+
+.phone-nav-arrow:hover {
+  background: rgba(0, 0, 0, 0.9);
+  transform: translateY(-50%) scale(1.1);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+.phone-nav-left {
+  left: -60px;
+}
+
+.phone-nav-right {
+  right: -60px;
+}
+
 .phone-mockup-video {
   position: absolute;
   top: 22px;
@@ -2772,9 +4175,15 @@ button:disabled {
   transform: translate(-50%, -65%);
   width: 76%;
   height: 140px;
-  border-radius: 14px;
+  border-radius: 16px;
   overflow: hidden;
   z-index: 20;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.video-overlay:hover {
+  transform: translate(-50%, -65%) scale(1.02);
 }
 
 .video-component {
@@ -2785,21 +4194,38 @@ button:disabled {
   overflow: hidden;
 }
 
-.video-placeholder {
+/* Old video-placeholder styles removed - using unified styles above */
+
+/* Carousel sliding wrapper - exactly matches container size */
+.carousel-slides-wrapper {
   width: 100%;
   height: 100%;
-  background: #444;
   display: flex;
-  align-items: flex-start;
-  justify-content: center;
-  font-size: 12px;
-  color: #999;
-  padding-top: 40px;
+  transition: transform 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+  position: absolute;
+  top: 0;
+  left: 0;
+  overflow: hidden;
 }
 
-.video-placeholder.with-content {
+/* Individual slide containers - no rounded corners, exact size */
+.carousel-slide-container {
+  flex-shrink: 0;
+  position: relative;
+  height: 100%;
+  overflow: hidden;
+  display: flex;
   align-items: center;
-  padding-top: 0;
+  justify-content: center;
+}
+
+.carousel-slide-container img {
+  width: auto;
+  height: 100%;
+  max-height: 100%;
+  object-fit: cover;
+  object-position: center;
+  display: block;
 }
 
 .video-controls {
@@ -2934,23 +4360,39 @@ button:disabled {
 .mb-2 { margin-bottom: 1rem; }
 .mx-2 { margin-left: 0.5rem; margin-right: 0.5rem; }
 
-/* Carousel Controls */
-.carousel-controls {
+/* Carousel Info */
+.carousel-info {
   display: flex;
-  justify-content: center;
+  flex-direction: column;
   align-items: center;
-  gap: 1rem;
+  gap: 0.5rem;
   padding: 1rem;
   background: var(--card);
   border-radius: 8px;
   margin-top: 1rem;
+  text-align: center;
+}
+
+.carousel-counter {
+  font-weight: 600;
+  color: var(--text);
+  font-size: 14px;
+}
+
+.carousel-hint {
+  margin: 0;
+  font-size: 12px;
+  color: var(--muted);
+  font-style: italic;
 }
 
 /* Global Style Prompt Controls */
 .style-prompt-container {
-  display: flex;
+  display: flex !important;
   flex-direction: column;
   gap: 12px;
+  position: relative;
+  z-index: 1;
 }
 
 .style-prompt-editor {
@@ -2964,6 +4406,33 @@ button:disabled {
   line-height: 1.4;
   resize: vertical;
   min-height: 120px;
+  max-height: 160px; /* Limit to about 8 lines */
+  overflow-y: auto;
+  position: relative;
+}
+
+/* Gradient fade for style prompt editor */
+.style-prompt-container {
+  position: relative;
+}
+
+.style-prompt-container::after {
+  content: '';
+  position: absolute;
+  bottom: 50px; /* Account for action buttons */
+  left: 12px;
+  right: 12px;
+  height: 25px;
+  background: linear-gradient(transparent, var(--card));
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+  border-radius: 0 0 8px 8px;
+}
+
+/* Show gradient when style editor content overflows */
+.style-prompt-container.overflowing::after {
+  opacity: 1;
 }
 
 .style-prompt-editor:focus {
@@ -2979,11 +4448,34 @@ button:disabled {
   display: flex;
   gap: 8px;
   justify-content: flex-end;
+  margin-top: 12px;
 }
 
 .style-prompt-actions .shuffle-btn {
-  font-size: 12px;
-  padding: 6px 12px;
+  font-size: 12px !important;
+  padding: 8px 16px !important;
+  height: auto !important;
+  width: auto !important;
+  background: #2a2b2f !important;
+  color: var(--text) !important;
+  border: 1px solid #3a3b3f !important;
+  border-radius: 8px !important;
+  cursor: pointer !important;
+  transition: all 0.2s ease !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  min-height: 36px !important;
+}
+
+.style-prompt-actions .shuffle-btn:hover {
+  background: #343539 !important;
+  transform: translateY(-1px) !important;
+}
+
+.style-prompt-actions .shuffle-btn:focus {
+  outline: 2px solid var(--green) !important;
+  outline-offset: 2px !important;
 }
 
 /* Footer */
@@ -2996,33 +4488,34 @@ button:disabled {
 
 /* Mobile Responsive Design for Sidebar */
 @media (max-width: 768px) {
-  .menu-toggle {
-    top: 16px;
-    left: 16px;
-    padding: 10px;
+  .header-buttons {
+    gap: 8px;
   }
   
-  .left-column {
+  .menu-toggle, .phone-toggle, .prompts-toggle {
+    padding: 6px;
+    width: 32px;
+    height: 32px;
+  }
+  
+  .left-column, .phone-panel {
     width: 100vw;
     padding: 16px;
   }
   
-  .sidebar-header {
-    margin-top: 20px;
+  .sidebar-header, .phone-panel-header {
+    margin-top: 0; /* Remove margin since panels are now positioned below fixed header */
   }
   
-  .sidebar-header h2 {
+  .sidebar-header h2, .phone-panel-header h2 {
     font-size: 16px;
   }
   
   .three-column-container {
-    padding: 16px;
+    padding: 10px 0px 0px 0px; /* Maintain left padding for dots on mobile */
+    padding-top: 80px; /* Add space for fixed header on mobile */
     grid-template-columns: 1fr;
     gap: 16px;
-  }
-  
-  .three-column-container.sidebar-open {
-    grid-template-columns: 1fr;
   }
   
   .shuffle-controls {
@@ -3041,11 +4534,8 @@ button:disabled {
   .three-column-container {
     grid-template-columns: 1fr !important;
     gap: 20px;
-    padding: 16px;
-    margin-left: 0 !important;
-  }
-  
-  .three-column-container.sidebar-open {
+    padding: 10px 0px 0px 0px; /* Maintain left padding for dots */
+    padding-top: 80px; /* Add space for fixed header on tablet/desktop */
     margin-left: 0 !important;
   }
   
@@ -3084,6 +4574,15 @@ button:disabled {
 
 .product-header.showing-controls .product-title-container {
   border: 1px solid rgba(193, 247, 50, 0.3);
+}
+
+/* Hide dots when showing controls */
+.product-header.showing-controls .matrix-row-dots {
+  opacity: 1 !important;
+}
+
+.cnae-header-card.showing-controls .matrix-col-dots {
+  opacity: 1 !important;
 }
 
 /* Utility Classes */
@@ -3125,4 +4624,253 @@ button:disabled {
 @keyframes spin {
   0% { transform: rotate(0deg); }
   100% { transform: rotate(360deg); }
+}
+
+/* Video Preview Area - Unified Clean Styles */
+.video-area {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+/* Remove duplicated styles - use unified layout styles only */
+
+.video-controls {
+    position: absolute;
+    bottom: 10px;
+    right: 10px;
+    display: flex;
+    gap: 8px;
+    opacity: 0;
+    transition: opacity 0.2s ease;
+}
+
+.video-preview-area:hover .video-controls {
+    opacity: 1;
+}
+
+.video-control-btn {
+    background: rgba(0, 0, 0, 0.8);
+    border: none;
+    color: white;
+    padding: 8px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 14px;
+    transition: background 0.2s ease;
+}
+
+.video-control-btn:hover {
+    background: rgba(0, 0, 0, 0.9);
+}
+
+/* Video Settings Styles */
+.video-settings {
+    background: #2a2b2f;
+    border: 1px solid #3a3b3f;
+    border-radius: 8px;
+    padding: 16px;
+    margin-bottom: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.setting-group {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.setting-label {
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--text);
+}
+
+.video-setting-select {
+    background: #1a1b1d;
+    border: 1px solid #3a3b3f;
+    border-radius: 6px;
+    padding: 8px 12px;
+    color: var(--text);
+    font-size: 14px;
+    cursor: pointer;
+    transition: border-color 0.2s ease;
+}
+
+.video-setting-select:hover {
+    border-color: var(--purple);
+}
+
+.video-setting-select:focus {
+    outline: none;
+    border-color: var(--green);
+    box-shadow: 0 0 0 2px rgba(193, 247, 50, 0.2);
+}
+
+.pricing-display {
+    background: rgba(193, 247, 50, 0.1);
+    border: 1px solid rgba(193, 247, 50, 0.3);
+    border-radius: 6px;
+    padding: 12px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.pricing-label {
+    font-size: 14px;
+    color: var(--text);
+}
+
+.pricing-amount {
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--green);
+}
+
+/* Pricing Modal - Part of Unified System */
+.pricing-modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.85);
+    backdrop-filter: blur(10px);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 10000;
+    opacity: 0;
+    transition: all 0.3s ease;
+}
+
+.pricing-modal.show {
+    display: flex !important;
+    opacity: 1;
+}
+
+.pricing-modal-content {
+    background: var(--card);
+    border: 1px solid #3a3b3f;
+    border-radius: 12px;
+    padding: 24px;
+    max-width: 500px;
+    width: 90%;
+    max-height: 80vh;
+    overflow-y: auto;
+}
+
+.pricing-modal-header {
+    margin-bottom: 20px;
+}
+
+.pricing-modal-title {
+    font-size: 20px;
+    font-weight: 600;
+    color: var(--text);
+    margin: 0 0 8px 0;
+}
+
+.pricing-modal-subtitle {
+    font-size: 14px;
+    color: var(--muted);
+    margin: 0;
+}
+
+.pricing-breakdown {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    margin-bottom: 20px;
+}
+
+.pricing-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px;
+    background: #2a2b2f;
+    border-radius: 8px;
+    border: 1px solid #3a3b3f;
+}
+
+.pricing-item-info {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.pricing-item-title {
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--text);
+}
+
+.pricing-item-description {
+    font-size: 12px;
+    color: var(--muted);
+}
+
+.pricing-item-cost {
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--green);
+}
+
+.pricing-total {
+    border-top: 2px solid #3a3b3f;
+    padding-top: 16px;
+    margin-top: 16px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.pricing-total-label {
+    font-size: 18px;
+    font-weight: 600;
+    color: var(--text);
+}
+
+.pricing-total-amount {
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--green);
+}
+
+.pricing-modal-actions {
+    display: flex;
+    gap: 12px;
+    justify-content: flex-end;
+    margin-top: 20px;
+}
+
+.pricing-modal-actions .btn {
+    padding: 10px 20px;
+    border-radius: 6px;
+    font-weight: 500;
+    cursor: pointer;
+    border: none;
+    transition: all 0.2s ease;
+}
+
+.pricing-modal-actions .btn-cancel {
+    background: #666;
+    color: white;
+}
+
+.pricing-modal-actions .btn-cancel:hover {
+    background: #777;
+}
+
+.pricing-modal-actions .btn-confirm {
+    background: var(--green);
+    color: #000;
+}
+
+.pricing-modal-actions .btn-confirm:hover {
+    background: #a8e32a;
 }

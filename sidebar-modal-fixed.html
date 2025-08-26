@@ -1,0 +1,1039 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sidebar Navigation Modal - Fixed</title>
+    <style>
+        :root {
+            --green: #c1f732;
+            --purple: #c87ef7;
+            --bg: #0f0f10;
+            --card: #17181a;
+            --text: #e8e8ea;
+            --muted: #a8a8ad;
+            --accent: #ffffff;
+            
+            /* Step Colors */
+            --step-1-color: #7210e8;
+            --step-2-color: #c96100;
+            --step-3-color: #79ef04;
+        }
+
+        * { box-sizing: border-box; }
+        
+        body {
+            margin: 0;
+            padding: 20px;
+            background: var(--bg);
+            color: var(--text);
+            font-family: Inter, ui-sans-serif, system-ui, -apple-system;
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        h1 {
+            text-align: center;
+            margin-bottom: 30px;
+            background: linear-gradient(45deg, var(--green), var(--purple));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            font-size: 28px;
+        }
+
+        .launch-section {
+            background: var(--card);
+            border-radius: 12px;
+            border: 1px solid #333;
+            padding: 30px;
+            text-align: center;
+            margin-bottom: 40px;
+        }
+
+        .launch-button {
+            background: linear-gradient(45deg, var(--step-1-color), var(--step-2-color));
+            color: white;
+            border: none;
+            padding: 16px 32px;
+            border-radius: 12px;
+            font-size: 18px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(114, 16, 232, 0.3);
+        }
+
+        .launch-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 25px rgba(114, 16, 232, 0.4);
+        }
+
+        /* Modal Styles */
+        .modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.85);
+            backdrop-filter: blur(10px);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            opacity: 0;
+            transition: all 0.3s ease;
+        }
+
+        .modal.show {
+            display: flex;
+            opacity: 1;
+        }
+
+        .modal-content {
+            background: var(--card);
+            border-radius: 18px;
+            width: 95%;
+            max-width: 1200px;
+            height: 90vh;
+            max-height: 800px;
+            border: 1px solid rgba(114, 16, 232, 0.3);
+            box-shadow: 0 30px 60px rgba(114, 16, 232, 0.2);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            transform: scale(0.9);
+            transition: all 0.3s ease;
+        }
+
+        .modal.show .modal-content {
+            transform: scale(1);
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px 24px;
+            border-bottom: 1px solid #333;
+            background: rgba(35, 36, 39, 0.8);
+        }
+
+        .modal-header h3 {
+            margin: 0;
+            color: var(--text);
+            font-size: 20px;
+            font-weight: 600;
+        }
+
+        .modal-close {
+            background: none;
+            border: none;
+            color: var(--muted);
+            font-size: 24px;
+            cursor: pointer;
+            padding: 8px;
+            border-radius: 6px;
+            transition: all 0.2s ease;
+        }
+
+        .modal-close:hover {
+            color: var(--text);
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .modal-body {
+            flex: 1;
+            display: flex;
+            flex-direction: row;
+            padding: 0;
+            overflow: hidden;
+        }
+
+        /* Sidebar Styles */
+        .sidebar {
+            width: 280px;
+            background: rgba(35, 36, 39, 0.8);
+            border-right: 1px solid #333;
+            padding: 24px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .sidebar h4 {
+            margin: 0 0 24px 0;
+            color: var(--text);
+            font-size: 16px;
+            font-weight: 600;
+        }
+
+        .nav-step {
+            padding: 16px;
+            border-radius: 10px;
+            margin-bottom: 12px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            border: 1px solid transparent;
+            position: relative;
+        }
+
+        .nav-step:hover {
+            background: rgba(255, 255, 255, 0.05);
+            border-color: rgba(255, 255, 255, 0.1);
+        }
+
+        .nav-step.active {
+            background: rgba(114, 16, 232, 0.15);
+            border-color: rgba(114, 16, 232, 0.4);
+            box-shadow: 0 0 0 1px rgba(114, 16, 232, 0.2);
+        }
+
+        .nav-step.completed {
+            background: rgba(193, 247, 50, 0.1);
+            border-color: rgba(193, 247, 50, 0.3);
+        }
+
+        .nav-step.completed::after {
+            content: "✓";
+            position: absolute;
+            right: 12px;
+            color: var(--green);
+            font-weight: bold;
+            font-size: 14px;
+        }
+
+        .step-icon {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+            font-size: 14px;
+            flex-shrink: 0;
+        }
+
+        .nav-step:nth-child(2) .step-icon { background: var(--step-1-color); color: white; }
+        .nav-step:nth-child(3) .step-icon { background: var(--step-2-color); color: white; }
+        .nav-step:nth-child(4) .step-icon { background: var(--step-3-color); color: black; }
+
+        .step-info {
+            flex: 1;
+        }
+
+        .step-title {
+            font-weight: 600;
+            color: var(--text);
+            margin-bottom: 2px;
+            font-size: 14px;
+        }
+
+        .step-description {
+            font-size: 12px;
+            color: var(--muted);
+            line-height: 1.3;
+        }
+
+        /* Progress Section */
+        .progress-section {
+            margin-top: auto;
+            padding-top: 24px;
+            border-top: 1px solid #333;
+        }
+
+        .progress-title {
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--text);
+            margin-bottom: 12px;
+        }
+
+        .progress-bar {
+            background: #333;
+            height: 8px;
+            border-radius: 4px;
+            overflow: hidden;
+            margin-bottom: 8px;
+        }
+
+        .progress-fill {
+            background: linear-gradient(90deg, var(--step-1-color), var(--step-2-color), var(--step-3-color));
+            height: 100%;
+            width: 0%;
+            transition: width 0.5s ease;
+        }
+
+        .progress-text {
+            font-size: 12px;
+            color: var(--muted);
+        }
+
+        /* Main Content Area */
+        .main-content {
+            flex: 1;
+            padding: 32px;
+            display: flex;
+            flex-direction: column;
+            overflow-y: auto;
+        }
+
+        .step-content {
+            display: none;
+            flex-direction: column;
+            height: 100%;
+            animation: fadeIn 0.3s ease;
+        }
+
+        .step-content.active {
+            display: flex;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .step-header {
+            margin-bottom: 24px;
+        }
+
+        .step-header h3 {
+            margin: 0 0 8px 0;
+            color: var(--text);
+            font-size: 24px;
+            font-weight: 600;
+        }
+
+        .step-subtitle {
+            color: var(--muted);
+            font-size: 14px;
+        }
+
+        /* Form Elements */
+        .form-group {
+            margin-bottom: 24px;
+        }
+
+        .form-label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+            color: var(--text);
+            font-size: 14px;
+        }
+
+        .prompt-editor {
+            background: rgba(0, 0, 0, 0.4);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            padding: 16px;
+            color: var(--text);
+            font-family: inherit;
+            font-size: 14px;
+            resize: vertical;
+            min-height: 120px;
+            width: 100%;
+            transition: all 0.3s ease;
+        }
+
+        .prompt-editor:focus {
+            outline: none;
+            border-color: var(--step-1-color);
+            box-shadow: 0 0 0 3px rgba(114, 16, 232, 0.1);
+        }
+
+        .prompt-editor:read-only {
+            opacity: 0.7;
+            cursor: not-allowed;
+        }
+
+        /* Drag and Drop Area */
+        .drag-drop-area {
+            border: 2px dashed rgba(255, 255, 255, 0.2);
+            border-radius: 12px;
+            padding: 48px 24px;
+            text-align: center;
+            color: var(--muted);
+            transition: all 0.3s ease;
+            cursor: pointer;
+            background: rgba(0, 0, 0, 0.2);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .drag-drop-area:hover,
+        .drag-drop-area.dragover {
+            border-color: var(--step-2-color);
+            background: rgba(201, 97, 0, 0.1);
+            color: var(--text);
+        }
+
+        .drag-drop-area.has-image {
+            padding: 0;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .uploaded-image {
+            width: 100%;
+            height: 200px;
+            object-fit: cover;
+            border-radius: 10px;
+        }
+
+        .image-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.7);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .drag-drop-area.has-image:hover .image-overlay {
+            opacity: 1;
+        }
+
+        .drop-icon {
+            font-size: 48px;
+            margin-bottom: 16px;
+            opacity: 0.7;
+        }
+
+        /* Cropping Interface */
+        .cropper-container {
+            background: rgba(0, 0, 0, 0.2);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            padding: 24px;
+            margin-top: 20px;
+            display: none;
+        }
+
+        .cropper-container.show {
+            display: block;
+        }
+
+        .crop-preview {
+            width: 100%;
+            height: 200px;
+            background: #222;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--muted);
+            position: relative;
+            overflow: hidden;
+            margin-bottom: 16px;
+        }
+
+        .crop-selection {
+            position: absolute;
+            border: 2px dashed var(--step-2-color);
+            background: rgba(201, 97, 0, 0.1);
+            cursor: move;
+            min-width: 50px;
+            min-height: 50px;
+        }
+
+        .crop-handles {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            pointer-events: none;
+        }
+
+        /* Buttons */
+        .btn {
+            padding: 12px 20px;
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .btn-primary {
+            background: var(--step-1-color);
+            color: white;
+        }
+
+        .btn-secondary {
+            background: var(--step-2-color);
+            color: white;
+        }
+
+        .btn-success {
+            background: var(--step-3-color);
+            color: black;
+        }
+
+        .btn:hover:not(:disabled) {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+        }
+
+        .step-actions {
+            display: flex;
+            gap: 12px;
+            margin-top: auto;
+            padding-top: 24px;
+            flex-wrap: wrap;
+        }
+
+        /* Loading Animation */
+        .loading {
+            display: inline-block;
+            width: 16px;
+            height: 16px;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            border-top-color: white;
+            animation: spin 1s ease-in-out infinite;
+            margin-right: 8px;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* Status Messages */
+        .status-message {
+            padding: 12px 16px;
+            border-radius: 8px;
+            margin: 12px 0;
+            font-size: 14px;
+            display: none;
+            animation: slideIn 0.3s ease;
+        }
+
+        .status-message.success {
+            background: rgba(34, 197, 94, 0.1);
+            border: 1px solid rgba(34, 197, 94, 0.3);
+            color: #22c55e;
+        }
+
+        .status-message.error {
+            background: rgba(239, 68, 68, 0.1);
+            border: 1px solid rgba(239, 68, 68, 0.3);
+            color: #ef4444;
+        }
+
+        .status-message.show {
+            display: block;
+        }
+
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Hidden file input */
+        .file-input {
+            display: none;
+        }
+
+        /* Coming Soon */
+        .coming-soon {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            color: var(--muted);
+            text-align: center;
+        }
+
+        .coming-soon-icon {
+            font-size: 64px;
+            margin-bottom: 24px;
+            opacity: 0.5;
+        }
+
+        .coming-soon h4 {
+            margin: 0 0 8px 0;
+            font-size: 20px;
+        }
+
+        .coming-soon p {
+            margin: 0;
+            font-size: 14px;
+            opacity: 0.8;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .modal-content {
+                width: 98%;
+                height: 95vh;
+            }
+            
+            .sidebar {
+                width: 240px;
+            }
+            
+            .main-content {
+                padding: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🚀 Sidebar Navigation Modal</h1>
+        
+        <div class="launch-section">
+            <h3 style="margin-top: 0;">Perfect Workflow Design</h3>
+            <p style="color: var(--muted); margin-bottom: 24px;">
+                Sidebar navigation with step switching, drag & drop, image cropping, and enhanced prompt editing.
+            </p>
+            <button class="launch-button" onclick="openModal()">Open Cell Modal</button>
+        </div>
+
+        <div style="background: var(--card); border-radius: 12px; padding: 24px; border: 1px solid #333;">
+            <h3 style="margin-top: 0; text-align: center;">✨ Advanced Features</h3>
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px;">
+                <div style="text-align: center;">
+                    <h4 style="color: var(--step-1-color);">📋 Click-to-Navigate Steps</h4>
+                    <p style="color: var(--muted); font-size: 14px;">Click any step in the sidebar to jump between workflow stages</p>
+                </div>
+                <div style="text-align: center;">
+                    <h4 style="color: var(--step-2-color);">📊 Progress Tracking</h4>
+                    <p style="color: var(--muted); font-size: 14px;">Visual progress bar shows completion status</p>
+                </div>
+                <div style="text-align: center;">
+                    <h4 style="color: var(--step-2-color);">🖼️ Full Image Pipeline</h4>
+                    <p style="color: var(--muted); font-size: 14px;">Upload, crop, and process images seamlessly</p>
+                </div>
+                <div style="text-align: center;">
+                    <h4 style="color: var(--step-3-color);">🎬 Video Ready</h4>
+                    <p style="color: var(--muted); font-size: 14px;">Framework prepared for video generation</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Sidebar Navigation Modal -->
+    <div id="cell-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Cell Content Workflow</h3>
+                <button class="modal-close" onclick="closeModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <!-- Sidebar -->
+                <div class="sidebar">
+                    <h4>Workflow Steps</h4>
+                    
+                    <div class="nav-step active" onclick="switchToStep(1)" data-step="1">
+                        <div class="step-icon">1</div>
+                        <div class="step-info">
+                            <div class="step-title">Generate Prompt</div>
+                            <div class="step-description">AI-powered content prompts</div>
+                        </div>
+                    </div>
+                    
+                    <div class="nav-step" onclick="switchToStep(2)" data-step="2">
+                        <div class="step-icon">2</div>
+                        <div class="step-info">
+                            <div class="step-title">Create Image</div>
+                            <div class="step-description">Upload & crop images</div>
+                        </div>
+                    </div>
+                    
+                    <div class="nav-step" onclick="switchToStep(3)" data-step="3">
+                        <div class="step-icon">3</div>
+                        <div class="step-info">
+                            <div class="step-title">Generate Video</div>
+                            <div class="step-description">Video content creation</div>
+                        </div>
+                    </div>
+
+                    <div class="progress-section">
+                        <div class="progress-title">Overall Progress</div>
+                        <div class="progress-bar">
+                            <div class="progress-fill" id="progress-fill"></div>
+                        </div>
+                        <div class="progress-text" id="progress-text">0 of 3 steps completed</div>
+                    </div>
+                </div>
+
+                <!-- Main Content Area -->
+                <div class="main-content">
+                    <!-- Step 1: Prompt Generation -->
+                    <div class="step-content active" id="step-content-1">
+                        <div class="step-header">
+                            <h3>Generate Content Prompt</h3>
+                            <div class="step-subtitle">Create AI-powered prompts for your Brazilian content</div>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label">Generated Prompt</label>
+                            <textarea 
+                                id="prompt-editor" 
+                                class="prompt-editor" 
+                                placeholder="Click 'Generate Prompt' to create an AI-powered prompt for your content..."
+                                readonly
+                            ></textarea>
+                            <div class="status-message" id="prompt-status"></div>
+                        </div>
+
+                        <div class="step-actions">
+                            <button class="btn btn-primary" onclick="generatePrompt()">
+                                <span id="generate-prompt-text">Generate Prompt</span>
+                            </button>
+                            <button class="btn btn-secondary" onclick="togglePromptEdit()" id="edit-prompt-btn" disabled>
+                                Edit Prompt
+                            </button>
+                            <button class="btn btn-success" onclick="savePrompt()" id="save-prompt-btn" style="display: none;">
+                                Save Changes
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Step 2: Image Upload & Cropping -->
+                    <div class="step-content" id="step-content-2">
+                        <div class="step-header">
+                            <h3>Upload & Edit Image</h3>
+                            <div class="step-subtitle">Upload images and crop them to perfect dimensions</div>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label">Image Upload</label>
+                            <div class="drag-drop-area" id="drop-area" onclick="document.getElementById('file-input').click()">
+                                <div id="drop-text">
+                                    <div class="drop-icon">📁</div>
+                                    <div style="font-size: 16px; font-weight: 500; margin-bottom: 8px;">
+                                        Drag & drop your image here or click to browse
+                                    </div>
+                                    <div style="font-size: 12px; opacity: 0.7;">
+                                        Supports JPG, PNG, WebP up to 10MB
+                                    </div>
+                                </div>
+                                <div class="image-overlay">
+                                    <div style="color: white; font-weight: 500;">Click to change image</div>
+                                </div>
+                            </div>
+                            <input type="file" id="file-input" class="file-input" accept="image/*" onchange="handleFileSelect(event)">
+                        </div>
+                        
+                        <div class="cropper-container" id="cropper-container">
+                            <label class="form-label">Crop Your Image</label>
+                            <div class="crop-preview" id="crop-preview">
+                                <div class="crop-selection" id="crop-selection" style="width: 150px; height: 100px; top: 50px; left: 50px;"></div>
+                                <div style="color: var(--muted);">Drag to adjust crop area</div>
+                            </div>
+                        </div>
+
+                        <div class="status-message" id="image-status"></div>
+
+                        <div class="step-actions">
+                            <button class="btn btn-secondary" onclick="generateImage()" id="generate-image-btn" disabled>
+                                <span id="generate-image-text">Generate Image</span>
+                            </button>
+                            <button class="btn btn-secondary" onclick="toggleCropper()" id="crop-btn" style="display: none;">
+                                Crop Image
+                            </button>
+                            <button class="btn btn-success" onclick="applyCrop()" id="apply-crop-btn" style="display: none;">
+                                Apply Crop
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Step 3: Video Generation -->
+                    <div class="step-content" id="step-content-3">
+                        <div class="step-header">
+                            <h3>Generate Video Content</h3>
+                            <div class="step-subtitle">Transform your prompt and image into dynamic video content</div>
+                        </div>
+
+                        <div class="coming-soon">
+                            <div class="coming-soon-icon">🎬</div>
+                            <h4>Video Generation</h4>
+                            <p>Coming Soon in Next Update</p>
+                        </div>
+
+                        <div class="step-actions">
+                            <button class="btn btn-success" disabled>Generate Video</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentStep = 1;
+        let completedSteps = new Set();
+        let uploadedImage = null;
+
+        // Sample prompts for demonstration
+        const samplePrompts = [
+            "Create a vibrant Brazilian marketplace scene with colorful fruits, traditional crafts, and local vendors showcasing the rich culture and community spirit of Brazil.",
+            "Design a stunning sunset over the Amazon rainforest with exotic birds, flowing rivers, and lush green canopy stretching to the horizon.",
+            "Illustrate a lively Brazilian carnival celebration with dancers in elaborate feathered costumes, samba music, and joyful crowds in Rio de Janeiro.",
+            "Craft a serene Brazilian beach scene at golden hour with palm trees, crystal clear turquoise water, and traditional fishing boats along the shore.",
+            "Depict a bustling Brazilian coffee plantation with workers harvesting beans, mountains in the background, and the warm glow of early morning light."
+        ];
+
+        function openModal() {
+            document.getElementById('cell-modal').classList.add('show');
+            updateProgress();
+        }
+
+        function closeModal() {
+            document.getElementById('cell-modal').classList.remove('show');
+        }
+
+        function switchToStep(stepNumber) {
+            // Update navigation
+            document.querySelectorAll('.nav-step').forEach(step => {
+                step.classList.remove('active');
+            });
+            document.querySelector(`.nav-step[data-step="${stepNumber}"]`).classList.add('active');
+
+            // Update content
+            document.querySelectorAll('.step-content').forEach(content => {
+                content.classList.remove('active');
+            });
+            document.getElementById(`step-content-${stepNumber}`).classList.add('active');
+
+            currentStep = stepNumber;
+        }
+
+        function updateProgress() {
+            const progressFill = document.getElementById('progress-fill');
+            const progressText = document.getElementById('progress-text');
+            const percentage = (completedSteps.size / 3) * 100;
+            
+            progressFill.style.width = percentage + '%';
+            progressText.textContent = `${completedSteps.size} of 3 steps completed`;
+
+            // Update navigation step states
+            completedSteps.forEach(step => {
+                document.querySelector(`.nav-step[data-step="${step}"]`).classList.add('completed');
+            });
+        }
+
+        function markStepCompleted(stepNumber) {
+            completedSteps.add(stepNumber);
+            updateProgress();
+        }
+
+        function showStatus(elementId, message, type) {
+            const statusEl = document.getElementById(elementId);
+            statusEl.textContent = message;
+            statusEl.className = `status-message ${type} show`;
+            setTimeout(() => {
+                statusEl.classList.remove('show');
+            }, 4000);
+        }
+
+        // Prompt Generation Functions
+        function generatePrompt() {
+            const btn = document.getElementById('generate-prompt-text');
+            const editor = document.getElementById('prompt-editor');
+            const editBtn = document.getElementById('edit-prompt-btn');
+
+            btn.innerHTML = '<span class="loading"></span>Generating...';
+            
+            setTimeout(() => {
+                const randomPrompt = samplePrompts[Math.floor(Math.random() * samplePrompts.length)];
+                editor.value = randomPrompt;
+                editor.readOnly = false;
+                btn.textContent = 'Regenerate Prompt';
+                editBtn.disabled = false;
+                
+                markStepCompleted(1);
+                showStatus('prompt-status', '✅ Prompt generated successfully!', 'success');
+                
+                // Auto-switch to next step after short delay
+                setTimeout(() => {
+                    switchToStep(2);
+                }, 1500);
+            }, 2000);
+        }
+
+        function togglePromptEdit() {
+            const editor = document.getElementById('prompt-editor');
+            const editBtn = document.getElementById('edit-prompt-btn');
+            const saveBtn = document.getElementById('save-prompt-btn');
+
+            if (editor.readOnly) {
+                editor.readOnly = false;
+                editor.focus();
+                editBtn.style.display = 'none';
+                saveBtn.style.display = 'inline-block';
+            }
+        }
+
+        function savePrompt() {
+            const editor = document.getElementById('prompt-editor');
+            const editBtn = document.getElementById('edit-prompt-btn');
+            const saveBtn = document.getElementById('save-prompt-btn');
+
+            editor.readOnly = true;
+            editBtn.style.display = 'inline-block';
+            saveBtn.style.display = 'none';
+            
+            showStatus('prompt-status', '💾 Prompt saved successfully!', 'success');
+        }
+
+        // File Upload & Drag and Drop Functions
+        function setupDragAndDrop() {
+            const dropArea = document.getElementById('drop-area');
+
+            ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+                dropArea.addEventListener(eventName, preventDefaults, false);
+            });
+
+            ['dragenter', 'dragover'].forEach(eventName => {
+                dropArea.addEventListener(eventName, highlight, false);
+            });
+
+            ['dragleave', 'drop'].forEach(eventName => {
+                dropArea.addEventListener(eventName, unhighlight, false);
+            });
+
+            dropArea.addEventListener('drop', handleDrop, false);
+
+            function preventDefaults(e) {
+                e.preventDefault();
+                e.stopPropagation();
+            }
+
+            function highlight() {
+                dropArea.classList.add('dragover');
+            }
+
+            function unhighlight() {
+                dropArea.classList.remove('dragover');
+            }
+
+            function handleDrop(e) {
+                const dt = e.dataTransfer;
+                const files = dt.files;
+                handleFiles(files);
+            }
+        }
+
+        function handleFileSelect(event) {
+            const files = event.target.files;
+            handleFiles(files);
+        }
+
+        function handleFiles(files) {
+            if (files.length > 0) {
+                const file = files[0];
+                if (file.type.startsWith('image/') && file.size <= 10 * 1024 * 1024) {
+                    uploadedImage = file;
+                    displayUploadedImage(file);
+                } else {
+                    showStatus('image-status', '❌ Please upload a valid image file under 10MB', 'error');
+                }
+            }
+        }
+
+        function displayUploadedImage(file) {
+            const dropArea = document.getElementById('drop-area');
+            const reader = new FileReader();
+
+            reader.onload = function(e) {
+                dropArea.innerHTML = `
+                    <img src="${e.target.result}" alt="Uploaded image" class="uploaded-image">
+                    <div class="image-overlay">
+                        <div style="color: white; font-weight: 500;">Click to change image</div>
+                    </div>
+                `;
+                dropArea.classList.add('has-image');
+                
+                document.getElementById('generate-image-btn').disabled = false;
+                document.getElementById('crop-btn').style.display = 'inline-block';
+                
+                markStepCompleted(2);
+                showStatus('image-status', '✅ Image uploaded successfully!', 'success');
+            };
+
+            reader.readAsDataURL(file);
+        }
+
+        function toggleCropper() {
+            const container = document.getElementById('cropper-container');
+            const applyBtn = document.getElementById('apply-crop-btn');
+            
+            if (container.classList.contains('show')) {
+                container.classList.remove('show');
+                applyBtn.style.display = 'none';
+            } else {
+                container.classList.add('show');
+                applyBtn.style.display = 'inline-block';
+            }
+        }
+
+        function applyCrop() {
+            toggleCropper();
+            showStatus('image-status', '✂️ Image cropped successfully!', 'success');
+        }
+
+        function generateImage() {
+            const btn = document.getElementById('generate-image-text');
+            
+            btn.innerHTML = '<span class="loading"></span>Generating...';
+            
+            setTimeout(() => {
+                btn.textContent = 'Regenerate Image';
+                showStatus('image-status', '🎨 Image generated successfully!', 'success');
+                
+                // Auto-switch to video step
+                setTimeout(() => {
+                    switchToStep(3);
+                }, 1500);
+            }, 3000);
+        }
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', function() {
+            setupDragAndDrop();
+            updateProgress();
+            
+            // Close modal on background click
+            document.getElementById('cell-modal').addEventListener('click', function(e) {
+                if (e.target === this) {
+                    closeModal();
+                }
+            });
+
+            // Close modal on Escape key
+            document.addEventListener('keydown', function(e) {
+                if (e.key === 'Escape') {
+                    closeModal();
+                }
+            });
+        });
+    </script>
+</body>
+</html>

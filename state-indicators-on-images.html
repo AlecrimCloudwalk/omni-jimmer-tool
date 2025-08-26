@@ -1,0 +1,1096 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>State Indicators on Images</title>
+    <style>
+        :root {
+            --bg: #0f0f10;
+            --text: #e8e8ea;
+            --card: #17181a;
+            --step-1-color: #7210e8; /* Purple - Prompts */
+            --step-2-color: #c96100; /* Orange - Images */
+            --step-3-color: #79ef04; /* Green - Videos */
+            --muted: #a8a8ad;
+        }
+
+        * { box-sizing: border-box; }
+        
+        body {
+            margin: 0;
+            padding: 40px;
+            background: var(--bg);
+            color: var(--text);
+            font-family: Inter, ui-sans-serif, system-ui, -apple-system;
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        h1 {
+            text-align: center;
+            margin-bottom: 40px;
+            background: linear-gradient(45deg, #c1f732, #c87ef7);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            font-size: 32px;
+        }
+
+        .showcase-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 30px;
+            margin-bottom: 40px;
+        }
+
+        .showcase-section {
+            background: var(--card);
+            border-radius: 12px;
+            border: 1px solid #232427;
+            padding: 25px;
+            text-align: center;
+        }
+
+        .showcase-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: var(--text);
+            margin-bottom: 20px;
+        }
+
+        /* Image Box Base */
+        .image-box {
+            width: 120px;
+            height: 67px; /* 16:9 aspect ratio */
+            background: #1a1d25;
+            border-radius: 6px;
+            position: relative;
+            overflow: hidden;
+            margin: 10px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border: 1px solid #333;
+        }
+
+        .image-box:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.3);
+        }
+
+        .image-box img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: block;
+        }
+
+        .states-demo {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 15px;
+            margin: 25px 0;
+        }
+
+        .state-example {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .state-label {
+            font-size: 11px;
+            color: var(--muted);
+            text-align: center;
+            max-width: 120px;
+        }
+
+        /* Position indicators on top-right of image boxes */
+        .indicator-overlay {
+            position: absolute;
+            top: 6px;
+            right: 6px;
+            z-index: 10;
+        }
+
+        /* 1. Progress Rings on Images */
+        .progress-ring {
+            width: 24px;
+            height: 24px;
+            position: relative;
+        }
+
+        .ring-bg, .ring-progress {
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            position: absolute;
+            border: 2px solid;
+        }
+
+        .ring-bg {
+            border-color: rgba(255,255,255,0.2);
+        }
+
+        .ring-progress {
+            border-color: transparent;
+            border-top-color: var(--step-1-color);
+            transform: rotate(-90deg);
+            transition: all 0.5s ease;
+        }
+
+        .ring-progress.step-1 { border-top-color: var(--step-1-color); }
+        .ring-progress.step-2 { 
+            border-top-color: var(--step-2-color); 
+            border-right-color: var(--step-2-color); 
+        }
+        .ring-progress.step-3 { 
+            border-top-color: var(--step-3-color); 
+            border-right-color: var(--step-3-color);
+            border-bottom-color: var(--step-3-color);
+        }
+
+        .ring-center {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 8px;
+            font-weight: 600;
+            color: white;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.8);
+        }
+
+        /* 2. Mini Progress Bars on Images */
+        .mini-progress-bar {
+            width: 36px;
+            height: 4px;
+            background: rgba(0,0,0,0.6);
+            border-radius: 2px;
+            overflow: hidden;
+            display: flex;
+            backdrop-filter: blur(2px);
+        }
+
+        .bar-segment {
+            flex: 1;
+            height: 100%;
+            margin-right: 1px;
+            background: rgba(255,255,255,0.2);
+            transition: background 0.3s ease;
+        }
+
+        .bar-segment:last-child {
+            margin-right: 0;
+        }
+
+        .bar-segment.active-1 { background: var(--step-1-color); }
+        .bar-segment.active-2 { background: var(--step-2-color); }
+        .bar-segment.active-3 { background: var(--step-3-color); }
+
+        /* 3. Step Icons on Images */
+        .step-icons {
+            display: flex;
+            gap: 4px;
+            align-items: center;
+        }
+
+        .step-icon {
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 8px;
+            background: rgba(0,0,0,0.7);
+            color: rgba(255,255,255,0.4);
+            transition: all 0.3s ease;
+            backdrop-filter: blur(2px);
+        }
+
+        .step-icon.active {
+            color: #000;
+            transform: scale(1.1);
+        }
+
+        .step-icon.active-1 { background: var(--step-1-color); }
+        .step-icon.active-2 { background: var(--step-2-color); }
+        .step-icon.active-3 { background: var(--step-3-color); }
+
+        /* 4. Traffic Light on Images */
+        .traffic-light {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+            background: rgba(0,0,0,0.7);
+            padding: 4px;
+            border-radius: 6px;
+            backdrop-filter: blur(2px);
+        }
+
+        .traffic-dot {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: rgba(255,255,255,0.2);
+            transition: all 0.3s ease;
+        }
+
+        .traffic-dot.active-1 { 
+            background: var(--step-1-color); 
+            box-shadow: 0 0 4px var(--step-1-color); 
+        }
+        .traffic-dot.active-2 { 
+            background: var(--step-2-color); 
+            box-shadow: 0 0 4px var(--step-2-color); 
+        }
+        .traffic-dot.active-3 { 
+            background: var(--step-3-color); 
+            box-shadow: 0 0 4px var(--step-3-color); 
+        }
+
+        /* 5. Workflow Chevrons on Images */
+        .workflow-chevrons {
+            display: flex;
+            align-items: center;
+            gap: 1px;
+            background: rgba(0,0,0,0.7);
+            padding: 2px;
+            border-radius: 4px;
+            backdrop-filter: blur(2px);
+        }
+
+        .chevron {
+            width: 10px;
+            height: 10px;
+            background: rgba(255,255,255,0.2);
+            position: relative;
+            transition: all 0.3s ease;
+            clip-path: polygon(0 0, calc(100% - 3px) 0, 100% 50%, calc(100% - 3px) 100%, 0 100%, 3px 50%);
+        }
+
+        .chevron:first-child {
+            clip-path: polygon(0 0, calc(100% - 3px) 0, 100% 50%, calc(100% - 3px) 100%, 0 100%);
+        }
+
+        .chevron:last-child {
+            clip-path: polygon(3px 0, 100% 0, 100% 100%, 3px 100%, 0 50%);
+        }
+
+        .chevron.active-1 { background: var(--step-1-color); }
+        .chevron.active-2 { background: var(--step-2-color); }
+        .chevron.active-3 { background: var(--step-3-color); }
+
+        /* 6. Badge System on Images */
+        .badge-system {
+            display: flex;
+            gap: 2px;
+            align-items: center;
+        }
+
+        .badge {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: rgba(0,0,0,0.7);
+            color: rgba(255,255,255,0.4);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 6px;
+            font-weight: bold;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(2px);
+        }
+
+        .badge.earned {
+            color: #000;
+            transform: scale(1.1);
+        }
+
+        .badge.earned-1 { background: var(--step-1-color); }
+        .badge.earned-2 { background: var(--step-2-color); }
+        .badge.earned-3 { background: var(--step-3-color); }
+
+        /* 7. Timeline on Images */
+        .timeline {
+            display: flex;
+            align-items: center;
+            gap: 2px;
+            background: rgba(0,0,0,0.7);
+            padding: 2px 4px;
+            border-radius: 4px;
+            backdrop-filter: blur(2px);
+        }
+
+        .timeline-line {
+            width: 8px;
+            height: 2px;
+            background: rgba(255,255,255,0.2);
+            transition: all 0.3s ease;
+        }
+
+        .timeline-line.active-1 { background: var(--step-1-color); }
+        .timeline-line.active-2 { background: var(--step-2-color); }
+        .timeline-line.active-3 { background: var(--step-3-color); }
+
+        .timeline-dot {
+            width: 4px;
+            height: 4px;
+            border-radius: 50%;
+            background: rgba(255,255,255,0.2);
+            transition: all 0.3s ease;
+        }
+
+        .timeline-dot.active-1 { 
+            background: var(--step-1-color); 
+            box-shadow: 0 0 3px var(--step-1-color); 
+        }
+        .timeline-dot.active-2 { 
+            background: var(--step-2-color); 
+            box-shadow: 0 0 3px var(--step-2-color); 
+        }
+        .timeline-dot.active-3 { 
+            background: var(--step-3-color); 
+            box-shadow: 0 0 3px var(--step-3-color); 
+        }
+
+        /* 8. Pulse Indicators on Images */
+        .pulse-indicators {
+            display: flex;
+            gap: 3px;
+            align-items: center;
+            background: rgba(0,0,0,0.7);
+            padding: 3px;
+            border-radius: 4px;
+            backdrop-filter: blur(2px);
+        }
+
+        .pulse-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: rgba(255,255,255,0.2);
+            transition: all 0.3s ease;
+        }
+
+        .pulse-dot.active-1 { 
+            background: var(--step-1-color); 
+            animation: pulse-1 2s infinite;
+        }
+
+        .pulse-dot.active-2 { 
+            background: var(--step-2-color);
+            animation: pulse-2 2s infinite;
+        }
+
+        .pulse-dot.active-3 { 
+            background: var(--step-3-color);
+            animation: pulse-3 2s infinite;
+        }
+
+        @keyframes pulse-1 {
+            0% { box-shadow: 0 0 0 0 rgba(114, 16, 232, 0.7); }
+            70% { box-shadow: 0 0 0 4px rgba(114, 16, 232, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(114, 16, 232, 0); }
+        }
+
+        @keyframes pulse-2 {
+            0% { box-shadow: 0 0 0 0 rgba(201, 97, 0, 0.7); }
+            70% { box-shadow: 0 0 0 4px rgba(201, 97, 0, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(201, 97, 0, 0); }
+        }
+
+        @keyframes pulse-3 {
+            0% { box-shadow: 0 0 0 0 rgba(121, 239, 4, 0.7); }
+            70% { box-shadow: 0 0 0 4px rgba(121, 239, 4, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(121, 239, 4, 0); }
+        }
+
+        /* Matrix Simulation */
+        .matrix-simulation {
+            background: #1a1b1d;
+            border-radius: 12px;
+            padding: 30px;
+            margin-top: 40px;
+        }
+
+        .matrix-title {
+            font-size: 24px;
+            font-weight: 600;
+            text-align: center;
+            margin-bottom: 30px;
+            color: var(--text);
+        }
+
+        .matrix-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+            gap: 20px;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .matrix-cell {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .cell-title {
+            font-size: 11px;
+            color: var(--muted);
+            text-align: center;
+            margin-bottom: 5px;
+        }
+
+        .description {
+            font-size: 13px;
+            color: var(--muted);
+            margin-top: 15px;
+            line-height: 1.4;
+            text-align: center;
+        }
+
+        /* Remove old background classes since we have actual images now */
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🖼️ State Indicators on Image Boxes</h1>
+
+        <div class="showcase-grid">
+            <!-- 1. Progress Rings on Images -->
+            <div class="showcase-section">
+                <h3 class="showcase-title">1. Progress Rings</h3>
+                <div class="states-demo">
+                    <div class="state-example">
+                        <div class="image-box">
+                            <img src="https://images.unsplash.com/photo-1556761175-b413da4baf72?w=120&h=67&fit=crop" alt="Business meeting">
+                            <div class="indicator-overlay">
+                                <div class="progress-ring">
+                                    <div class="ring-bg"></div>
+                                    <div class="ring-center">0</div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="state-label">Empty</div>
+                    </div>
+                    <div class="state-example">
+                        <div class="image-box business">
+                            <img src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=120&h=67&fit=crop" alt="Office workspace">
+                            <div class="indicator-overlay">
+                                <div class="progress-ring">
+                                    <div class="ring-bg"></div>
+                                    <div class="ring-progress step-1"></div>
+                                    <div class="ring-center">1</div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="state-label">Step 1</div>
+                    </div>
+                    <div class="state-example">
+                        <div class="image-box restaurant">
+                            <img src="https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=120&h=67&fit=crop" alt="Restaurant interior">
+                            <div class="indicator-overlay">
+                                <div class="progress-ring">
+                                    <div class="ring-bg"></div>
+                                    <div class="ring-progress step-2"></div>
+                                    <div class="ring-center">2</div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="state-label">Step 2</div>
+                    </div>
+                    <div class="state-example">
+                        <div class="image-box retail">
+                            <img src="https://images.unsplash.com/photo-1441986300917-64674bd600d8?w=120&h=67&fit=crop" alt="Retail store">
+                            <div class="indicator-overlay">
+                                <div class="progress-ring">
+                                    <div class="ring-bg"></div>
+                                    <div class="ring-progress step-3"></div>
+                                    <div class="ring-center">3</div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="state-label">Complete</div>
+                    </div>
+                </div>
+                <div class="description">
+                    Clean circular progress with number indicator
+                </div>
+            </div>
+
+            <!-- 2. Mini Progress Bars on Images -->
+            <div class="showcase-section">
+                <h3 class="showcase-title">2. Mini Progress Bars</h3>
+                <div class="states-demo">
+                    <div class="state-example">
+                        <div class="image-box">
+                            <img src="https://images.unsplash.com/photo-1560472354-b33ff0c44a43?w=120&h=67&fit=crop" alt="Product launch">
+                            <div class="indicator-overlay">
+                                <div class="mini-progress-bar">
+                                    <div class="bar-segment"></div>
+                                    <div class="bar-segment"></div>
+                                    <div class="bar-segment"></div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="state-label">Empty</div>
+                    </div>
+                    <div class="state-example">
+                        <div class="image-box business">
+                            <img src="https://images.unsplash.com/photo-1522071820081-009f0129c71c?w=120&h=67&fit=crop" alt="Team collaboration">
+                            <div class="indicator-overlay">
+                                <div class="mini-progress-bar">
+                                    <div class="bar-segment active-1"></div>
+                                    <div class="bar-segment"></div>
+                                    <div class="bar-segment"></div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="state-label">Step 1</div>
+                    </div>
+                    <div class="state-example">
+                        <div class="image-box restaurant">
+                            <img src="https://images.unsplash.com/photo-1414235077428-338989a2e8c0?w=120&h=67&fit=crop" alt="Cafe atmosphere">
+                            <div class="indicator-overlay">
+                                <div class="mini-progress-bar">
+                                    <div class="bar-segment active-1"></div>
+                                    <div class="bar-segment active-2"></div>
+                                    <div class="bar-segment"></div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="state-label">Step 2</div>
+                    </div>
+                    <div class="state-example">
+                        <div class="image-box retail">
+                            <img src="https://images.unsplash.com/photo-1445205170230-053b83016050?w=120&h=67&fit=crop" alt="Shopping center">
+                            <div class="indicator-overlay">
+                                <div class="mini-progress-bar">
+                                    <div class="bar-segment active-1"></div>
+                                    <div class="bar-segment active-2"></div>
+                                    <div class="bar-segment active-3"></div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="state-label">Complete</div>
+                    </div>
+                </div>
+                <div class="description">
+                    Horizontal segmented bars - very compact
+                </div>
+            </div>
+
+            <!-- 3. Step Icons on Images -->
+            <div class="showcase-section">
+                <h3 class="showcase-title">3. Step Icons</h3>
+                <div class="states-demo">
+                    <div class="state-example">
+                        <div class="image-box">
+                            <img src="https://images.unsplash.com/photo-1557804506-669a67965ba0?w=120&h=67&fit=crop" alt="Office meeting">
+                            <div class="indicator-overlay">
+                                <div class="step-icons">
+                                    <div class="step-icon">💭</div>
+                                    <div class="step-icon">📸</div>
+                                    <div class="step-icon">🎬</div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="state-label">Empty</div>
+                    </div>
+                    <div class="state-example">
+                        <div class="image-box business">
+                            <img src="https://images.unsplash.com/photo-1518709268805-4e9042af2176?w=120&h=67&fit=crop" alt="Tech startup">
+                            <div class="indicator-overlay">
+                                <div class="step-icons">
+                                    <div class="step-icon active active-1">💭</div>
+                                    <div class="step-icon">📸</div>
+                                    <div class="step-icon">🎬</div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="state-label">Prompt</div>
+                    </div>
+                    <div class="state-example">
+                        <div class="image-box restaurant">
+                            <img src="https://images.unsplash.com/photo-1600891964092-4316c288032e?w=120&h=67&fit=crop" alt="Restaurant kitchen">
+                            <div class="indicator-overlay">
+                                <div class="step-icons">
+                                    <div class="step-icon active active-1">💭</div>
+                                    <div class="step-icon active active-2">📸</div>
+                                    <div class="step-icon">🎬</div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="state-label">Image</div>
+                    </div>
+                    <div class="state-example">
+                        <div class="image-box retail">
+                            <img src="https://images.unsplash.com/photo-1472851294608-062f824d29cc?w=120&h=67&fit=crop" alt="Boutique store">
+                            <div class="indicator-overlay">
+                                <div class="step-icons">
+                                    <div class="step-icon active active-1">💭</div>
+                                    <div class="step-icon active active-2">📸</div>
+                                    <div class="step-icon active active-3">🎬</div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="state-label">Video</div>
+                    </div>
+                </div>
+                <div class="description">
+                    Clear workflow icons - instantly recognizable
+                </div>
+            </div>
+
+            <!-- 4. Traffic Light on Images -->
+            <div class="showcase-section">
+                <h3 class="showcase-title">4. Traffic Light</h3>
+                <div class="states-demo">
+                    <div class="state-example">
+                        <div class="image-box">
+                            <img src="https://images.unsplash.com/photo-1600298881974-6be191ceeda1?w=120&h=67&fit=crop" alt="Healthcare clinic">
+                            <div class="indicator-overlay">
+                                <div class="traffic-light">
+                                    <div class="traffic-dot"></div>
+                                    <div class="traffic-dot"></div>
+                                    <div class="traffic-dot"></div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="state-label">Empty</div>
+                    </div>
+                    <div class="state-example">
+                        <div class="image-box business">
+                            <img src="https://images.unsplash.com/photo-1497366216548-37526070297c?w=120&h=67&fit=crop" alt="Modern office">
+                            <div class="indicator-overlay">
+                                <div class="traffic-light">
+                                    <div class="traffic-dot active-1"></div>
+                                    <div class="traffic-dot"></div>
+                                    <div class="traffic-dot"></div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="state-label">Step 1</div>
+                    </div>
+                    <div class="state-example">
+                        <div class="image-box restaurant">
+                            <img src="https://images.unsplash.com/photo-1552566588-b8da3f72c5b4?w=120&h=67&fit=crop" alt="Fine dining">
+                            <div class="indicator-overlay">
+                                <div class="traffic-light">
+                                    <div class="traffic-dot active-1"></div>
+                                    <div class="traffic-dot active-2"></div>
+                                    <div class="traffic-dot"></div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="state-label">Step 2</div>
+                    </div>
+                    <div class="state-example">
+                        <div class="image-box retail">
+                            <img src="https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=120&h=67&fit=crop" alt="Retail fashion">
+                            <div class="indicator-overlay">
+                                <div class="traffic-light">
+                                    <div class="traffic-dot active-1"></div>
+                                    <div class="traffic-dot active-2"></div>
+                                    <div class="traffic-dot active-3"></div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="state-label">Complete</div>
+                    </div>
+                </div>
+                <div class="description">
+                    Vertical stacked - familiar and space-efficient
+                </div>
+            </div>
+
+            <!-- 5. Workflow Chevrons on Images -->
+            <div class="showcase-section">
+                <h3 class="showcase-title">5. Chevrons</h3>
+                <div class="states-demo">
+                    <div class="state-example">
+                        <div class="image-box">
+                            <img src="https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?w=120&h=67&fit=crop" alt="Building interior">
+                            <div class="indicator-overlay">
+                                <div class="workflow-chevrons">
+                                    <div class="chevron"></div>
+                                    <div class="chevron"></div>
+                                    <div class="chevron"></div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="state-label">Empty</div>
+                    </div>
+                    <div class="state-example">
+                        <div class="image-box business">
+                            <img src="https://images.unsplash.com/photo-1575089976121-8fcdee02caba?w=120&h=67&fit=crop" alt="Business discussion">
+                            <div class="indicator-overlay">
+                                <div class="workflow-chevrons">
+                                    <div class="chevron active-1"></div>
+                                    <div class="chevron"></div>
+                                    <div class="chevron"></div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="state-label">Step 1</div>
+                    </div>
+                    <div class="state-example">
+                        <div class="image-box restaurant">
+                            <img src="https://images.unsplash.com/photo-1559329007-40df8a9345d8?w=120&h=67&fit=crop" alt="Coffee shop">
+                            <div class="indicator-overlay">
+                                <div class="workflow-chevrons">
+                                    <div class="chevron active-1"></div>
+                                    <div class="chevron active-2"></div>
+                                    <div class="chevron"></div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="state-label">Step 2</div>
+                    </div>
+                    <div class="state-example">
+                        <div class="image-box retail">
+                            <img src="https://images.unsplash.com/photo-1560472354-a3d5c6eb1de8?w=120&h=67&fit=crop" alt="Modern store">
+                            <div class="indicator-overlay">
+                                <div class="workflow-chevrons">
+                                    <div class="chevron active-1"></div>
+                                    <div class="chevron active-2"></div>
+                                    <div class="chevron active-3"></div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="state-label">Complete</div>
+                    </div>
+                </div>
+                <div class="description">
+                    Connected arrows showing flow direction
+                </div>
+            </div>
+
+            <!-- 6. Badges on Images -->
+            <div class="showcase-section">
+                <h3 class="showcase-title">6. Badges</h3>
+                <div class="states-demo">
+                    <div class="state-example">
+                        <div class="image-box">
+                            <img src="https://images.unsplash.com/photo-1589939705384-5185137a7f0f?w=120&h=67&fit=crop" alt="Spa wellness">
+                            <div class="indicator-overlay">
+                                <div class="badge-system">
+                                    <div class="badge">1</div>
+                                    <div class="badge">2</div>
+                                    <div class="badge">3</div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="state-label">Empty</div>
+                    </div>
+                    <div class="state-example">
+                        <div class="image-box business">
+                            <img src="https://images.unsplash.com/photo-1497366811353-6870744d04b2?w=120&h=67&fit=crop" alt="Modern workspace">
+                            <div class="indicator-overlay">
+                                <div class="badge-system">
+                                    <div class="badge earned earned-1">✓</div>
+                                    <div class="badge">2</div>
+                                    <div class="badge">3</div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="state-label">Badge 1</div>
+                    </div>
+                    <div class="state-example">
+                        <div class="image-box restaurant">
+                            <img src="https://images.unsplash.com/photo-1580828343064-fde4fc206bc6?w=120&h=67&fit=crop" alt="Food service">
+                            <div class="indicator-overlay">
+                                <div class="badge-system">
+                                    <div class="badge earned earned-1">✓</div>
+                                    <div class="badge earned earned-2">✓</div>
+                                    <div class="badge">3</div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="state-label">Badge 2</div>
+                    </div>
+                    <div class="state-example">
+                        <div class="image-box retail">
+                            <img src="https://images.unsplash.com/photo-1583847268964-b28dc8f51f92?w=120&h=67&fit=crop" alt="Boutique shopping">
+                            <div class="indicator-overlay">
+                                <div class="badge-system">
+                                    <div class="badge earned earned-1">✓</div>
+                                    <div class="badge earned earned-2">✓</div>
+                                    <div class="badge earned earned-3">✓</div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="state-label">All Earned</div>
+                    </div>
+                </div>
+                <div class="description">
+                    Achievement-style with checkmarks
+                </div>
+            </div>
+
+            <!-- 7. Timeline on Images -->
+            <div class="showcase-section">
+                <h3 class="showcase-title">7. Timeline</h3>
+                <div class="states-demo">
+                    <div class="state-example">
+                        <div class="image-box">
+                            <img src="https://images.unsplash.com/photo-1543269664-647eda2c3af3?w=120&h=67&fit=crop" alt="Business timeline">
+                            <div class="indicator-overlay">
+                                <div class="timeline">
+                                    <div class="timeline-dot"></div>
+                                    <div class="timeline-line"></div>
+                                    <div class="timeline-dot"></div>
+                                    <div class="timeline-line"></div>
+                                    <div class="timeline-dot"></div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="state-label">Empty</div>
+                    </div>
+                    <div class="state-example">
+                        <div class="image-box business">
+                            <img src="https://images.unsplash.com/photo-1500989145603-8e6aae5e1b14?w=120&h=67&fit=crop" alt="Office progress">
+                            <div class="indicator-overlay">
+                                <div class="timeline">
+                                    <div class="timeline-dot active-1"></div>
+                                    <div class="timeline-line active-1"></div>
+                                    <div class="timeline-dot"></div>
+                                    <div class="timeline-line"></div>
+                                    <div class="timeline-dot"></div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="state-label">Step 1</div>
+                    </div>
+                    <div class="state-example">
+                        <div class="image-box restaurant">
+                            <img src="https://images.unsplash.com/photo-1572737333349-7d8e8dcfb4ca?w=120&h=67&fit=crop" alt="Food preparation">
+                            <div class="indicator-overlay">
+                                <div class="timeline">
+                                    <div class="timeline-dot active-1"></div>
+                                    <div class="timeline-line active-1"></div>
+                                    <div class="timeline-dot active-2"></div>
+                                    <div class="timeline-line active-2"></div>
+                                    <div class="timeline-dot"></div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="state-label">Step 2</div>
+                    </div>
+                    <div class="state-example">
+                        <div class="image-box retail">
+                            <img src="https://images.unsplash.com/photo-1604719312566-8912e9227c6a?w=120&h=67&fit=crop" alt="Retail completion">
+                            <div class="indicator-overlay">
+                                <div class="timeline">
+                                    <div class="timeline-dot active-1"></div>
+                                    <div class="timeline-line active-1"></div>
+                                    <div class="timeline-dot active-2"></div>
+                                    <div class="timeline-line active-2"></div>
+                                    <div class="timeline-dot active-3"></div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="state-label">Complete</div>
+                    </div>
+                </div>
+                <div class="description">
+                    Linear progress with connecting lines
+                </div>
+            </div>
+
+            <!-- 8. Pulse Indicators on Images -->
+            <div class="showcase-section">
+                <h3 class="showcase-title">8. Pulse Dots</h3>
+                <div class="states-demo">
+                    <div class="state-example">
+                        <div class="image-box">
+                            <img src="https://images.unsplash.com/photo-1496171367470-9ed9a91ea931?w=120&h=67&fit=crop" alt="Working process">
+                            <div class="indicator-overlay">
+                                <div class="pulse-indicators">
+                                    <div class="pulse-dot"></div>
+                                    <div class="pulse-dot"></div>
+                                    <div class="pulse-dot"></div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="state-label">Empty</div>
+                    </div>
+                    <div class="state-example">
+                        <div class="image-box business">
+                            <img src="https://images.unsplash.com/photo-1664382953518-4a2d6d09d43c?w=120&h=67&fit=crop" alt="Active business">
+                            <div class="indicator-overlay">
+                                <div class="pulse-indicators">
+                                    <div class="pulse-dot active-1"></div>
+                                    <div class="pulse-dot"></div>
+                                    <div class="pulse-dot"></div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="state-label">Processing</div>
+                    </div>
+                    <div class="state-example">
+                        <div class="image-box restaurant">
+                            <img src="https://images.unsplash.com/photo-1587561848062-7b3dd2b8fb14?w=120&h=67&fit=crop" alt="Kitchen activity">
+                            <div class="indicator-overlay">
+                                <div class="pulse-indicators">
+                                    <div class="pulse-dot active-1"></div>
+                                    <div class="pulse-dot active-2"></div>
+                                    <div class="pulse-dot"></div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="state-label">Step 2 Active</div>
+                    </div>
+                    <div class="state-example">
+                        <div class="image-box retail">
+                            <img src="https://images.unsplash.com/photo-1513475382585-d06e58bcb0e0?w=120&h=67&fit=crop" alt="Busy retail">
+                            <div class="indicator-overlay">
+                                <div class="pulse-indicators">
+                                    <div class="pulse-dot active-1"></div>
+                                    <div class="pulse-dot active-2"></div>
+                                    <div class="pulse-dot active-3"></div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="state-label">All Pulsing</div>
+                    </div>
+                </div>
+                <div class="description">
+                    Animated pulses for live feedback
+                </div>
+            </div>
+        </div>
+
+        <!-- Realistic Matrix Simulation -->
+        <div class="matrix-simulation">
+            <h3 class="matrix-title">🎯 Realistic Matrix Preview</h3>
+            <div class="matrix-grid">
+                <div class="matrix-cell">
+                    <div class="cell-title">Restaurante × Marketing</div>
+                    <div class="image-box business">
+                        <img src="https://images.unsplash.com/photo-1555396273-367ea4eb4db5?w=120&h=67&fit=crop" alt="Restaurant scene">
+                        <div class="indicator-overlay">
+                            <div class="step-icons">
+                                <div class="step-icon active active-1">💭</div>
+                                <div class="step-icon active active-2">📸</div>
+                                <div class="step-icon">🎬</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="matrix-cell">
+                    <div class="cell-title">Loja × Tech</div>
+                    <div class="image-box retail">
+                        <img src="https://images.unsplash.com/photo-1586880244386-8b3e34c8382c?w=120&h=67&fit=crop" alt="Tech retail">
+                        <div class="indicator-overlay">
+                            <div class="mini-progress-bar">
+                                <div class="bar-segment active-1"></div>
+                                <div class="bar-segment active-2"></div>
+                                <div class="bar-segment active-3"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="matrix-cell">
+                    <div class="cell-title">Clínica × Health</div>
+                    <div class="image-box healthcare">
+                        <img src="https://images.unsplash.com/photo-1516549655169-df83a0774514?w=120&h=67&fit=crop" alt="Medical clinic">
+                        <div class="indicator-overlay">
+                            <div class="traffic-light">
+                                <div class="traffic-dot active-1"></div>
+                                <div class="traffic-dot"></div>
+                                <div class="traffic-dot"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="matrix-cell">
+                    <div class="cell-title">Salão × Beauty</div>
+                    <div class="image-box restaurant">
+                        <img src="https://images.unsplash.com/photo-1560066984-138dadb4c035?w=120&h=67&fit=crop" alt="Beauty salon">
+                        <div class="indicator-overlay">
+                            <div class="progress-ring">
+                                <div class="ring-bg"></div>
+                                <div class="ring-progress step-2"></div>
+                                <div class="ring-center">2</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="matrix-cell">
+                    <div class="cell-title">Bar × Nightlife</div>
+                    <div class="image-box business">
+                        <img src="https://images.unsplash.com/photo-1514933651103-005eec06c04b?w=120&h=67&fit=crop" alt="Bar interior">
+                        <div class="indicator-overlay">
+                            <div class="pulse-indicators">
+                                <div class="pulse-dot active-1"></div>
+                                <div class="pulse-dot active-2"></div>
+                                <div class="pulse-dot active-3"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="matrix-cell">
+                    <div class="cell-title">Academia × Fitness</div>
+                    <div class="image-box healthcare">
+                        <img src="https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?w=120&h=67&fit=crop" alt="Gym equipment">
+                        <div class="indicator-overlay">
+                            <div class="badge-system">
+                                <div class="badge earned earned-1">✓</div>
+                                <div class="badge earned earned-2">✓</div>
+                                <div class="badge">3</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="description" style="text-align: center; margin-top: 30px; font-size: 14px;">
+                Mix and match different indicators based on your preferences!<br>
+                <strong style="color: var(--text);">Perfect readability on any background image</strong>
+            </div>
+        </div>
+
+        <div style="margin-top: 60px; padding: 30px; background: var(--card); border-radius: 12px; border: 1px solid #232427; text-align: center;">
+            <h3 style="margin-top: 0; color: var(--text);">🎨 Perfect for Your Matrix</h3>
+            <div style="color: var(--muted); line-height: 1.6;">
+                <p><strong>✅ All indicators work great on images</strong></p>
+                <p><strong>✅ Semi-transparent backgrounds for readability</strong></p>
+                <p><strong>✅ Backdrop blur effects for modern look</strong></p>
+                <p><strong>✅ Hover effects and smooth animations</strong></p>
+                <p><strong>💜🧡💚 Your colors look amazing on all variations!</strong></p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Add hover animations
+        document.querySelectorAll('.image-box').forEach(box => {
+            box.addEventListener('mouseenter', () => {
+                const indicator = box.querySelector('.indicator-overlay > *');
+                if (indicator) {
+                    indicator.style.transform = 'scale(1.1)';
+                }
+            });
+            
+            box.addEventListener('mouseleave', () => {
+                const indicator = box.querySelector('.indicator-overlay > *');
+                if (indicator) {
+                    indicator.style.transform = 'scale(1)';
+                }
+            });
+        });
+    </script>
+</body>
+</html>

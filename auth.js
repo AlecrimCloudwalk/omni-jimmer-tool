@@ -316,19 +316,29 @@ class AuthManager {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${this.apiKeys.replicate}`,
                         ...options.headers
                     },
                     body: JSON.stringify(data)  // Send data directly without endpoint wrapper
                 });
 
+                // Parse response even if not ok, to check for specific errors
+                const responseData = await proxyResponse.json();
+
                 if (proxyResponse.ok) {
                     console.log('✅ Local proxy successful');
-                    return await proxyResponse.json();
+                    return responseData;
+                } else if (proxyResponse.status === 402) {
+                    // Handle spending limit specifically - this is a valid response from a working proxy
+                    console.log('💳 Replicate spending limit reached - proxy is working');
+                    throw new Error(`Replicate spending limit reached: ${responseData.detail || responseData.title || 'Monthly limit exceeded'}`);
                 } else {
-                    console.warn('⚠️ Local proxy failed, trying Supabase proxy...');
+                    console.warn('⚠️ Local proxy failed with status:', proxyResponse.status, 'trying Supabase proxy...');
                 }
             } catch (proxyError) {
+                // If it's our spending limit error, re-throw it (don't try other proxies)
+                if (proxyError.message.includes('spending limit')) {
+                    throw proxyError;
+                }
                 console.warn('⚠️ Local proxy not available, trying Supabase proxy...', proxyError.message);
             }
 
@@ -471,7 +481,37 @@ Original prompt: ${basePrompt}`;
         } catch (error) {
             console.error('❌ Failed to generate prompt with instructions:', error);
             console.error('Error details:', error.message);
-            throw error;
+            
+            // Check for specific OpenAI errors
+            if (error.message.includes('insufficient_quota') || 
+                error.message.includes('billing') ||
+                error.message.includes('exceeded your current quota')) {
+                throw new Error('💳 Insufficient OpenAI credits: Your OpenAI account is out of credits. Please add funds to your OpenAI account to continue generating prompts.');
+            }
+            
+            // Check for invalid API key
+            if (error.message.includes('invalid_api_key') || 
+                error.message.includes('authentication') ||
+                error.message.includes('unauthorized')) {
+                throw new Error('🔑 Invalid API Key: Your OpenAI API key is invalid or missing. Please check your API key configuration.');
+            }
+            
+            // Check for rate limiting
+            if (error.message.includes('rate_limit') || error.message.includes('too many requests')) {
+                throw new Error('⏱️ Rate limited: Too many requests to OpenAI. Please wait a moment and try again.');
+            }
+            
+            // Check for CORS/network issues
+            const isCorsError = error.message.includes('CORS') || 
+                               error.message.includes('Failed to fetch') || 
+                               error.message.includes('blocked by the browser');
+                               
+            if (isCorsError) {
+                throw new Error('🌐 Connection error: Cannot connect to OpenAI API. Please check your network connection.');
+            }
+            
+            // Generic error with helpful context
+            throw new Error(`🚨 Prompt generation failed: ${error.message}`);
         }
     }
 
@@ -482,19 +522,18 @@ Original prompt: ${basePrompt}`;
         try {
             console.log('🎨 Starting image generation with prompt:', prompt);
             
-            // Development mode: Skip actual image generation for faster testing
-            // Set window.enableRealImages = true in console to test real image generation
+            // Real image generation is now enabled by default
+            // Set window.disableRealImages = true or localStorage to use placeholders for testing
             const isDev = this.isDevelopmentMode();
             const isLocalhost = window.location.hostname === 'localhost';
-            const enableReal = window.enableRealImages;
+            const disableReal = window.disableRealImages || localStorage.getItem('disableRealImages') === 'true';
             
-            console.log('🔍 Image generation mode check:', { isDev, isLocalhost, enableReal, willUsePlaceholder: isDev && isLocalhost && !enableReal });
+            console.log('🔍 Image generation mode check:', { isDev, isLocalhost, disableReal, willUsePlaceholder: isDev && isLocalhost && disableReal });
             
-            if (isDev && isLocalhost && !enableReal) {
-                console.log('🚧 Development mode: Using placeholder image');
-                console.log('💡 To test real image generation, run: window.enableRealImages = true');
-                // Return a placeholder image for development
-                return ['https://picsum.photos/1024/1024?random=' + Math.floor(Math.random() * 1000)];
+            if (isDev && isLocalhost && disableReal) {
+                console.log('🚧 Development mode: Real image generation disabled');
+                console.log('💡 To re-enable real images: window.disableRealImages = false; localStorage.removeItem("disableRealImages")');
+                throw new Error('🔧 Development mode: Real image generation is disabled. Enable it to generate images.');
             }
             
             console.log('🎨 Proceeding with real image generation!');
@@ -545,18 +584,37 @@ Original prompt: ${basePrompt}`;
         } catch (error) {
             console.error('Image generation failed:', error);
             
-            // Development fallback: Use placeholder image
-            if (this.isDevelopmentMode() && error.message.includes('CORS')) {
-                console.log('🚧 CORS error in development, using placeholder');
-                return ['https://picsum.photos/1024/1024?random=' + Math.floor(Math.random() * 1000)];
+            // Check for specific Replicate errors
+            if (error.message.includes('insufficient funds') || 
+                error.message.includes('out of funds') ||
+                error.message.includes('billing') ||
+                error.message.includes('credits') ||
+                error.message.includes('payment')) {
+                throw new Error('💳 Insufficient funds: Your Replicate account is out of credits. Please add funds to your Replicate account to continue generating images.');
             }
             
-            // Provide helpful error message for CORS issues
-            if (error.message.includes('CORS')) {
-                throw new Error('CORS error: Image generation requires a proxy server. Please start the Supabase functions with: supabase functions serve');
+            // Check for CORS/network issues
+            const isCorsError = error.message.includes('CORS') || 
+                               error.message.includes('Failed to fetch') || 
+                               error.message.includes('blocked by the browser') ||
+                               error.message.includes('violates the following Content Security Policy');
+                               
+            if (isCorsError) {
+                throw new Error('🌐 Connection error: Image generation requires a proxy server. Please start the Supabase functions with: supabase functions serve');
             }
             
-            throw error;
+            // Check for rate limiting
+            if (error.message.includes('rate limit') || error.message.includes('too many requests')) {
+                throw new Error('⏱️ Rate limited: Too many requests. Please wait a moment and try again.');
+            }
+            
+            // Check for model/input errors
+            if (error.message.includes('model') || error.message.includes('input')) {
+                throw new Error('⚙️ Model error: There was an issue with the AI model or input parameters. Please try again.');
+            }
+            
+            // Generic error with helpful context
+            throw new Error(`🚨 Generation failed: ${error.message}`);
         }
     }
 
@@ -618,7 +676,8 @@ Original prompt: ${basePrompt}`;
         Object.assign(notification.style, {
             position: 'fixed',
             top: '20px',
-            right: '20px',
+            left: '50%',
+            transform: 'translateX(-50%)',
             padding: '1rem 1.5rem',
             borderRadius: '8px',
             color: 'white',
@@ -626,7 +685,7 @@ Original prompt: ${basePrompt}`;
             zIndex: '10000',
             maxWidth: '400px',
             boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
-            animation: 'slideIn 0.3s ease'
+            animation: 'slideInCenter 0.3s ease'
         });
 
         // Set background color based on type
@@ -643,16 +702,118 @@ Original prompt: ${basePrompt}`;
         // Auto remove after 5 seconds
         setTimeout(() => {
             if (notification.parentNode) {
-                notification.style.animation = 'slideOut 0.3s ease';
+                notification.style.animation = 'slideOutCenter 0.3s ease';
                 setTimeout(() => notification.remove(), 300);
             }
         }, 5000);
 
         // Add click to dismiss
         notification.addEventListener('click', () => {
-            notification.style.animation = 'slideOut 0.3s ease';
+            notification.style.animation = 'slideOutCenter 0.3s ease';
             setTimeout(() => notification.remove(), 300);
         });
+    }
+
+    /**
+     * Generate video using Replicate - Text/Image to Video models
+     */
+    async generateVideo(prompt, imageUrl = null, options = {}) {
+        try {
+            console.log('🎬 Starting video generation with prompt:', prompt);
+            console.log('🖼️ Using image:', imageUrl);
+            
+            // Check if we should use placeholders for testing
+            const isDev = this.isDevelopmentMode();
+            const isLocalhost = window.location.hostname === 'localhost';
+            const disableReal = window.disableRealVideos;
+            
+            if (isDev && isLocalhost && disableReal) {
+                console.log('🚧 Development mode: Real video generation disabled');
+                throw new Error('🔧 Development mode: Real video generation is disabled. Enable it to generate videos.');
+            }
+            
+            console.log('🎬 Proceeding with real video generation!');
+
+            // Choose model based on whether we have an image input
+            let model, inputConfig;
+            
+            if (imageUrl) {
+                // Image-to-video generation using Luma Video
+                model = 'lumalabs/luma-video-v1';
+                inputConfig = {
+                    image: imageUrl,
+                    aspect_ratio: '16:9',
+                    loop: false
+                };
+                if (prompt) {
+                    inputConfig.prompt = prompt;
+                }
+            } else {
+                // Text-to-video generation using Luma Video
+                model = 'lumalabs/luma-video-v1';
+                inputConfig = {
+                    prompt: prompt,
+                    aspect_ratio: '16:9',
+                    loop: false
+                };
+            }
+
+            // Add any additional options
+            Object.assign(inputConfig, options);
+
+            const body = {
+                model: model,
+                input: inputConfig
+            };
+
+            console.log('🔄 Video request body:', JSON.stringify(body, null, 2));
+            
+            // Use the Replicate proxy (video generation takes longer so polling is important)
+            const prediction = await this.callReplicate('', body);
+            
+            if (prediction && prediction.output) {
+                const videoUrl = Array.isArray(prediction.output) ? prediction.output[0] : prediction.output;
+                console.log('✅ Video generation completed:', videoUrl);
+                return [videoUrl];
+            } else {
+                throw new Error('Video generation failed: No output received');
+            }
+            
+        } catch (error) {
+            console.error('❌ Video generation error:', error);
+            
+            // Check for specific Replicate errors
+            if (error.message.includes('insufficient funds') || 
+                error.message.includes('out of funds') ||
+                error.message.includes('billing') ||
+                error.message.includes('credits') ||
+                error.message.includes('payment')) {
+                throw new Error('💳 Insufficient funds: Your Replicate account is out of credits. Please add funds to your Replicate account to continue generating videos.');
+            }
+            
+            // Check for CORS/network issues
+            const isCorsError = error.message.includes('CORS') || 
+                               error.message.includes('Failed to fetch') || 
+                               error.message.includes('blocked by the browser') ||
+                               error.message.includes('violates the following Content Security Policy');
+                               
+            if (isCorsError) {
+                throw new Error('🌐 Connection error: Video generation requires a proxy server. Please start the Supabase functions with: supabase functions serve');
+            }
+            
+            // Check for rate limiting
+            if (error.message.includes('rate limit') || error.message.includes('too many requests')) {
+                throw new Error('⏱️ Rate limited: Too many requests. Please wait a moment and try again.');
+            }
+            
+            // Check for model/input errors
+            if (error.message.includes('model') || error.message.includes('input')) {
+                throw new Error('⚙️ Model error: There was an issue with the AI model or input parameters. Please try again.');
+            }
+            
+            // Generic error with helpful context
+            throw new Error(`🚨 Video generation failed: ${error.message}`);
+        }
     }
 
     /**
@@ -670,14 +831,14 @@ Original prompt: ${basePrompt}`;
 // Add notification animations
 const style = document.createElement('style');
 style.textContent = `
-    @keyframes slideIn {
-        from { transform: translateX(100%); opacity: 0; }
-        to { transform: translateX(0); opacity: 1; }
+    @keyframes slideInCenter {
+        from { transform: translateX(-50%) translateY(-20px); opacity: 0; }
+        to { transform: translateX(-50%) translateY(0); opacity: 1; }
     }
     
-    @keyframes slideOut {
-        from { transform: translateX(0); opacity: 1; }
-        to { transform: translateX(100%); opacity: 0; }
+    @keyframes slideOutCenter {
+        from { transform: translateX(-50%) translateY(0); opacity: 1; }
+        to { transform: translateX(-50%) translateY(-20px); opacity: 0; }
     }
     
     .api-key-set {
