@@ -130,7 +130,12 @@
             </div>
             
             <div class="app-preview">
-
+                <div class="preview-controls">
+                    <label class="preview-switch">
+                        <input type="radio" name="previewMode" value="carousel" id="previewCarousel" checked>
+                        <span>Carousel View</span>
+                    </label>
+                </div>
                 <div class="demo-controls mb-2">
                     <select id="demo-cnae-select" class="input">
                         <option value="">Select a CNAE to preview</option>
@@ -149,23 +154,23 @@
                             <div class="video-placeholder">
                                 <span>Generated content will appear here</span>
                             </div>
-                            <div class="video-controls">
-                                <div class="gradient-overlay"></div>
-                                <div class="content-overlay">
-                                    <div class="text-overlay">
-                                        <p id="demo-cnae-title">Select a CNAE to preview products</p>
-                                    </div>
-                                    <button class="cta-button">Saiba mais</button>
+                        </div>
+                        <div class="video-controls">
+                            <div class="gradient-overlay"></div>
+                            <div class="content-overlay">
+                                <div class="text-overlay">
+                                    <p id="demo-cnae-title">Select CNAE</p>
                                 </div>
-                                <div class="carousel-indicators">
-                                    <div class="indicator active"></div>
-                                    <div class="indicator"></div>
-                                    <div class="indicator"></div>
-                                    <div class="indicator"></div>
-                                    <div class="indicator"></div>
-                                    <div class="indicator"></div>
-                                </div>
+                                <button class="cta-button">Começar a usar</button>
                             </div>
+                        </div>
+                        <div class="carousel-indicators">
+                            <div class="indicator active"></div>
+                            <div class="indicator"></div>
+                            <div class="indicator"></div>
+                            <div class="indicator"></div>
+                            <div class="indicator"></div>
+                            <div class="indicator"></div>
                         </div>
                     </div>
                     
@@ -173,9 +178,11 @@
                     <div class="iphone-frame"></div>
                 </div>
                 
-                <!-- Carousel Info -->
-                <div class="carousel-info mt-2">
-                    <span id="slide-indicator" class="carousel-counter">0/0</span>
+                <!-- Carousel Controls -->
+                <div class="carousel-controls mt-2">
+                    <button id="prev-slide" class="btn btn-secondary btn-sm" disabled>‹ Previous</button>
+                    <span id="slide-indicator" class="mx-2">0/0</span>
+                    <button id="next-slide" class="btn btn-secondary btn-sm" disabled>Next ›</button>
                 </div>
             </div>
         </section>
