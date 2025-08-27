@@ -1,4 +1,4 @@
-# 🚀 Deploy Supabase Edge Functions for Omni Jimmer Tool
+# 🚀 Deploy Supabase Edge Functions
 
 ## Prerequisites
 
@@ -14,13 +14,13 @@
 
 ## 🔧 Setup Steps
 
-### 1. Link to your Supabase project
+### 1. Link to your existing Supabase project
 ```bash
 # Navigate to your project
 cd /Users/matheusaugustoalecrimdesousacorrea/Documents/omni-jimmer-tool
 
-# Link to your existing Supabase project (replace with your project ref)
-supabase link --project-ref YOUR_PROJECT_REF
+# Link to your existing Supabase project (same as original demo)
+supabase link --project-ref zeeyvgspihtrgcdkrsvx
 ```
 
 ### 2. Deploy the Edge Functions
@@ -30,20 +30,20 @@ supabase functions deploy openai-proxy
 supabase functions deploy replicate-proxy
 ```
 
-### 3. Set Environment Variables in Supabase
+### 3. Environment Variables (Already Set!)
 
-Go to your Supabase dashboard and set these secrets:
+✅ **Skip this step** - Your environment variables are already configured in your existing Supabase project:
 
-1. **Navigate to**: https://supabase.com/dashboard/project/YOUR_PROJECT_REF/settings/functions
-2. **Set these environment variables**:
-   - `OPENAI_API_KEY` = your OpenAI API key
-   - `REPLICATE_API_TOKEN` = your Replicate API token
-   - `SUPABASE_URL` = https://YOUR_PROJECT_REF.supabase.co
-   - `SUPABASE_ANON_KEY` = your anon key
+- `OPENAI_API_KEY` ✅ Already set
+- `REPLICATE_API_TOKEN` ✅ Already set  
+- `SUPABASE_URL` ✅ Already set
+- `SUPABASE_ANON_KEY` ✅ Already set
+
+Dashboard: https://supabase.com/dashboard/project/zeeyvgspihtrgcdkrsvx/settings/functions
 
 ### 4. Test the Functions
 
-You can test them locally with:
+You can test them with:
 ```bash
 # Test OpenAI proxy
 supabase functions serve openai-proxy
@@ -54,35 +54,22 @@ supabase functions serve replicate-proxy
 
 ## 🔒 Security Features
 
-✅ **Authentication required** - Only @cloudwalk.io users can access
-✅ **Server-side API keys** - No client-side exposure
-✅ **CORS headers** - Proper cross-origin support
-✅ **Error handling** - Comprehensive error responses
+✅ **Authentication required** - Only @cloudwalk.io users can access  
+✅ **Server-side API keys** - No client-side exposure  
+✅ **CORS headers** - Proper cross-origin support  
+✅ **Error handling** - Comprehensive error responses  
 
 ## 🎯 Function URLs
 
-After deployment, your functions will be available at:
-- OpenAI: `https://YOUR_PROJECT_REF.supabase.co/functions/v1/openai-proxy`
-- Replicate: `https://YOUR_PROJECT_REF.supabase.co/functions/v1/replicate-proxy`
+Your functions are available at (same URLs as original demo):
+- OpenAI: `https://zeeyvgspihtrgcdkrsvx.supabase.co/functions/v1/openai-proxy`
+- Replicate: `https://zeeyvgspihtrgcdkrsvx.supabase.co/functions/v1/replicate-proxy`
 
-## 🌐 Deploy to Render
+These match exactly what your app expects!
 
-1. **Connect your GitHub repository** to Render
-2. **Set Build Command**: `./build-render.sh`
-3. **Set Publish Directory**: `.` (root)
-4. **Add Environment Variables**:
-   - `SUPABASE_URL`
-   - `SUPABASE_ANON_KEY`
+## 📝 Next Steps
 
-The build script will automatically inject these at deployment time!
-
-## 🎬 Omni Jimmer Tool Features
-
-This deployment supports:
-- ✅ Matrix-based AI content generation
-- ✅ Brazilian business context
-- ✅ CNAE classification support
-- ✅ Multi-product campaigns
-- ✅ Secure API key management
-- ✅ Real-time generation progress
-- ✅ Export/Import functionality
+1. ✅ **Supabase project** - Using existing project `zeeyvgspihtrgcdkrsvx`
+2. ✅ **GitHub OAuth** - Already configured in your existing project
+3. 🔄 **Deploy to Render** - Set environment variables and deploy
+4. 🧪 **Test** - Verify the full authentication flow works

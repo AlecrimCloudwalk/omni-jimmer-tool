@@ -26,7 +26,9 @@ function getAllowedOrigin(request: Request): string {
     'https://zeeyvgspihtrgcdkrsvx.supabase.co',
     'https://omni-demo.onrender.com',
     'https://design-cw-omni.onrender.com',
-    'https://omni-demo.vercel.app'
+    'https://omni-demo.vercel.app',
+    // Add your new project's domains here
+    'https://omni-jimmer-tool.onrender.com'
   ];
   
   // Check exact matches and subdomain matches

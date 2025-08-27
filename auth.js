@@ -1,793 +1,493 @@
-/**
- * Authentication and API management for Omni Jimmer Tool
- */
+// Supabase GitHub OAuth Authentication for Cloudwalk
+// Restricts access to @cloudwalk.io domain only
 
-class AuthManager {
-    constructor() {
-        this.apiKeys = {
-            openai: null,
-            replicate: null
-        };
-        this.loadStoredKeys();
-        this.setupEventListeners();
+class CloudwalkAuth {
+  constructor() {
+    this.user = null;
+    this.isAuthenticated = false;
+    this.allowedDomain = 'cloudwalk.io';
+    this.supabase = null;
+    this.init();
+  }
+
+  async init() {
+    try {
+      console.log('🔥 Initializing Supabase Auth...');
+      
+      // Load Supabase SDK
+      await this.loadSupabaseSDK();
+      
+      // Initialize Supabase
+      await this.initializeSupabase();
+      
+      // Set up auth state listener
+      this.setupAuthStateListener();
+      
+      console.log('✅ Supabase Auth initialized');
+      
+    } catch (error) {
+      console.error('❌ Supabase Auth initialization failed:', error);
+      // Fallback to demo mode
+      this.initDemoMode();
     }
+  }
 
-    /**
-     * Load API keys from secure storage
-     */
-    loadStoredKeys() {
-        // Check if SecurityUtils is available
-        if (window.SecurityUtils && typeof window.SecurityUtils.getApiKey === 'function') {
-            this.apiKeys.openai = window.SecurityUtils.getApiKey('openai');
-            this.apiKeys.replicate = window.SecurityUtils.getApiKey('replicate');
+  async loadSupabaseSDK() {
+    return new Promise((resolve, reject) => {
+      // Check if Supabase is already loaded
+      if (window.supabase) {
+        resolve();
+        return;
+      }
+      
+      // Load Supabase SDK
+      const script = document.createElement('script');
+      script.src = 'https://unpkg.com/@supabase/supabase-js@2.39.3/dist/umd/supabase.js';
+      script.onload = () => {
+        console.log('📦 Supabase SDK loaded');
+        resolve();
+      };
+      script.onerror = () => reject(new Error('Failed to load Supabase SDK'));
+      document.head.appendChild(script);
+    });
+  }
+
+  async initializeSupabase() {
+    // Get config from global
+    const config = window.supabaseConfig;
+    
+    // Check if Supabase is properly configured
+    if (!config || !config.url || !config.anonKey || config.anonKey === 'YOUR_ANON_KEY_HERE' || config.anonKey.length < 30) {
+      throw new Error('Supabase not configured - falling back to demo mode');
+    }
+    
+    console.log('🔧 Supabase config valid:', { 
+      url: config.url, 
+      anonKey: config.anonKey.substring(0, 10) + '...' 
+    });
+    
+    // Initialize Supabase client
+    this.supabase = window.supabase.createClient(config.url, config.anonKey);
+    
+    console.log('🔑 Supabase client initialized for GitHub OAuth');
+  }
+
+  setupAuthStateListener() {
+    this.supabase.auth.onAuthStateChange((event, session) => {
+      console.log('🔄 Auth state changed:', event, session?.user?.email || 'signed out');
+      
+      if (event === 'SIGNED_IN' && session?.user) {
+        this.handleAuthenticatedUser(session.user);
+      } else if (event === 'SIGNED_OUT') {
+        this.handleSignedOutUser();
+      }
+    });
+  }
+
+  handleAuthenticatedUser(supabaseUser) {
+    console.log('✅ User authenticated:', supabaseUser.email);
+    
+    // Validate domain
+    if (!this.validateUserDomain(supabaseUser.email)) {
+      console.warn('🚫 Domain validation failed, signing out');
+      this.supabase.auth.signOut();
+      return;
+    }
+    
+    // Create our user object
+    this.user = {
+      uid: supabaseUser.id,
+      email: supabaseUser.email,
+      name: supabaseUser.user_metadata?.full_name || supabaseUser.email.split('@')[0],
+      picture: supabaseUser.user_metadata?.avatar_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(supabaseUser.email)}&background=c87ef7&color=fff`,
+      domain: supabaseUser.email.split('@')[1],
+      loginTime: Date.now(),
+      provider: 'github',
+      accessToken: null // Will be set when needed
+    };
+    
+    this.isAuthenticated = true;
+    this.updateAuthUI();
+    
+    // API key management removed - server-side keys only
+    console.log('🔑 User authenticated - API keys managed server-side');
+    
+    // Get access token for API calls
+    this.refreshAccessToken();
+  }
+
+  handleSignedOutUser() {
+    console.log('👋 User signed out');
+    this.user = null;
+    this.isAuthenticated = false;
+    this.updateAuthUI();
+    
+    // API key management removed - authentication required for access
+    console.log('👋 User signed out - authentication required for API access');
+  }
+
+  // SECURITY FIX: Secure email input dialog to replace prompt()
+  showSecureEmailDialog() {
+    return new Promise((resolve, reject) => {
+      // Create modal overlay
+      const overlay = SecurityUtils.createElement('div', '', 'secure-modal-overlay');
+      overlay.style.cssText = `
+        position: fixed; top: 0; left: 0; width: 100%; height: 100%; 
+        background: rgba(0,0,0,0.5); z-index: 10000; display: flex; 
+        align-items: center; justify-content: center;
+      `;
+      
+      // Create modal dialog
+      const modal = SecurityUtils.createElement('div', '', 'secure-modal');
+      modal.style.cssText = `
+        background: white; padding: 30px; border-radius: 12px; 
+        max-width: 400px; width: 90%; box-shadow: 0 10px 25px rgba(0,0,0,0.3);
+      `;
+      
+      // Create form elements
+      const title = SecurityUtils.createElement('h3', 'Demo Mode - Cloudwalk Authentication');
+      const description = SecurityUtils.createElement('p', 'Enter your authorized email address:');
+      description.style.color = '#666';
+      
+      const input = document.createElement('input');
+      input.type = 'email';
+      input.placeholder = 'name@cloudwalk.io';
+      input.style.cssText = `
+        width: 100%; padding: 12px; border: 2px solid #ddd; 
+        border-radius: 6px; font-size: 16px; margin: 15px 0;
+      `;
+      
+      const buttonContainer = SecurityUtils.createElement('div');
+      buttonContainer.style.cssText = 'display: flex; gap: 10px; justify-content: flex-end;';
+      
+      const cancelBtn = SecurityUtils.createElement('button', 'Cancel');
+      cancelBtn.style.cssText = 'padding: 10px 20px; border: 1px solid #ddd; background: white; border-radius: 6px; cursor: pointer;';
+      
+      const submitBtn = SecurityUtils.createElement('button', 'Sign In');
+      submitBtn.style.cssText = 'padding: 10px 20px; background: #c87ef7; color: white; border: none; border-radius: 6px; cursor: pointer;';
+      
+      // Event handlers
+      const cleanup = () => document.body.removeChild(overlay);
+      
+      cancelBtn.onclick = () => {
+        cleanup();
+        reject(new Error('User cancelled'));
+      };
+      
+      const submit = () => {
+        const email = input.value.trim();
+        const allowedEmails = ['lupape@gmail.com'];
+        const isCloudwalkEmail = SecurityUtils.isCloudwalkEmail(email);
+        const isAllowedEmail = allowedEmails.includes(email);
+        
+        if (isCloudwalkEmail || isAllowedEmail) {
+          cleanup();
+          resolve(email);
         } else {
-            console.warn('SecurityUtils not available yet, will retry later');
-            // Retry after a short delay
-            setTimeout(() => {
-                if (window.SecurityUtils && typeof window.SecurityUtils.getApiKey === 'function') {
-                    this.apiKeys.openai = window.SecurityUtils.getApiKey('openai');
-                    this.apiKeys.replicate = window.SecurityUtils.getApiKey('replicate');
-                    this.updateKeyDisplays();
-                }
-            }, 100);
+          input.style.borderColor = '#ff4444';
+          input.focus();
         }
-        
-        // Auto-load development keys if in development mode and no keys stored
-        if (this.isDevelopmentMode() && (!this.apiKeys.openai || !this.apiKeys.replicate)) {
-            this.loadDevelopmentKeys();
-        }
-        
-        this.updateKeyDisplays();
+      };
+      
+      submitBtn.onclick = submit;
+      input.onkeypress = (e) => {
+        if (e.key === 'Enter') submit();
+        if (e.key === 'Escape') cancelBtn.click();
+      };
+      
+      // Assemble modal
+      buttonContainer.appendChild(cancelBtn);
+      buttonContainer.appendChild(submitBtn);
+      modal.appendChild(title);
+      modal.appendChild(description);
+      modal.appendChild(input);
+      modal.appendChild(buttonContainer);
+      overlay.appendChild(modal);
+      
+      // Add to page and focus
+      document.body.appendChild(overlay);
+      input.focus();
+    });
+  }
+
+  validateUserDomain(email) {
+    if (!email) return false;
+    
+    // List of specifically allowed emails
+    const allowedEmails = ['lupape@gmail.com'];
+    const domain = email.split('@')[1];
+    const isCloudwalkEmail = domain === this.allowedDomain;
+    const isAllowedEmail = allowedEmails.includes(email);
+    const isValid = isCloudwalkEmail || isAllowedEmail;
+    
+    if (!isValid) {
+      alert(`❌ Access Restricted\n\nThis application is only available to @${this.allowedDomain} email addresses.\n\nYour email: ${email}`);
     }
+    
+    return isValid;
+  }
 
-    /**
-     * Check if we're in development mode
-     */
-    isDevelopmentMode() {
-        return window.location.hostname === 'localhost' || 
-               window.location.hostname === '127.0.0.1' ||
-               window.location.port !== '';
+  async refreshAccessToken() {
+    try {
+      const { data: { session } } = await this.supabase.auth.getSession();
+      if (session?.access_token) {
+        this.user.accessToken = session.access_token;
+        console.log('🎫 Access token refreshed');
+      }
+    } catch (error) {
+      console.error('❌ Failed to refresh access token:', error);
     }
+  }
 
-    /**
-     * Load development API keys from environment
-     */
-    loadDevelopmentKeys() {
-        console.log('🔑 Development mode: Auto-loading API keys...');
-        
-        // Development API keys (these would normally come from .env in a Node.js environment)
-        // For client-side development, we'll store them temporarily
-        const devKeys = {
-            openai: 'YOUR_OPENAI_API_KEY_HERE',
-            replicate: 'YOUR_REPLICATE_API_KEY_HERE'
-        };
+  initDemoMode() {
+    console.log('🔄 Falling back to demo mode');
+    console.log('ℹ️ To enable real GitHub OAuth, configure Supabase in supabase-config.js');
+    this.loadDemoMode();
+  }
 
-        try {
-            if (devKeys.openai && !this.apiKeys.openai) {
-                window.SecurityUtils.storeApiKey('openai', devKeys.openai);
-                this.apiKeys.openai = devKeys.openai;
-                console.log('✅ Auto-loaded OpenAI API key for development');
-            }
+  loadDemoMode() {
+    // Demo mode - show auth UI immediately
+    this.updateAuthUI();
+    
+    // Add info message to auth container
+    this.showDemoModeInfo();
+  }
 
-            if (devKeys.replicate && !this.apiKeys.replicate) {
-                window.SecurityUtils.storeApiKey('replicate', devKeys.replicate);
-                this.apiKeys.replicate = devKeys.replicate;
-                console.log('✅ Auto-loaded Replicate API key for development');
-            }
-
-            if (devKeys.openai || devKeys.replicate) {
-                this.showSuccess('🔑 Development API keys loaded automatically!');
-            }
-        } catch (error) {
-            console.warn('⚠️  Could not auto-load development keys:', error.message);
-        }
+  showDemoModeInfo() {
+    const authContainer = document.getElementById('authContainer');
+    if (authContainer) {
+      const infoDiv = document.createElement('div');
+      infoDiv.className = 'demo-mode-info';
+      // SECURITY FIX: Use safe DOM methods instead of innerHTML
+      const warningDiv = SecurityUtils.createElement('div');
+      warningDiv.style.cssText = 'background: #fef3cd; border: 1px solid #ffc107; padding: 12px; border-radius: 8px; margin-bottom: 20px; font-size: 14px;';
+      
+      const strongEl = SecurityUtils.createElement('strong', '🔧 Demo Mode:');
+      const textEl = SecurityUtils.createElement('span', ' Supabase não configurado.');
+      const brEl = document.createElement('br');
+      const smallEl = SecurityUtils.createElement('small', 'Para GitHub OAuth real, configure ');
+      const codeEl = SecurityUtils.createElement('code', 'supabase-config.js');
+      
+      smallEl.appendChild(codeEl);
+      warningDiv.appendChild(strongEl);
+      warningDiv.appendChild(textEl);
+      warningDiv.appendChild(brEl);
+      warningDiv.appendChild(smallEl);
+      
+      infoDiv.appendChild(warningDiv);
+      
+      const authCard = authContainer.querySelector('.auth-card');
+      if (authCard && !authCard.querySelector('.demo-mode-info')) {
+        authCard.insertBefore(infoDiv, authCard.firstChild);
+      }
     }
+  }
 
-    /**
-     * Set up event listeners for API key management
-     */
-    setupEventListeners() {
-        // Individual save buttons
-        const saveOpenAIBtn = document.getElementById('save-openai-key');
-        const saveReplicateBtn = document.getElementById('save-replicate-key');
-        
-        if (saveOpenAIBtn) {
-            saveOpenAIBtn.addEventListener('click', () => {
-                this.saveOpenAIKey();
-            });
-        }
-        
-        if (saveReplicateBtn) {
-            saveReplicateBtn.addEventListener('click', () => {
-                this.saveReplicateKey();
-            });
-        }
-
-        // Auto-save on Enter key
-        const openaiInput = document.getElementById('openai-key');
-        const replicateInput = document.getElementById('replicate-key');
-        
-        if (openaiInput) {
-            openaiInput.addEventListener('keypress', (e) => {
-                if (e.key === 'Enter') {
-                    this.saveOpenAIKey();
-                }
-            });
-        }
-        
-        if (replicateInput) {
-            replicateInput.addEventListener('keypress', (e) => {
-                if (e.key === 'Enter') {
-                    this.saveReplicateKey();
-                }
-            });
-        }
+  // Get auth token for API calls
+  async getAuthToken() {
+    try {
+      if (this.supabase) {
+        // Real Supabase JWT token
+        const { data: { session } } = await this.supabase.auth.getSession();
+        return session?.access_token || null;
+      } else if (this.user && this.user.demoMode) {
+        // Demo mode - return fake token
+        return `demo_token_${this.user.email}`;
+      }
+      return null;
+    } catch (error) {
+      console.error('❌ Failed to get auth token:', error);
+      return null;
     }
+  }
 
-    /**
-     * Save API keys securely
-     */
-    saveApiKeys() {
-        const openaiKey = document.getElementById('openai-key').value.trim();
-        const replicateKey = document.getElementById('replicate-key').value.trim();
+  async signIn() {
+    try {
+      console.log('🔐 Starting GitHub Sign-In...');
+      
+      if (this.supabase) {
+        // Real Supabase GitHub Auth
+        console.log('🔥 Using Supabase GitHub Auth');
         
-        try {
-            // Validate keys
-            if (openaiKey && !window.SecurityUtils.validateApiKey('openai', openaiKey)) {
-                throw new Error('Invalid OpenAI API key format');
-            }
-            
-            if (replicateKey && !window.SecurityUtils.validateApiKey('replicate', replicateKey)) {
-                throw new Error('Invalid Replicate API key format');
-            }
-
-            // Store keys
-            if (openaiKey) {
-                window.SecurityUtils.storeApiKey('openai', openaiKey);
-                this.apiKeys.openai = openaiKey;
-            }
-            
-            if (replicateKey) {
-                window.SecurityUtils.storeApiKey('replicate', replicateKey);
-                this.apiKeys.replicate = replicateKey;
-            }
-
-            // Clear input fields
-            document.getElementById('openai-key').value = '';
-            document.getElementById('replicate-key').value = '';
-            
-            // Update displays
-            this.updateKeyDisplays();
-            
-            this.showSuccess('API keys saved successfully!');
-            
-        } catch (error) {
-            this.showError(error.message);
-        }
-    }
-
-    /**
-     * Save OpenAI API key securely
-     */
-    saveOpenAIKey() {
-        const openaiKey = document.getElementById('openai-key').value.trim();
-        
-        try {
-            if (!openaiKey) {
-                throw new Error('Please enter an OpenAI API key');
-            }
-            
-            if (!window.SecurityUtils.validateApiKey('openai', openaiKey)) {
-                throw new Error('Invalid OpenAI API key format');
-            }
-
-            window.SecurityUtils.storeApiKey('openai', openaiKey);
-            this.apiKeys.openai = openaiKey;
-            document.getElementById('openai-key').value = '';
-            this.updateKeyDisplays();
-            this.showSuccess('OpenAI API key saved successfully!');
-            
-        } catch (error) {
-            this.showError(error.message);
-        }
-    }
-
-    /**
-     * Save Replicate API key securely
-     */
-    saveReplicateKey() {
-        const replicateKey = document.getElementById('replicate-key').value.trim();
-        
-        try {
-            if (!replicateKey) {
-                throw new Error('Please enter a Replicate API key');
-            }
-            
-            if (!window.SecurityUtils.validateApiKey('replicate', replicateKey)) {
-                throw new Error('Invalid Replicate API key format');
-            }
-
-            window.SecurityUtils.storeApiKey('replicate', replicateKey);
-            this.apiKeys.replicate = replicateKey;
-            document.getElementById('replicate-key').value = '';
-            this.updateKeyDisplays();
-            this.showSuccess('Replicate API key saved successfully!');
-            
-        } catch (error) {
-            this.showError(error.message);
-        }
-    }
-
-    /**
-     * Update key status displays
-     */
-    updateKeyDisplays() {
-        const openaiInput = document.getElementById('openai-key');
-        const replicateInput = document.getElementById('replicate-key');
-        
-        if (this.apiKeys.openai) {
-            openaiInput.placeholder = `OpenAI: ${window.SecurityUtils.maskApiKey(this.apiKeys.openai)}`;
-            openaiInput.classList.add('api-key-set');
-        } else {
-            openaiInput.placeholder = 'OpenAI API Key';
-            openaiInput.classList.remove('api-key-set');
-        }
-        
-        if (this.apiKeys.replicate) {
-            replicateInput.placeholder = `Replicate: ${window.SecurityUtils.maskApiKey(this.apiKeys.replicate)}`;
-            replicateInput.classList.add('api-key-set');
-        } else {
-            replicateInput.placeholder = 'Replicate API Key';
-            replicateInput.classList.remove('api-key-set');
-        }
-    }
-
-    /**
-     * Check if required API keys are available
-     */
-    hasRequiredKeys() {
-        const hasOpenAI = !!this.apiKeys.openai;
-        const hasReplicate = !!this.apiKeys.replicate;
-        
-        console.log('🔑 API Keys check:', {
-            openai: hasOpenAI ? 'Present' : 'Missing',
-            replicate: hasReplicate ? 'Present' : 'Missing',
-            bothPresent: hasOpenAI && hasReplicate
+        const { data, error } = await this.supabase.auth.signInWithOAuth({
+          provider: 'github',
+          options: {
+            redirectTo: window.location.origin + window.location.pathname
+          }
         });
         
-        return hasOpenAI && hasReplicate;
-    }
-
-    /**
-     * Get API key for a specific provider
-     */
-    getApiKey(provider) {
-        return this.apiKeys[provider];
-    }
-
-    /**
-     * Make authenticated API call to OpenAI
-     */
-    async callOpenAI(endpoint, data, options = {}) {
-        if (!this.apiKeys.openai) {
-            throw new Error('OpenAI API key not configured');
-        }
-
-        try {
-            window.SecurityUtils.checkRateLimit('openai', 60); // 60 calls per minute
-
-            const response = await fetch(`https://api.openai.com/v1/${endpoint}`, {
-                method: 'POST',
-                headers: {
-                    'Authorization': `Bearer ${this.apiKeys.openai}`,
-                    'Content-Type': 'application/json',
-                    ...options.headers
-                },
-                body: JSON.stringify(data)
-            });
-
-            if (!response.ok) {
-                const error = await response.json();
-                throw new Error(error.error?.message || `OpenAI API error: ${response.status}`);
-            }
-
-            return await response.json();
-        } catch (error) {
-            console.error('OpenAI API call failed:', error);
-            throw error;
-        }
-    }
-
-    /**
-     * Make authenticated API call to Replicate (with proxy fallback)
-     */
-    async callReplicate(endpoint, data, options = {}) {
-        if (!this.apiKeys.replicate) {
-            throw new Error('Replicate API key not configured');
-        }
-
-        try {
-            window.SecurityUtils.checkRateLimit('replicate', 30); // 30 calls per minute
-
-            // Try local proxy first (if available)
-            try {
-                console.log('🔄 Trying local CORS proxy for Replicate...');
-                const proxyResponse = await fetch('http://localhost:3001/api/replicate', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        ...options.headers
-                    },
-                    body: JSON.stringify(data)  // Send data directly without endpoint wrapper
-                });
-
-                // Parse response even if not ok, to check for specific errors
-                const responseData = await proxyResponse.json();
-
-                if (proxyResponse.ok) {
-                    console.log('✅ Local proxy successful');
-                    return responseData;
-                } else if (proxyResponse.status === 402) {
-                    // Handle spending limit specifically - this is a valid response from a working proxy
-                    console.log('💳 Replicate spending limit reached - proxy is working');
-                    throw new Error(`Replicate spending limit reached: ${responseData.detail || responseData.title || 'Monthly limit exceeded'}`);
-                } else {
-                    console.warn('⚠️ Local proxy failed with status:', proxyResponse.status, 'trying Supabase proxy...');
-                }
-            } catch (proxyError) {
-                // If it's our spending limit error, re-throw it (don't try other proxies)
-                if (proxyError.message.includes('spending limit')) {
-                    throw proxyError;
-                }
-                console.warn('⚠️ Local proxy not available, trying Supabase proxy...', proxyError.message);
-            }
-
-            // Try Supabase proxy as fallback
-            if (window.supabaseConfig?.functions?.replicate) {
-                console.log('🔄 Trying Supabase proxy for Replicate...');
-                try {
-                    const response = await fetch(window.supabaseConfig.functions.replicate, {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                            ...options.headers
-                        },
-                        body: JSON.stringify({
-                            endpoint: endpoint,
-                            ...data
-                        })
-                    });
-
-                    if (response.ok) {
-                        console.log('✅ Supabase proxy successful');
-                        return await response.json();
-                    } else {
-                        console.warn('⚠️ Supabase proxy failed, trying direct call...');
-                    }
-                } catch (proxyError) {
-                    console.warn('⚠️ Supabase proxy not available, trying direct call...', proxyError.message);
-                }
-            }
-
-            // Fallback to direct API call
-            console.log('🔄 Making direct Replicate API call...');
-            const response = await fetch(`https://api.replicate.com/v1/${endpoint}`, {
-                method: options.method || 'POST',
-                headers: {
-                    'Authorization': `Bearer ${this.apiKeys.replicate}`,
-                    'Content-Type': 'application/json',
-                    ...options.headers
-                },
-                body: data ? JSON.stringify(data) : undefined
-            });
-
-            if (!response.ok) {
-                const error = await response.json();
-                throw new Error(error.detail || `Replicate API error: ${response.status}`);
-            }
-
-            return await response.json();
-        } catch (error) {
-            console.error('Replicate API call failed:', error);
-            
-            // If CORS error, provide helpful message
-            if (error.message.includes('Failed to fetch') || error.message.includes('CORS')) {
-                throw new Error('CORS error: Direct API calls are blocked by the browser. Please start the Supabase functions or use a proxy server.');
-            }
-            
-            throw error;
-        }
-    }
-
-    /**
-     * Generate enhanced prompt using OpenAI
-     */
-    async enhancePrompt(basePrompt, cnaeContext, productType) {
-        const systemPrompt = `You are an expert at creating detailed, professional prompts for AI image generation focused on Brazilian business contexts.
-
-Task: Enhance the given prompt for a ${productType} image in the context of ${cnaeContext}.
-
-Requirements:
-- Keep the core intent of the original prompt
-- Add specific Brazilian business context
-- Include professional, clean environment details
-- Ensure diversity and authenticity
-- Avoid any text, logos, or brands in the image
-- Make it specific for high-quality commercial use
-- Maximum 500 characters
-
-Original prompt: ${basePrompt}`;
-
-        try {
-            const response = await this.callOpenAI('chat/completions', {
-                model: 'gpt-5-nano',
-                messages: [
-                    {
-                        role: 'system',
-                        content: systemPrompt
-                    },
-                    {
-                        role: 'user',
-                        content: `Enhance this prompt: "${basePrompt}"`
-                    }
-                ],
-                max_completion_tokens: 150,
-                temperature: 0.7
-            });
-
-            return response.choices[0].message.content.trim();
-        } catch (error) {
-            console.warn('Failed to enhance prompt, using original:', error);
-            return basePrompt;
-        }
-    }
-
-    /**
-     * Generate prompt using OpenAI with specific instructions and structured input
-     */
-    async generatePromptWithInstructions(instructions, structuredInput) {
-        console.log('🔑 generatePromptWithInstructions called');
-        console.log('📋 Instructions length:', instructions.length);
-        console.log('📄 Structured input:', structuredInput);
-        
-        if (!this.apiKeys.openai) {
-            throw new Error('OpenAI API key not configured');
+        if (error) {
+          throw error;
         }
         
-        try {
-            console.log('🚀 Making OpenAI API call...');
-            
-            const response = await this.callOpenAI('chat/completions', {
-                model: 'gpt-5-nano',
-                messages: [
-                    {
-                        role: 'system',
-                        content: instructions
-                    },
-                    {
-                        role: 'user',
-                        content: structuredInput
-                    }
-                ],
-                max_completion_tokens: 200,
-                temperature: 0.7
-            });
-
-            console.log('📨 OpenAI response received:', response);
-            const generatedPrompt = response.choices[0].message.content.trim();
-            console.log('✨ Final generated prompt:', generatedPrompt);
-            
-            return generatedPrompt;
-        } catch (error) {
-            console.error('❌ Failed to generate prompt with instructions:', error);
-            console.error('Error details:', error.message);
-            throw error;
-        }
-    }
-
-    /**
-     * Generate image using Replicate (copied from working original app)
-     */
-    async generateImage(prompt, options = {}) {
-        try {
-            console.log('🎨 Starting image generation with prompt:', prompt);
-            
-            // Real image generation is now enabled by default
-            // Set window.disableRealImages = true or localStorage to use placeholders for testing
-            const isDev = this.isDevelopmentMode();
-            const isLocalhost = window.location.hostname === 'localhost';
-            const disableReal = window.disableRealImages || localStorage.getItem('disableRealImages') === 'true';
-            
-            console.log('🔍 Image generation mode check:', { isDev, isLocalhost, disableReal, willUsePlaceholder: isDev && isLocalhost && disableReal });
-            
-            if (isDev && isLocalhost && disableReal) {
-                console.log('🚧 Development mode: Using placeholder image (disabled real generation)');
-                console.log('💡 To re-enable real images: window.disableRealImages = false; localStorage.removeItem("disableRealImages")');
-                // Return a placeholder image for development
-                return ['https://picsum.photos/1280/720?random=' + Math.floor(Math.random() * 1000)];
-            }
-            
-            console.log('🎨 Proceeding with real image generation!');
-            
-            // Generate seed like the original app
-            const imageSeed = Math.floor(Math.random() * 1000000);
-            console.log(`🖼️ Image Seed: ${imageSeed}`);
-
-            // Use the exact same format as the working original app
-            const body = {
-                model: 'bytedance/seedream-3',
-                input: {
-                    prompt: prompt,
-                    guidance_scale: 2.5,
-                    seed: imageSeed,
-                    width: 1000,
-                    height: 1000,
-                    num_outputs: 1
-                }
-            };
-
-            console.log('🔄 Image request body:', JSON.stringify(body, null, 2));
-            
-            // Use local proxy with same format as original
-            const prediction = await this.callReplicate('', body);
-            
-            console.log('✅ Prediction response:', prediction);
-            
-            // Handle the response like the original app
-            let extractedUrl = null;
-            
-            if (prediction.output) {
-                if (Array.isArray(prediction.output) && prediction.output.length > 0) {
-                    extractedUrl = prediction.output[0];
-                    console.log('📸 Image URL extracted from array:', extractedUrl);
-                } else if (typeof prediction.output === 'string') {
-                    extractedUrl = prediction.output;
-                    console.log('📸 Image URL extracted as string:', extractedUrl);
-                }
-            }
-            
-            if (extractedUrl) {
-                return [extractedUrl];
-            } else {
-                throw new Error('No image URL found in response');
-            }
-            
-        } catch (error) {
-            console.error('Image generation failed:', error);
-            
-            // Development fallback: Use placeholder image
-            if (this.isDevelopmentMode() && error.message.includes('CORS')) {
-                console.log('🚧 CORS error in development, using placeholder');
-                return ['https://picsum.photos/1280/720?random=' + Math.floor(Math.random() * 1000)];
-            }
-            
-            // Provide helpful error message for CORS issues
-            if (error.message.includes('CORS')) {
-                throw new Error('CORS error: Image generation requires a proxy server. Please start the Supabase functions with: supabase functions serve');
-            }
-            
-            throw error;
-        }
-    }
-
-    /**
-     * Poll Replicate prediction until completion
-     */
-    async pollPrediction(predictionId, maxAttempts = 30) {
-        for (let attempt = 0; attempt < maxAttempts; attempt++) {
-            try {
-                const prediction = await this.callReplicate(`predictions/${predictionId}`, null, { method: 'GET' });
-                
-                if (prediction.status === 'succeeded') {
-                    return prediction.output;
-                } else if (prediction.status === 'failed') {
-                    throw new Error(`Generation failed: ${prediction.error}`);
-                } else if (prediction.status === 'canceled') {
-                    throw new Error('Generation was canceled');
-                }
-                
-                // Wait before next poll (increasing delay)
-                await new Promise(resolve => setTimeout(resolve, Math.min(1000 + attempt * 500, 5000)));
-                
-            } catch (error) {
-                if (attempt === maxAttempts - 1) throw error;
-                await new Promise(resolve => setTimeout(resolve, 2000));
-            }
-        }
+        console.log('✅ GitHub Sign-In initiated');
         
-        throw new Error('Generation timed out');
-    }
-
-    /**
-     * Show success message
-     */
-    showSuccess(message) {
-        this.showNotification(message, 'success');
-    }
-
-    /**
-     * Show error message
-     */
-    showError(message) {
-        this.showNotification(message, 'error');
-    }
-
-    /**
-     * Show notification
-     */
-    showNotification(message, type = 'info') {
-        // Remove existing notifications
-        const existing = document.querySelectorAll('.notification');
-        existing.forEach(el => el.remove());
-
-        const notification = document.createElement('div');
-        notification.className = `notification notification-${type}`;
-        notification.textContent = message;
+        // Note: User will be redirected to GitHub, then back to our app
+        // The auth state listener will handle the successful auth
         
-        // Add styles
-        Object.assign(notification.style, {
-            position: 'fixed',
-            top: '20px',
-            left: '50%',
-            transform: 'translateX(-50%)',
-            padding: '1rem 1.5rem',
-            borderRadius: '8px',
-            color: 'white',
-            fontWeight: '500',
-            zIndex: '10000',
-            maxWidth: '400px',
-            boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
-            animation: 'slideInCenter 0.3s ease'
-        });
-
-        // Set background color based on type
-        const colors = {
-            success: '#10B981',
-            error: '#EF4444',
-            warning: '#F59E0B',
-            info: '#3B82F6'
-        };
-        notification.style.backgroundColor = colors[type] || colors.info;
-
-        document.body.appendChild(notification);
-
-        // Auto remove after 5 seconds
-        setTimeout(() => {
-            if (notification.parentNode) {
-                notification.style.animation = 'slideOutCenter 0.3s ease';
-                setTimeout(() => notification.remove(), 300);
-            }
-        }, 5000);
-
-        // Add click to dismiss
-        notification.addEventListener('click', () => {
-            notification.style.animation = 'slideOutCenter 0.3s ease';
-            setTimeout(() => notification.remove(), 300);
-        });
+        return data;
+        
+      } else {
+        // Fallback demo mode
+        console.log('🔄 Using demo mode');
+        return this.signInDemo();
+      }
+      
+    } catch (error) {
+      console.error('❌ Sign-in failed:', error);
+      
+      if (error.message.includes('popup')) {
+        alert('❌ Popup blocked\n\nPlease allow popups for this site and try again.');
+      } else {
+        alert(`❌ Sign-in failed: ${error.message}`);
+      }
+      
+      throw error;
     }
+  }
 
-    /**
-     * Generate video using Replicate - Text/Image to Video models
-     */
-    async generateVideo(prompt, imageUrl = null, options = {}) {
-        try {
-            console.log('🎬 Starting video generation with prompt:', prompt);
-            console.log('🖼️ Using image:', imageUrl);
-            
-            // Check if we should use placeholders for testing
-            const isDev = this.isDevelopmentMode();
-            const isLocalhost = window.location.hostname === 'localhost';
-            const disableReal = window.disableRealVideos;
-            
-            if (isDev && isLocalhost && disableReal) {
-                console.log('🚧 Development mode: Using placeholder video');
-                // Return a placeholder video for development
-                return ['https://sample-videos.com/zip/10/mp4/SampleVideo_1280x720_1mb.mp4'];
-            }
-            
-            console.log('🎬 Proceeding with real video generation!');
-
-            // Map UI model names to actual Replicate models
-            const modelMapping = {
-                'seedanceLite': 'bytedance/seedance-1-lite',
-                'seedancePro': 'bytedance/seedance-1-pro'
-            };
-
-            // Get settings from options or use defaults
-            const uiModel = options.model || 'seedanceLite';
-            const model = modelMapping[uiModel] || 'bytedance/seedance-1-lite';
-            const duration = options.duration || 5;
-            const resolution = options.resolution || '720p'; // Default to 720p as requested
-
-            console.log('🎬 Video settings:', { uiModel, model, duration, resolution });
-
-            // Choose model and input config based on whether we have an image input
-            let inputConfig;
-            
-            if (imageUrl) {
-                // Image-to-video generation
-                inputConfig = {
-                    image: imageUrl,
-                    prompt: prompt || "cinematic, professional, smooth motion",
-                    fps: 24,
-                    duration: duration,
-                    resolution: resolution,
-                    aspect_ratio: "16:9",
-                    camera_fixed: false
-                };
-            } else {
-                // Text-to-video generation
-                inputConfig = {
-                    prompt: prompt,
-                    fps: 24,
-                    duration: duration,
-                    resolution: resolution,
-                    aspect_ratio: "16:9",
-                    camera_fixed: false
-                };
-            }
-
-            const body = {
-                model: model,
-                input: inputConfig
-            };
-
-            console.log('🔄 Video request body:', JSON.stringify(body, null, 2));
-            
-            // Use the Replicate proxy (video generation takes longer so polling is important)
-            const prediction = await this.callReplicate('', body);
-            
-            if (prediction && prediction.output) {
-                const videoUrl = Array.isArray(prediction.output) ? prediction.output[0] : prediction.output;
-                console.log('✅ Video generation completed:', videoUrl);
-                return [videoUrl];
-            } else {
-                throw new Error('Video generation failed: No output received');
-            }
-            
-        } catch (error) {
-            console.error('❌ Video generation error:', error);
-            
-            // Provide helpful error message for CORS issues
-            if (error.message.includes('CORS')) {
-                throw new Error('CORS error: Video generation requires a proxy server. Please start the Supabase functions with: supabase functions serve');
-            }
-            
-            throw error;
-        }
+  async signInDemo() {
+    // SECURITY FIX: Replace prompt() with secure input dialog
+    const email = await this.showSecureEmailDialog();
+    
+    if (!email || !SecurityUtils.isValidEmail(email)) {
+      throw new Error('Invalid email format');
     }
-
-    /**
-     * Clear all stored authentication data
-     */
-    clearAllData() {
-        window.SecurityUtils.clearAllData();
-        this.apiKeys.openai = null;
-        this.apiKeys.replicate = null;
-        this.updateKeyDisplays();
-        this.showSuccess('All data cleared successfully');
+    
+    const allowedEmails = ['lupape@gmail.com'];
+    const emailDomain = email.split('@')[1];
+    const isCloudwalkEmail = emailDomain === this.allowedDomain;
+    const isAllowedEmail = allowedEmails.includes(email);
+    
+    if (!isCloudwalkEmail && !isAllowedEmail) {
+      throw new Error(`❌ Access restricted to @${this.allowedDomain} emails only`);
     }
+    
+    // Create demo user object
+    this.user = {
+      email: email,
+      name: email.split('@')[0],
+      domain: emailDomain,
+      loginTime: Date.now(),
+      picture: `https://ui-avatars.com/api/?name=${encodeURIComponent(email)}&background=c87ef7&color=fff`,
+      demoMode: true
+    };
+    
+    this.isAuthenticated = true;
+    this.updateAuthUI();
+    
+    alert(`✅ Demo Mode - Welcome ${this.user.name}!\n\nYou're signed in with demo authentication.`);
+    return this.user;
+  }
+
+  async signOut() {
+    try {
+      console.log('🚪 Signing out...');
+      
+      if (this.supabase) {
+        // Real Supabase sign out
+        await this.supabase.auth.signOut();
+        console.log('✅ Supabase sign out complete');
+      } else {
+        // Demo mode sign out
+        this.user = null;
+        this.isAuthenticated = false;
+        this.updateAuthUI();
+      }
+      
+      alert('👋 Signed out successfully!');
+      
+    } catch (error) {
+      console.error('❌ Sign out failed:', error);
+      alert(`❌ Sign out failed: ${error.message}`);
+    }
+  }
+
+  updateAuthUI() {
+    const authContainer = document.getElementById('authContainer');
+    const mainApp = document.getElementById('mainApp');
+    
+    if (!authContainer || !mainApp) return;
+    
+    if (this.isAuthenticated && this.user) {
+      // Show main app, hide auth
+      authContainer.style.display = 'none';
+      mainApp.style.display = 'block';
+      
+      // Update user info in header
+      this.updateUserInfo();
+      
+    } else {
+      // Show auth, hide main app
+      authContainer.style.display = 'block';
+      mainApp.style.display = 'none';
+    }
+  }
+
+  updateUserInfo() {
+    let userInfo = document.getElementById('userInfo');
+    if (!userInfo && this.user) {
+      // Create user info element
+      userInfo = document.createElement('div');
+      userInfo.id = 'userInfo';
+      userInfo.className = 'user-info';
+      
+      const header = document.querySelector('header');
+      if (header) {
+        header.appendChild(userInfo);
+      }
+    }
+    
+    if (userInfo && this.user) {
+      // SECURITY FIX: Use safe DOM methods instead of innerHTML
+      const profileDiv = SecurityUtils.createElement('div', '', 'user-profile');
+      
+      // Create user avatar
+      const imgEl = document.createElement('img');
+      imgEl.src = this.user.picture || '';
+      imgEl.alt = this.user.name || 'User';
+      imgEl.className = 'user-avatar';
+      
+      // Create user details
+      const detailsDiv = SecurityUtils.createElement('div', '', 'user-details');
+      const nameSpan = SecurityUtils.createElement('span', this.user.name || '', 'user-name');
+      const emailSpan = SecurityUtils.createElement('span', this.user.email || '', 'user-email');
+      detailsDiv.appendChild(nameSpan);
+      detailsDiv.appendChild(emailSpan);
+      
+      // Create sign out button
+      const signOutBtn = SecurityUtils.createElement('button', 'Sign Out', 'sign-out-btn');
+      signOutBtn.onclick = () => cloudwalkAuth.signOut();
+      
+      // Assemble profile
+      profileDiv.appendChild(imgEl);
+      profileDiv.appendChild(detailsDiv);
+      profileDiv.appendChild(signOutBtn);
+      
+      userInfo.innerHTML = ''; // Clear existing content safely
+      userInfo.appendChild(profileDiv);
+    }
+  }
+
+  // Check if user is authenticated (for protecting app functions)
+  requireAuth() {
+    if (!this.isAuthenticated) {
+      alert('🔐 Please sign in with your Cloudwalk account first');
+      return false;
+    }
+    return true;
+  }
+
+  // Get user info for API calls
+  getUserInfo() {
+    return this.user;
+  }
 }
 
-// Add notification animations
-const style = document.createElement('style');
-style.textContent = `
-    @keyframes slideInCenter {
-        from { transform: translateX(-50%) translateY(-20px); opacity: 0; }
-        to { transform: translateX(-50%) translateY(0); opacity: 1; }
-    }
-    
-    @keyframes slideOutCenter {
-        from { transform: translateX(-50%) translateY(0); opacity: 1; }
-        to { transform: translateX(-50%) translateY(-20px); opacity: 0; }
-    }
-    
-    .api-key-set {
-        background-color: #f0f9f0 !important;
-        border-color: #10B981 !important;
-    }
-`;
-document.head.appendChild(style);
+// Global instance
+window.cloudwalkAuth = new CloudwalkAuth();
 
-// Create global instance
-window.AuthManager = new AuthManager();
+// Export for modules
+if (typeof module !== 'undefined' && module.exports) {
+  module.exports = CloudwalkAuth;
+}
