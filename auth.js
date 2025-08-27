@@ -503,7 +503,7 @@ class AuthManager {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'stability-ai/stable-diffusion:27b93a2413e7f36cd83da926f3656280b2931564ff050bf9575f1fdf9bcd7478',
+        model: 'bytedance/seedream-3',
         input: { prompt: prompt }
       }),
     });
@@ -527,14 +527,9 @@ class AuthManager {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'stability-ai/stable-video-diffusion:3f0457e4619daac51203dedb1a4266e6c72b4f57fb8bbb2cc9b14bb1a4c7a4aa',
+        model: 'bytedance/seedance-1-lite',
         input: { 
-          cond_aug: 0.02,
-          decoding_t: 14,
-          motion_bucket_id: 180,
-          noise_aug_strength: 0.1,
-          sizing_strategy: "maintain_aspect_ratio",
-          video_length: options.duration || "14_frames_with_svd",
+          prompt: prompt,
           image: imageUrl
         }
       }),
