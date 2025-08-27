@@ -484,8 +484,127 @@ class CloudwalkAuth {
   }
 }
 
+// Create AuthManager interface for backward compatibility
+class AuthManager {
+  constructor(cloudwalkAuth) {
+    this.cloudwalkAuth = cloudwalkAuth;
+    this.apiKeys = { openai: null, replicate: null }; // Managed by Supabase
+  }
+
+  // API Generation Methods
+  async generateImage(prompt) {
+    const token = await this.cloudwalkAuth.getAuthToken();
+    if (!token) throw new Error('Not authenticated');
+
+    const response = await fetch(window.supabaseConfig.functions.replicate, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        model: 'stability-ai/stable-diffusion:27b93a2413e7f36cd83da926f3656280b2931564ff050bf9575f1fdf9bcd7478',
+        input: { prompt: prompt }
+      }),
+    });
+
+    if (!response.ok) {
+      throw new Error(`Image generation failed: ${response.status}`);
+    }
+
+    const result = await response.json();
+    return result.output;
+  }
+
+  async generateVideo(prompt, imageUrl, options = {}) {
+    const token = await this.cloudwalkAuth.getAuthToken();
+    if (!token) throw new Error('Not authenticated');
+
+    const response = await fetch(window.supabaseConfig.functions.replicate, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        model: 'stability-ai/stable-video-diffusion:3f0457e4619daac51203dedb1a4266e6c72b4f57fb8bbb2cc9b14bb1a4c7a4aa',
+        input: { 
+          cond_aug: 0.02,
+          decoding_t: 14,
+          motion_bucket_id: 180,
+          noise_aug_strength: 0.1,
+          sizing_strategy: "maintain_aspect_ratio",
+          video_length: options.duration || "14_frames_with_svd",
+          image: imageUrl
+        }
+      }),
+    });
+
+    if (!response.ok) {
+      throw new Error(`Video generation failed: ${response.status}`);
+    }
+
+    const result = await response.json();
+    return result.output;
+  }
+
+  async generatePromptWithInstructions(instructions, prompt, metadata) {
+    const token = await this.cloudwalkAuth.getAuthToken();
+    if (!token) throw new Error('Not authenticated');
+
+    const response = await fetch(window.supabaseConfig.functions.openai, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        model: 'gpt-4',
+        messages: [
+          { role: 'system', content: instructions },
+          { role: 'user', content: `${prompt}\n\nMetadata: ${JSON.stringify(metadata)}` }
+        ],
+        max_tokens: 500,
+        temperature: 0.7
+      }),
+    });
+
+    if (!response.ok) {
+      throw new Error(`Prompt generation failed: ${response.status}`);
+    }
+
+    const result = await response.json();
+    return result.choices[0].message.content;
+  }
+
+  // Utility Methods
+  hasRequiredKeys() {
+    return true; // Keys are managed by Supabase functions
+  }
+
+  showNotification(message, type = 'info') {
+    console.log(`📢 ${type.toUpperCase()}: ${message}`);
+  }
+
+  showError(message) {
+    console.error(`❌ ERROR: ${message}`);
+  }
+
+  showSuccess(message) {
+    console.log(`✅ SUCCESS: ${message}`);
+  }
+}
+
 // Global instance
 window.cloudwalkAuth = new CloudwalkAuth();
+
+// Create AuthManager for backward compatibility
+setTimeout(() => {
+  if (window.cloudwalkAuth && !window.AuthManager) {
+    window.AuthManager = new AuthManager(window.cloudwalkAuth);
+    console.log('✅ AuthManager interface ready');
+  }
+}, 100);
 
 // Export for modules
 if (typeof module !== 'undefined' && module.exports) {
