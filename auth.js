@@ -420,7 +420,7 @@ Original prompt: ${basePrompt}`;
 
         try {
             const response = await this.callOpenAI('chat/completions', {
-                model: 'gpt-4o-mini',
+                model: 'gpt-5-nano',
                 messages: [
                     {
                         role: 'system',
@@ -431,7 +431,7 @@ Original prompt: ${basePrompt}`;
                         content: `Enhance this prompt: "${basePrompt}"`
                     }
                 ],
-                max_tokens: 150,
+                max_completion_tokens: 150,
                 temperature: 0.7
             });
 
@@ -458,7 +458,7 @@ Original prompt: ${basePrompt}`;
             console.log('🚀 Making OpenAI API call...');
             
             const response = await this.callOpenAI('chat/completions', {
-                model: 'gpt-4o-mini',
+                model: 'gpt-5-nano',
                 messages: [
                     {
                         role: 'system',
@@ -469,7 +469,7 @@ Original prompt: ${basePrompt}`;
                         content: structuredInput
                     }
                 ],
-                max_tokens: 200,
+                max_completion_tokens: 200,
                 temperature: 0.7
             });
 
@@ -687,32 +687,45 @@ Original prompt: ${basePrompt}`;
             
             console.log('🎬 Proceeding with real video generation!');
 
-            // Choose model based on whether we have an image input
-            let model, inputConfig;
+            // Map UI model names to actual Replicate models
+            const modelMapping = {
+                'seedanceLite': 'bytedance/seedance-1-lite',
+                'seedancePro': 'bytedance/seedance-1-pro'
+            };
+
+            // Get settings from options or use defaults
+            const uiModel = options.model || 'seedanceLite';
+            const model = modelMapping[uiModel] || 'bytedance/seedance-1-lite';
+            const duration = options.duration || 5;
+            const resolution = options.resolution || '720p'; // Default to 720p as requested
+
+            console.log('🎬 Video settings:', { uiModel, model, duration, resolution });
+
+            // Choose model and input config based on whether we have an image input
+            let inputConfig;
             
             if (imageUrl) {
-                // Image-to-video generation using Luma Video
-                model = 'lumalabs/luma-video-v1';
+                // Image-to-video generation
                 inputConfig = {
                     image: imageUrl,
-                    aspect_ratio: '16:9',
-                    loop: false
+                    prompt: prompt || "cinematic, professional, smooth motion",
+                    fps: 24,
+                    duration: duration,
+                    resolution: resolution,
+                    aspect_ratio: "16:9",
+                    camera_fixed: false
                 };
-                if (prompt) {
-                    inputConfig.prompt = prompt;
-                }
             } else {
-                // Text-to-video generation using Luma Video
-                model = 'lumalabs/luma-video-v1';
+                // Text-to-video generation
                 inputConfig = {
                     prompt: prompt,
-                    aspect_ratio: '16:9',
-                    loop: false
+                    fps: 24,
+                    duration: duration,
+                    resolution: resolution,
+                    aspect_ratio: "16:9",
+                    camera_fixed: false
                 };
             }
-
-            // Add any additional options
-            Object.assign(inputConfig, options);
 
             const body = {
                 model: model,
@@ -734,13 +747,6 @@ Original prompt: ${basePrompt}`;
             
         } catch (error) {
             console.error('❌ Video generation error:', error);
-            
-            // Development fallback: Use placeholder video
-            if (this.isDevelopmentMode() && error.message.includes('CORS')) {
-                console.log('🚧 CORS error in development, using placeholder');
-                // Use a more reliable placeholder video source
-                return [`https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4`];
-            }
             
             // Provide helpful error message for CORS issues
             if (error.message.includes('CORS')) {

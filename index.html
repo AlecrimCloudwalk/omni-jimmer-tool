@@ -73,6 +73,41 @@
                 </div>
             </div>
 
+            <!-- Global Video Settings -->
+            <div class="controls-section">
+                <h3>🎬 Global Video Settings</h3>
+                <div class="global-video-settings">
+                    <div class="setting-group">
+                        <label class="setting-label">Default Video Model</label>
+                        <select id="global-video-model-select" class="video-setting-select">
+                            <option value="seedanceLite">SeedDance Lite - $0.036/sec</option>
+                            <option value="seedancePro">SeedDance Pro - $0.06/sec</option>
+                        </select>
+                    </div>
+                    
+                    <div class="setting-group">
+                        <label class="setting-label">Default Duration</label>
+                        <select id="global-video-duration-select" class="video-setting-select">
+                            <option value="5">5 seconds</option>
+                            <option value="10">10 seconds</option>
+                        </select>
+                    </div>
+                    
+                    <div class="setting-group">
+                        <label class="setting-label">Default Resolution</label>
+                        <select id="global-video-resolution-select" class="video-setting-select">
+                            <option value="720p" selected>720p (Recommended)</option>
+                            <option value="1080p">1080p (Higher Quality)</option>
+                        </select>
+                    </div>
+                    
+                    <div class="global-video-actions">
+                        <button id="save-global-video-settings" class="shuffle-btn">💾 Save Settings</button>
+                        <button id="reset-global-video-settings" class="shuffle-btn">🔄 Reset</button>
+                    </div>
+                </div>
+            </div>
+
             <!-- Global Style Prompt -->
             <div class="controls-section">
                 <h3>🎥 Configurações de Câmera e Estilo</h3>
@@ -161,7 +196,7 @@
                                 <div class="text-overlay">
                                     <p id="demo-cnae-title">Select CNAE</p>
                                 </div>
-                                <button class="cta-button">Começar a usar</button>
+                                <button class="cta-button">Saiba mais</button>
                             </div>
                         </div>
                         <div class="carousel-indicators">
@@ -248,9 +283,9 @@
                     <div class="progress-section">
                         <div class="progress-title">Overall Progress</div>
                         <div class="progress-bar">
-                            <div class="progress-fill" id="progress-fill"></div>
+                            <div class="progress-fill" id="modal-progress-fill"></div>
                         </div>
-                        <div class="progress-text" id="progress-text">0 of 3 steps completed</div>
+                        <div class="progress-text" id="modal-progress-text">0 of 3 steps completed</div>
                     </div>
 
                     <div class="characteristics-info">
@@ -296,6 +331,14 @@
                         <div class="step-header">
                             <h3>Upload & Edit Image</h3>
                             <div class="step-subtitle">Upload images and crop them to perfect dimensions</div>
+                        </div>
+
+                        <!-- Content Prompt Display for Step 2 -->
+                        <div class="step-prompt-display" id="step-prompt-display-2" style="display: none;">
+                            <div class="prompt-display-box">
+                                <div class="prompt-label">Content Prompt</div>
+                                <div class="prompt-content" id="step-prompt-textarea-2"></div>
+                            </div>
                         </div>
 
                         <div class="step-layout">
@@ -352,6 +395,7 @@
                                 </button>
                             </div>
                         </div>
+
                     </div>
 
                     <!-- Step 3: Video Generation -->
@@ -361,8 +405,31 @@
                             <div class="step-subtitle">Transform your prompt and image into dynamic video content</div>
                         </div>
 
+                        <!-- Content Prompt Display for Step 3 -->
+                        <div class="step-prompt-display" id="step-prompt-display-3" style="display: none;">
+                            <div class="prompt-display-box">
+                                <div class="prompt-label">Content Prompt</div>
+                                <div class="prompt-content" id="step-prompt-textarea-3"></div>
+                            </div>
+                        </div>
+
                         <div class="step-layout">
                             <div class="form-group video-area">
+                                <label class="form-label">Video Preview</label>
+                                <div class="video-preview-area" id="video-preview-area">
+                                    <div id="video-placeholder" class="video-placeholder">
+                                        <div>
+                                            🎬 Video will appear here after generation
+                                        </div>
+                                        <div>
+                                            Uses your prompt and generated image to create dynamic video content
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="status-message" id="video-status"></div>
+                            </div>
+
+                            <div class="step-actions-right">
                                 <label class="form-label">Video Configuration</label>
                                 
                                 <!-- Video Settings -->
@@ -383,45 +450,32 @@
                                         </select>
                                     </div>
                                     
+                                    <div class="setting-group">
+                                        <label class="setting-label">Resolution</label>
+                                        <select id="video-resolution-select" class="video-setting-select">
+                                            <option value="720p" selected>720p (Recommended)</option>
+                                            <option value="1080p">1080p (Higher Quality)</option>
+                                        </select>
+                                    </div>
+                                    
                                     <div class="pricing-display" id="video-pricing">
                                         <span class="pricing-label">Estimated cost:</span>
                                         <span class="pricing-amount" id="video-cost-display">$0.18</span>
                                     </div>
-                                </div>
-
-                                <label class="form-label">Video Preview</label>
-                                <div class="video-preview-area" id="video-preview-area">
-                                    <div id="video-placeholder" class="video-placeholder">
-                                        <div>
-                                            🎬 Video will appear here after generation
-                                        </div>
-                                        <div>
-                                            Uses your prompt and generated image to create dynamic video content
-                                        </div>
+                                    
+                                    <div class="setting-note">
+                                        <small>💡 Resolution defaults from global settings. Higher resolution takes longer to generate.</small>
                                     </div>
                                 </div>
-                                <div class="status-message" id="video-status"></div>
-                            </div>
 
-                            <div class="step-actions-right">
                                 <button class="btn btn-step-3" id="generate-video-btn">
                                     <span id="generate-video-text">Generate Video</span>
                                 </button>
                             </div>
                         </div>
+
                     </div>
                 </div>
-            </div>
-            
-            <!-- Synced Prompt Box (appears at bottom of all steps except step 1) -->
-            <div class="synced-prompt-box hidden" id="synced-prompt-box">
-                <div class="synced-prompt-label">Content Prompt (synced across all steps)</div>
-                <textarea 
-                    id="synced-prompt-textarea" 
-                    class="synced-prompt-textarea" 
-                    placeholder="Your generated or custom prompt will appear here..."
-                    readonly
-                ></textarea>
             </div>
         </div>
     </div>

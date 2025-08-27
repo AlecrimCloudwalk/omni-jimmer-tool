@@ -53,9 +53,15 @@
                     'negra retinta, pele bem escura, cabelos crespos',
                     'parda clara, pele amorenada, cabelos ondulados',
                     'asiática, descendente japonesa, traços orientais',
-                    'indígena, traços nativos brasileiros',
+                    'traços indígenas nativo brasileiro, vestido normal',
                     'mulata, pele dourada, traços afro-brasileiros',
-                    'cafuza, mistura indígena e africana, pele acobreada'
+                    'cafuza, pele acobreada, mistura africana e indígena nativo brasileiro, vestido normal'
+                ],
+
+                // Gender distribution (50/50)
+                genders: [
+                    'homem',
+                    'mulher'
                 ],
                 
                 // Color system with specified percentages
@@ -98,12 +104,13 @@
                 
                 // Age range 30-50
                 ageRange: {
-                    min: 30,
-                    max: 50
+                    min: 25,
+                    max: 39
                 }
             };
 
         this.initializeDefaults();
+        this.initializeGlobalVideoSettings();
         this.setupEventListeners();
         this.loadStoredData();
         this.renderMatrix();
@@ -148,10 +155,27 @@
             { name: 'Criar Boleto', prompt: 'Empreendedor(a) de pé próximo ao balcão, olhando para o smartphone com leve sorriso. Uma mão apoia no balcão, a outra segura o celular mostrando as costas do aparelho. Ambiente organizado ao fundo.' },
             { name: 'Cartão', prompt: 'Close-up de uma mão segurando um smartphone mostrando as costas do aparelho. Fundo desfocado de ambiente comercial moderno e iluminado.' },
             { name: 'Pagar Boleto', prompt: 'Retrato do(a) profissional sentado(a) no posto de trabalho, notebook à frente e smartphone na mão mostrando as costas do aparelho. Postura ereta e confiante. Fundo do negócio suavemente desfocado.' },
-            { name: 'POS', prompt: 'Retrato heroico do(a) empreendedor(a) no espaço de trabalho, segurando em destaque um smartphone ou terminal POS voltado para a câmera. Postura orgulhosa e acessível, fundo autêntico do negócio desfocado.' },
+            { name: 'POS', prompt: 'Retrato heroico do(a) empreendedor(a) no espaço de trabalho, segurando em destaque um smartphone voltado para a câmera. Postura orgulhosa e acessível, fundo autêntico do negócio desfocado.' },
             { name: 'InfiniteCash', prompt: 'Plano aberto em ângulo baixo para sensação de grandeza: empreendedor(a) em posição central, postura firme e mão no quadril; na outra mão, um smartphone visível mostrando as costas. Ambiente organizado ao redor.' },
             { name: 'Instant Settlement', prompt: 'Empreendedor(a) em pé próximo ao caixa ou balcão do estabelecimento. Segura o celular em uma mão, mostrando as costas do aparelho, como se acompanhasse vendas. Expressão segura e profissional; ambiente de loja organizado ao fundo.' }
         ];
+
+        console.log('🌟 Initialized with defaults - ' + 
+                   `${this.cnaes.length} CNAEs and ${this.products.length} products`);
+    }
+
+    /**
+     * Initialize global video settings with defaults
+     */
+    initializeGlobalVideoSettings() {
+        // Initialize with defaults: SeedDance Lite, 5 seconds, 720p
+        this.globalVideoSettings = {
+            model: 'seedanceLite',
+            duration: 5,
+            resolution: '720p'
+        };
+        
+        console.log('🎬 Initialized global video settings:', this.globalVideoSettings);
     }
 
     /**
@@ -369,8 +393,16 @@
             console.log('🎬 Using new Brazilian camera settings as default global prompt');
         }
         
-        // Initialize the UI with the loaded global style prompt
+        // Load global video settings
+        const storedGlobalVideoSettings = localStorage.getItem('omni_jimmer_global_video_settings');
+        if (storedGlobalVideoSettings) {
+            this.globalVideoSettings = JSON.parse(storedGlobalVideoSettings);
+            console.log('📹 Loaded global video settings:', this.globalVideoSettings);
+        }
+        
+        // Initialize the UI with the loaded settings
         this.loadGlobalStylePromptToUI();
+        this.loadGlobalVideoSettingsToUI();
 
         this.updateDemoSelector();
     }
@@ -384,6 +416,7 @@
         localStorage.setItem('omni_jimmer_matrix', JSON.stringify(this.matrixData));
         localStorage.setItem('omni_jimmer_seeds', JSON.stringify(this.productSeeds));
         localStorage.setItem('omni_jimmer_global_style', this.promptBuilder.getGlobalStylePrompt());
+        localStorage.setItem('omni_jimmer_global_video_settings', JSON.stringify(this.globalVideoSettings));
     }
 
 
@@ -494,13 +527,77 @@
                 generatedAt: new Date().toISOString()
             };
             
-            this.renderMatrix();
+            // Update only this specific cell instead of rebuilding entire matrix
+            this.updateMatrixCell(cellKey);
             this.saveData();
             this.showMessage(`Prompt generated for ${product.name} - ${cnae.name}`, 'success');
             
         } catch (error) {
             console.error('Prompt generation failed:', error);
             this.showMessage(`Prompt generation failed: ${error.message}`, 'error');
+        }
+    }
+
+    /**
+     * Update a single matrix cell without rebuilding entire matrix (prevents flashing)
+     */
+    updateMatrixCell(cellKey) {
+        const cellData = this.matrixData[cellKey];
+        
+        // Find the specific cell element in the DOM
+        const cellElement = document.querySelector(`[data-cell="${cellKey}"]`);
+        if (!cellElement) return;
+
+        // Update cell content based on current status (matching renderCnaeCell logic)
+        let statusClass = 'cell-empty';
+        let content = 'Ready to generate';
+
+        if (cellData) {
+            // Check generating status FIRST (highest priority during generation)
+            if (cellData.status === 'generating' || cellData.status === 'generating_video') {
+                statusClass = 'cell-generating';
+                if (cellData.loadingGif) {
+                    content = `
+                        <div style="position: relative; height: 100%; background: #161518;">
+                            <img src="https://media.giphy.com/media/xTkcEQACH24SMPxIQg/giphy.gif" style="width: 100%; height: 100%; object-fit: cover; border-radius: 8px;">
+                        </div>
+                    `;
+                } else {
+                    const generationType = cellData.status === 'generating_video' ? 'video' : 'image';
+                    content = `Generating ${generationType}...`;
+                }
+            } else if (cellData.videoUrl) {
+                // Video generated - show video thumbnail with green status
+                statusClass = 'cell-generated';
+                const [productName, cnaeName] = cellKey.split('-');
+                content = `
+                    <video muted autoplay loop class="cell-video" style="width: 100%; height: 100%; object-fit: cover;">
+                        <source src="${cellData.videoUrl}" type="video/mp4">
+                        <img src="${cellData.imageUrl}" alt="${productName} - ${cnaeName}" class="cell-image">
+                    </video>
+                `;
+            } else if (cellData.imageUrl) {
+                statusClass = 'cell-generated';
+                const [productName, cnaeName] = cellKey.split('-');
+                content = `<img src="${cellData.imageUrl}" alt="${productName} - ${cnaeName}" class="cell-image">`;
+            } else if (cellData.status === 'prompt_ready' || cellData.prompt) {
+                statusClass = 'cell-prompt-ready';
+                content = 'Prompt ready';
+            } else if (cellData.status === 'error') {
+                statusClass = 'cell-error';
+                content = 'Generation failed';
+            }
+        }
+
+        // Update cell classes and content (matching renderCnaeCell structure)
+        cellElement.className = `cnae-cell-content ${statusClass}`;
+        cellElement.innerHTML = content;
+        
+        // Force DOM update and log for debugging
+        if (statusClass === 'cell-generated') {
+            console.log('🟢 Applied cell-generated class to:', cellKey, 'for green triangle');
+            // Force a style recalculation to ensure CSS pseudo-element updates
+            cellElement.offsetHeight;
         }
     }
 
@@ -514,9 +611,10 @@
             return;
         }
 
+        // Update status and show loading state WITHOUT full matrix rebuild
         this.matrixData[cellKey].status = 'generating';
-        this.matrixData[cellKey].loadingGif = true; // Add loading state
-        this.renderMatrix();
+        this.matrixData[cellKey].loadingGif = true;
+        this.updateMatrixCell(cellKey); // Targeted update instead of renderMatrix()
         this.saveData();
 
         try {
@@ -528,10 +626,11 @@
                 status: 'generated',
                 imageUrl: imageUrl,
                 generatedAt: new Date().toISOString(),
-                loadingGif: false // Clear loading state
+                loadingGif: false
             };
 
-            this.renderMatrix();
+            // Update only this specific cell instead of rebuilding entire matrix
+            this.updateMatrixCell(cellKey);
             this.saveData();
             this.updateCarouselIfNeeded(cellData.cnae);
             
@@ -541,9 +640,11 @@
                 ...cellData,
                 status: 'error',
                 error: error.message,
-                loadingGif: false // Clear loading state
+                loadingGif: false
             };
-            this.renderMatrix();
+            
+            // Update only this specific cell instead of rebuilding entire matrix
+            this.updateMatrixCell(cellKey);
             this.saveData();
             this.showMessage(`Image generation failed: ${error.message}`, 'error');
         }
@@ -574,10 +675,12 @@
         // Show loading in drop area
         if (dropArea) {
             dropArea.innerHTML = `
-                <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; height: 200px; background: #161518; border-radius: 12px;">
-                    <img src="https://media.giphy.com/media/xTkcEQACH24SMPxIQg/giphy.gif" style="max-height: 80px; width: 100%; object-fit: cover; margin-bottom: 16px; border-radius: 8px;">
-                    <div style="color: var(--text); font-size: 16px; font-weight: 500;">Generating image...</div>
-                    <div style="color: var(--muted); font-size: 14px; margin-top: 8px;">This may take a moment</div>
+                <div style="position: relative; height: 100%; min-height: 200px; background: #161518; border-radius: 12px; overflow: hidden;">
+                    <img src="https://media.giphy.com/media/xTkcEQACH24SMPxIQg/giphy.gif" style="width: 100%; height: 100%; object-fit: cover; position: absolute; top: 0; left: 0;">
+                    <div style="position: absolute; bottom: 20px; left: 20px; right: 20px; z-index: 2; background: rgba(0,0,0,0.8); padding: 16px; border-radius: 8px; text-align: center;">
+                        <div style="color: var(--text); font-size: 16px; font-weight: 500;">Generating image...</div>
+                        <div style="color: var(--muted); font-size: 14px; margin-top: 8px;">This may take a moment</div>
+                    </div>
                 </div>
             `;
             dropArea.classList.remove('has-image');
@@ -640,7 +743,8 @@
         }
 
         this.matrixData[cellKey].status = 'generating_video';
-        this.renderMatrix();
+        this.matrixData[cellKey].loadingGif = true;
+        this.updateMatrixCell(cellKey); // Targeted update instead of renderMatrix()
         this.saveData();
 
         try {
@@ -651,20 +755,25 @@
                 ...cellData,
                 status: 'video_generated',
                 videoUrl: videoUrl,
-                videoGeneratedAt: new Date().toISOString()
+                videoGeneratedAt: new Date().toISOString(),
+                loadingGif: false
             };
 
-            this.renderMatrix();
+            this.updateMatrixCell(cellKey); // Targeted update instead of renderMatrix()
             this.saveData();
+            
+            // Log for debugging green triangle update
+            console.log('🟢 Video generation completed, green triangle should appear for:', cellKey);
             
         } catch (error) {
             console.error('Video generation failed:', error);
             this.matrixData[cellKey] = { 
                 ...cellData,
                 status: 'error',
-                error: error.message
+                error: error.message,
+                loadingGif: false
             };
-            this.renderMatrix();
+            this.updateMatrixCell(cellKey); // Targeted update instead of renderMatrix()
             this.saveData();
             this.showMessage(`Video generation failed: ${error.message}`, 'error');
         }
@@ -689,6 +798,9 @@
         
         // Setup event listeners for modal buttons
         this.setupModalEventListeners();
+        
+        // Setup click outside to close
+        this.setupModalCloseOnOutsideClick();
     }
 
     /**
@@ -704,7 +816,7 @@
         
         // Show dynamic characteristics (read-only) using new enhanced Brazilian format
         const seedInfo = this.getSeededCharacteristics(this.getProductSeed(productName));
-        characteristicsDiv.textContent = `${seedInfo.age} anos, ${seedInfo.ethnicity}, ${seedInfo.clothingColor}, ${seedInfo.timeOfDay}, ${seedInfo.city}`;
+        characteristicsDiv.textContent = `${seedInfo.age} anos, ${seedInfo.gender}, ${seedInfo.ethnicity}, ${seedInfo.clothingColor}, ${seedInfo.timeOfDay}, ${seedInfo.city}`;
         
         // Reset workflow steps first
         this.resetWorkflowSteps();
@@ -752,6 +864,28 @@
                         generateImageBtn.textContent = 'Regenerate Image';
                     } else {
                         generateImageBtn.textContent = 'Regenerate Image';
+                    }
+                }
+                
+                // Enable video generation since we have an image
+                const generateVideoBtn = document.getElementById('generate-video-btn');
+                if (generateVideoBtn) generateVideoBtn.disabled = false;
+            }
+            
+            if (cellData.videoUrl) {
+                // Show existing video in preview area
+                this.showVideoInPreviewArea(cellData.videoUrl);
+                
+                // Mark step as completed after reset
+                setTimeout(() => this.markStepCompleted(3), 150);
+                
+                // Update video button text since we already have a video
+                const generateVideoBtn = document.getElementById('generate-video-text') || document.getElementById('generate-video-btn');
+                if (generateVideoBtn) {
+                    if (generateVideoBtn.tagName === 'SPAN') {
+                        generateVideoBtn.textContent = 'Regenerate Video';
+                    } else {
+                        generateVideoBtn.textContent = 'Regenerate Video';
                     }
                 }
             }
@@ -863,6 +997,7 @@
             // Video settings listeners
             const videoModelSelect = document.getElementById('video-model-select');
             const videoDurationSelect = document.getElementById('video-duration-select');
+            const videoResolutionSelect = document.getElementById('video-resolution-select');
             
             if (videoModelSelect) {
                 videoModelSelect.addEventListener('change', () => this.updateVideoPricing());
@@ -870,6 +1005,37 @@
             
             if (videoDurationSelect) {
                 videoDurationSelect.addEventListener('change', () => this.updateVideoPricing());
+            }
+            
+            if (videoResolutionSelect) {
+                videoResolutionSelect.addEventListener('change', () => this.updateVideoPricing());
+            }
+
+            // Global video settings listeners
+            const globalVideoModelSelect = document.getElementById('global-video-model-select');
+            const globalVideoDurationSelect = document.getElementById('global-video-duration-select');
+            const globalVideoResolutionSelect = document.getElementById('global-video-resolution-select');
+            const saveGlobalVideoSettings = document.getElementById('save-global-video-settings');
+            const resetGlobalVideoSettings = document.getElementById('reset-global-video-settings');
+            
+            if (saveGlobalVideoSettings) {
+                saveGlobalVideoSettings.addEventListener('click', () => this.saveGlobalVideoSettings());
+            }
+            
+            if (resetGlobalVideoSettings) {
+                resetGlobalVideoSettings.addEventListener('click', () => this.resetGlobalVideoSettings());
+            }
+            
+            if (globalVideoModelSelect) {
+                globalVideoModelSelect.addEventListener('change', () => this.syncGlobalVideoSettings());
+            }
+            
+            if (globalVideoDurationSelect) {
+                globalVideoDurationSelect.addEventListener('change', () => this.syncGlobalVideoSettings());
+            }
+            
+            if (globalVideoResolutionSelect) {
+                globalVideoResolutionSelect.addEventListener('change', () => this.syncGlobalVideoSettings());
             }
             
             console.log('🔧 Modal event listeners setup completed');
@@ -978,7 +1144,47 @@
         }
     }
 
-
+    /**
+     * Show video in preview area (unified function for existing and generated videos)
+     */
+    showVideoInPreviewArea(videoUrl) {
+        const videoPreviewArea = document.getElementById('video-preview-area');
+        const videoPlaceholder = document.getElementById('video-placeholder');
+        
+        if (!videoPreviewArea || !videoPlaceholder) {
+            console.warn('Video preview elements not found');
+            return;
+        }
+        
+        // Update container styling
+        videoPreviewArea.classList.add('has-video');
+        videoPlaceholder.classList.add('has-video');
+        
+        // Remove placeholder styling to let video fill container
+        videoPlaceholder.style.background = 'none';
+        videoPlaceholder.style.border = 'none';
+        videoPlaceholder.style.backdropFilter = 'none';
+        videoPlaceholder.style.padding = '0';
+        videoPlaceholder.style.maxWidth = 'none';
+        videoPlaceholder.style.height = '100%';
+        videoPlaceholder.style.position = 'relative';
+        videoPlaceholder.style.display = 'block';
+        videoPlaceholder.style.borderRadius = '12px';
+        videoPlaceholder.style.overflow = 'hidden';
+        
+        videoPlaceholder.innerHTML = `
+            <video controls autoplay muted loop style="width: 100%; height: 100%; object-fit: cover; border-radius: 12px; display: block;">
+                <source src="${videoUrl}" type="video/mp4">
+                <img src="https://media.giphy.com/media/xTkcEQACH24SMPxIQg/giphy.gif" style="width: 100%; height: 100%; object-fit: cover; border-radius: 12px;" alt="Video loading...">
+                Your browser does not support the video tag.
+            </video>
+            <div class="video-controls" style="position: absolute; bottom: 10px; right: 10px; z-index: 10;">
+                <button class="video-control-btn" onclick="app.downloadVideo('${videoUrl}')" style="background: rgba(0,0,0,0.7); color: white; border: none; padding: 8px; border-radius: 4px; cursor: pointer;">⬇️</button>
+            </div>
+        `;
+        
+        console.log('✅ Existing video displayed in preview area:', videoUrl);
+    }
 
     /**
      * Generate video for current cell (modal version)
@@ -998,6 +1204,7 @@
         // Get current video settings
         const videoModel = document.getElementById('video-model-select')?.value || 'seedanceLite';
         const videoDuration = parseInt(document.getElementById('video-duration-select')?.value || 5);
+        const videoResolution = document.getElementById('video-resolution-select')?.value || '720p';
         
         // Show pricing estimate
         const estimate = this.pricing.getOperationEstimate('video', 1);
@@ -1019,14 +1226,16 @@
             if (videoPlaceholder) {
                 videoPlaceholder.classList.add('loading');
                 videoPlaceholder.innerHTML = `
-                    <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 32px;">
-                        <img src="https://media.giphy.com/media/xTkcEQACH24SMPxIQg/giphy.gif" style="width: 100%; height: 100%; object-fit: cover; border-radius: 10px; position: absolute; top: 0; left: 0; z-index: 1;">
-                        <div style="font-size: 18px; font-weight: 600; color: var(--text); margin-bottom: 8px; display: flex; align-items: center; gap: 8px;">
-                            🎬 Generating video...
-                        </div>
-                        <div style="font-size: 14px; color: var(--muted); text-align: center; line-height: 1.4;">
-                            ${this.pricing.getVideoModelName(videoModel)} - ${videoDuration}s<br/>
-                            <span style="opacity: 0.7;">This may take several minutes</span>
+                    <div style="position: relative; width: 100%; height: 100%; overflow: hidden; border-radius: 10px;">
+                        <img src="https://media.giphy.com/media/xTkcEQACH24SMPxIQg/giphy.gif" style="width: 100%; height: 100%; object-fit: cover; position: absolute; top: 0; left: 0;">
+                        <div style="position: absolute; bottom: 20px; left: 20px; right: 20px; z-index: 2; background: rgba(0,0,0,0.8); padding: 16px; border-radius: 8px; text-align: center;">
+                            <div style="font-size: 18px; font-weight: 600; color: var(--text); margin-bottom: 8px; display: flex; align-items: center; justify-content: center; gap: 8px;">
+                                🎬 Generating video...
+                            </div>
+                            <div style="font-size: 14px; color: var(--muted); text-align: center; line-height: 1.4;">
+                                ${this.pricing.getVideoModelName(videoModel)} - ${videoDuration}s<br/>
+                                <span style="opacity: 0.7;">This may take several minutes</span>
+                            </div>
                         </div>
                     </div>
                 `;
@@ -1036,37 +1245,37 @@
 
         try {
             const videoUrls = await window.AuthManager.generateVideo(cellData.prompt, cellData.imageUrl, {
-                duration: videoDuration
+                duration: videoDuration,
+                model: videoModel,
+                resolution: videoResolution
             });
             const videoUrl = Array.isArray(videoUrls) ? videoUrls[0] : videoUrls;
 
             // Update cell data with video
             this.matrixData[this.currentCellKey] = {
                 ...cellData,
+                status: 'video_generated',
                 videoUrl: videoUrl,
                 videoGeneratedAt: new Date().toISOString(),
-                videoSettings: { model: videoModel, duration: videoDuration }
+                videoSettings: { model: videoModel, duration: videoDuration, resolution: videoResolution }
             };
 
-            // Show video in preview area
+            // Show video in preview area using unified function
+            this.showVideoInPreviewArea(videoUrl);
+            
+            // Remove generating state
             if (videoPreviewArea && videoPlaceholder) {
                 videoPreviewArea.classList.remove('generating');
-                videoPreviewArea.classList.add('has-video');
                 videoPlaceholder.classList.remove('loading');
-                videoPlaceholder.innerHTML = `
-                    <video controls autoplay muted loop style="width: 100%; height: 100%; object-fit: cover; border-radius: 10px;">
-                        <source src="${videoUrl}" type="video/mp4">
-                        <img src="https://media.giphy.com/media/xTkcEQACH24SMPxIQg/giphy.gif" style="width: 100%; height: 100%; object-fit: cover; border-radius: 10px;" alt="Video loading...">
-                        Your browser does not support the video tag.
-                    </video>
-                    <div class="video-controls">
-                        <button class="video-control-btn" onclick="app.downloadVideo('${videoUrl}')">⬇️</button>
-                    </div>
-                `;
             }
 
             this.saveData();
+            this.updateMatrixCell(this.currentCellKey); // Update the matrix cell to show video status
             this.updateProgress();
+            
+            // Mark step 3 as completed
+            this.markStepCompleted(3);
+            
             this.showStatus('video-status', '✅ Video generated successfully!', 'success');
 
             // Auto-advance or complete workflow
@@ -1195,6 +1404,44 @@
     closeCellModal() {
         document.getElementById('cell-modal').style.display = 'none';
         this.currentCellKey = null;
+        
+        // Remove click outside event listener
+        this.removeModalCloseListener();
+    }
+
+    /**
+     * Setup click outside modal to close
+     */
+    setupModalCloseOnOutsideClick() {
+        const modal = document.getElementById('cell-modal');
+        if (!modal) return;
+        
+        // Remove any existing listener first
+        this.removeModalCloseListener();
+        
+        // Create new listener function
+        this.modalClickOutsideHandler = (e) => {
+            // Check if click is on the modal backdrop (not modal content)
+            if (e.target === modal) {
+                this.closeCellModal();
+            }
+        };
+        
+        // Add event listener
+        modal.addEventListener('click', this.modalClickOutsideHandler);
+        
+        console.log('✅ Setup click outside to close modal');
+    }
+
+    /**
+     * Remove modal close event listener
+     */
+    removeModalCloseListener() {
+        const modal = document.getElementById('cell-modal');
+        if (modal && this.modalClickOutsideHandler) {
+            modal.removeEventListener('click', this.modalClickOutsideHandler);
+            this.modalClickOutsideHandler = null;
+        }
     }
 
     /**
@@ -1223,8 +1470,8 @@
      * Update progress bar in modal
      */
     updateProgress() {
-        const progressFill = document.getElementById('progress-fill');
-        const progressText = document.getElementById('progress-text');
+        const progressFill = document.getElementById('modal-progress-fill');
+        const progressText = document.getElementById('modal-progress-text');
         if (progressFill && progressText) {
             const percentage = (this.completedSteps.size / 3) * 100;
             
@@ -1251,36 +1498,45 @@
      * Update synced prompt box visibility and content
      */
     updateSyncedPromptBox(stepNumber) {
-        const syncedPromptBox = document.getElementById('synced-prompt-box');
-        const syncedPromptTextarea = document.getElementById('synced-prompt-textarea');
+        // Get the appropriate step prompt display element
+        const stepPromptDisplay = document.getElementById(`step-prompt-display-${stepNumber}`);
+        const stepPromptContent = document.getElementById(`step-prompt-textarea-${stepNumber}`);
         const promptEditor = document.getElementById('prompt-editor');
         
-        if (!syncedPromptBox || !syncedPromptTextarea) return;
+        // Hide all step prompt displays first
+        [2, 3].forEach(step => {
+            const display = document.getElementById(`step-prompt-display-${step}`);
+            if (display) display.style.display = 'none';
+        });
         
-        // Hide on step 1 (prompt step), show on steps 2 and 3
-        if (stepNumber === 1) {
-            syncedPromptBox.classList.add('hidden');
-        } else {
-            syncedPromptBox.classList.remove('hidden');
-            
-            // Sync content from main prompt editor
-            if (promptEditor) {
-                syncedPromptTextarea.value = promptEditor.value;
-                // Make it editable and sync back to main editor
-                syncedPromptTextarea.readOnly = false;
-                
-                // Setup two-way sync
-                if (!syncedPromptTextarea.hasAttribute('data-synced')) {
-                    syncedPromptTextarea.addEventListener('input', () => {
-                        if (promptEditor) {
-                            promptEditor.value = syncedPromptTextarea.value;
-                            // Auto-save prompt when user types
-                            this.autoSavePrompt(syncedPromptTextarea.value);
-                        }
-                    });
-                    syncedPromptTextarea.setAttribute('data-synced', 'true');
-                }
+        // Show and update only for steps 2 and 3
+        if (stepNumber === 2 || stepNumber === 3) {
+            if (!stepPromptDisplay || !stepPromptContent) {
+                console.log('🔍 Step prompt elements not found for step', stepNumber, { 
+                    stepPromptDisplay: !!stepPromptDisplay, 
+                    stepPromptContent: !!stepPromptContent 
+                });
+                return;
             }
+            
+            stepPromptDisplay.style.display = 'block';
+            
+            // Get the content from either the current cell or the prompt editor
+            let promptContent = '';
+            if (this.currentCellKey && this.matrixData[this.currentCellKey]?.prompt) {
+                promptContent = this.matrixData[this.currentCellKey].prompt;
+            } else if (promptEditor && promptEditor.value) {
+                promptContent = promptEditor.value;
+            }
+            
+            // Update the prompt content (using textContent for better security and formatting)
+            if (promptContent) {
+                stepPromptContent.textContent = promptContent;
+            } else {
+                stepPromptContent.textContent = 'No content prompt available';
+            }
+            
+            console.log('📝 Updated step', stepNumber, 'prompt display with content:', promptContent.substring(0, 50) + '...');
         }
     }
 
@@ -1289,13 +1545,14 @@
      */
     setupSyncedPromptSync() {
         const promptEditor = document.getElementById('prompt-editor');
-        const syncedPromptTextarea = document.getElementById('synced-prompt-textarea');
+        const stepPromptTextarea = document.getElementById('step-prompt-textarea');
         
-        if (promptEditor && syncedPromptTextarea) {
-            // Setup one-way sync from main editor to synced box initially
+        if (promptEditor && stepPromptTextarea) {
+            // Setup one-way sync from main editor to step prompt display
             promptEditor.addEventListener('input', () => {
-                if (!syncedPromptTextarea.classList.contains('hidden')) {
-                    syncedPromptTextarea.value = promptEditor.value;
+                const stepPromptDisplay = document.getElementById('step-prompt-display');
+                if (stepPromptDisplay && stepPromptDisplay.style.display !== 'none') {
+                    stepPromptTextarea.value = promptEditor.value;
                 }
             });
         }
@@ -2115,10 +2372,12 @@
         const cities = this.brazilianCharacteristics.cities;
         const timesOfDay = this.brazilianCharacteristics.timesOfDay;
         const ethnicities = this.brazilianCharacteristics.ethnicities;
+        const genders = this.brazilianCharacteristics.genders;
         
         const city = cities[seed % cities.length];
         const timeOfDay = timesOfDay[(seed * 7) % timesOfDay.length];
         const ethnicity = ethnicities[(seed * 13) % ethnicities.length];
+        const gender = genders[(seed * 17) % genders.length];
         const clothingColor = this.getClothingColorByDistribution(seed);
         const age = this.getRandomAge(seed);
         
@@ -2126,6 +2385,7 @@
             city,
             timeOfDay,
             ethnicity,
+            gender,
             clothingColor,
             age
         };
@@ -2137,15 +2397,10 @@
     buildStructuredInput(productName, basePrompt, cnae) {
         const seedInfo = this.getSeededCharacteristics(this.getProductSeed(productName));
         
-        // Create structured input combining user prompt + Brazilian characteristics
-        const structuredInput = `Scene: ${basePrompt}
-Business: ${cnae.name}
-Person: ${seedInfo.ethnicity}
-Location: ${seedInfo.city}
-Time: ${seedInfo.timeOfDay}
-Environment: Interior de um ${cnae.name.toLowerCase()}
-Profession: ${this.getProfessionFromCnae(cnae.name)}
-Additional: Ambiente brasileiro, sem letreiros visíveis`;
+        // Create structured input matching the new instruction format
+        const structuredInput = `Prompt: ${basePrompt} | Profissão: ${cnae.name}, Gênero: ${seedInfo.gender}, Etnia: ${seedInfo.ethnicity}, Cidade: ${seedInfo.city}, Horário: ${seedInfo.timeOfDay}, Idade: ${seedInfo.age}, Cor: ${seedInfo.clothingColor}, Ambiente: loja cheia, clientes atrás, movimento na loja`;
+
+        console.log('📋 Built structured input:', structuredInput);
 
         return structuredInput;
     }
@@ -2176,32 +2431,46 @@ Additional: Ambiente brasileiro, sem letreiros visíveis`;
      */
     createPortugueseLLMInstructions() {
         const globalStyle = this.promptBuilder.getGlobalStylePrompt();
-        return `Você é um especialista em criação de prompts para geração de imagens realistas de profissionais brasileiros em seus ambientes de trabalho.
+        return `Crie prompts cinematográficos em português combinando o prompt base do produto com as características brasileiras fornecidas.
 
-INSTRUÇÕES PRINCIPAIS:
-1. Crie prompts cinematográficos em português para imagens ultra-realistas
-2. Use SEMPRE as características brasileiras fornecidas (etnia, cidade, horário, idade)
-3. Adapte o ambiente e vestimenta à profissão específica
-4. Para profissões como médicos, dentistas, farmacêuticos: IGNORE a cor da roupa sugerida e use uniformes profissionais apropriados (jaleco branco, scrubs, etc.). Use a cor sugerida apenas como cor de destaque no ambiente ou acessórios
-5. Para outras profissões: use a cor da roupa sugerida normalmente
-6. NUNCA inclua textos, letreiros, placas ou escritas visíveis na imagem
-7. Use ambiente brasileiro apropriado para a profissão na cidade especificada
-8. Inclua sempre a idade da pessoa (entre os valores fornecidos)
-9. SEMPRE termine o prompt com as configurações técnicas globais fornecidas
+Combine: [PROMPT BASE] + [características: profissão, gênero, etnia, cidade, horário, idade, cor, ambiente] para gerar o prompt final. Adapte vestimenta e ambiente conforme a profissão. SEMPRE inclua o contexto de ambiente fornecido (clientes no fundo, movimento na loja).
+
+IMPORTANTE: Para prompts com múltiplas pessoas, varie naturalmente as etnias para representar a diversidade brasileira sem forçar. Mix naturalizado de diferentes grupos étnicos.
 
 CONFIGURAÇÕES TÉCNICAS GLOBAIS:
 ${globalStyle}
 
-FORMATO DE RESPOSTA:
-Retorne apenas o prompt final em português, incluindo as características + ambiente + configurações técnicas globais.
+EXEMPLOS:
 
-EXEMPLO PARA MÉDICO:
-Entrada: "Profissão: Médico, Etnia: parda pele morena, Cidade: São Paulo, Horário: meio-dia, Idade: 35, Cor: roupa azul"
-Saída: "Médico brasileiro de 35 anos, parda pele morena, usando jaleco branco, em consultório médico moderno em São Paulo, meio-dia com luz natural, ambiente com detalhes em tons de azul, equipamentos médicos, profissional e confiante. ${globalStyle}"
+Entrada: "Prompt: Retrato do(a) empreendedor(a) ao lado de uma vitrine ou expositor, conversando com um(a) cliente à frente. Postura firme, leve gesto com as mãos e contato visual, sugerindo confiança e indicação. | Profissão: Farmácia, Gênero: homem, Etnia: pardo pele morena, Cidade: São Paulo, Horário: meio-dia, Idade: 35, Cor: roupa azul"
+Saída: "Retrato do farmacêutico brasileiro de 35 anos, homem pardo pele morena, usando jaleco branco profissional, ao lado de uma vitrine de medicamentos em farmácia moderna em São Paulo, conversando com cliente. Postura firme, leve gesto com as mãos e contato visual, sugerindo confiança e indicação. Meio-dia com luz natural, ambiente com detalhes em tons de azul. ${globalStyle}"
 
-EXEMPLO PARA OUTRAS PROFISSÕES:
-Entrada: "Profissão: Vendedor, Etnia: negra pele escura, Cidade: Salvador, Horário: entardecer, Idade: 42, Cor: roupa verde lima"
-Saída: "Vendedor brasileiro de 42 anos, negra pele escura, vestindo roupa verde lima suave, em loja comercial em Salvador, luz do entardecer, ambiente profissional brasileiro, sorrindo e atendendo cliente. ${globalStyle}"`;
+Entrada: "Prompt: Close-up de uma mão segurando um smartphone mostrando as costas do aparelho. Fundo desfocado de ambiente comercial moderno e iluminado. | Profissão: Loja de Roupa, Gênero: mulher, Etnia: negra pele escura, Cidade: Salvador, Horário: entardecer, Idade: 42, Cor: roupa verde lima, Ambiente: loja cheia, clientes atrás, movimento na loja"
+Saída: "Close-up da mão de vendedora brasileira de 42 anos, mulher negra pele escura, vestindo blusa verde lima elegante, segurando smartphone mostrando as costas do aparelho. Fundo desfocado de loja de roupas moderna em Salvador com clientes navegando pelas araras ao fundo, movimento natural de clientes, luz do entardecer, ambiente movimentado de varejo brasileiro. ${globalStyle}"
+
+Entrada: "Prompt: Empreendedor(a) em pé próximo ao caixa ou balcão do estabelecimento. Segura o celular em uma mão, mostrando as costas do aparelho, como se acompanhasse vendas. Expressão segura e profissional. | Profissão: Restaurante, Gênero: homem, Etnia: branco, Cidade: Rio de Janeiro, Horário: manhã, Idade: 30, Cor: roupa preta"
+Saída: "Garçom brasileiro de 30 anos, homem branco, vestindo camisa preta elegante, em pé próximo ao caixa do restaurante no Rio de Janeiro. Segura o celular em uma mão, mostrando as costas do aparelho, como se acompanhasse vendas. Expressão segura e profissional, luz da manhã, ambiente de restaurante moderno com mesas e clientes ao fundo. ${globalStyle}"
+
+Entrada: "Prompt: Profissional trabalhando no estabelecimento, em ação característica da profissão. | Profissão: Barbearia, Gênero: homem, Etnia: negro, Cidade: Salvador, Horário: entardecer, Idade: 28, Cor: roupa branca, Ambiente: loja cheia, clientes atrás, movimento na loja"
+Saída: "Barbeiro brasileiro de 28 anos, homem negro, vestindo camisa branca profissional, trabalhando em barbearia em Salvador. Ambiente movimentado com poltronas de barbeiro ocupadas, espelhos grandes, clientes esperando na fila, movimento natural e constante na loja, luz do entardecer. ${globalStyle}"
+
+Entrada: "Prompt: Atendimento ao cliente no balcão de vendas. | Profissão: Oficina Mecânica, Gênero: mulher, Etnia: parda, Cidade: São Paulo, Horário: meio-dia, Idade: 35, Cor: roupa azul"
+Saída: "Mecânica brasileira de 35 anos, mulher parda, vestindo macacão azul profissional, atendendo cliente no balcão da oficina em São Paulo. Meio-dia, ambiente com carros ao fundo, elevadores pneumáticos, ferramentas, clientes aguardando, movimento típico de oficina. ${globalStyle}"
+
+Entrada: "Prompt: Organizando produtos na loja. | Profissão: Loja de Roupa, Gênero: mulher, Etnia: branca, Cidade: Curitiba, Horário: manhã, Idade: 26, Cor: roupa rosa"
+Saída: "Vendedora brasileira de 26 anos, mulher branca, vestindo blusa rosa elegante, organizando produtos na loja de roupas em Curitiba. Manhã, ambiente com araras de roupas, manequins, clientes navegando pelas peças, movimento natural de varejo. ${globalStyle}"
+
+IMPORTANTE: Adapte SEMPRE o ambiente conforme a profissão mencionada. Exemplos de ambientes específicos:
+- Barbearia: poltronas, espelhos, clientes esperando
+- Farmácia: prateleiras de medicamentos, balcão, clientes consultando
+- Loja de Roupa: araras, manequins, clientes experimentando
+- Oficina Mecânica: carros, elevadores pneumáticos, ferramentas
+- Restaurante: mesas, clientes jantando, garçons servindo
+- Salão de Beleza: cadeiras, espelhos, secadores, clientes sendo atendidas
+- Mercadinho: prateleiras, carrinho de compras, clientes escolhendo produtos
+- Padaria: vitrine de pães, fornos, clientes fazendo fila
+
+Retorne apenas o prompt final combinado seguindo estes exemplos.`;
     }
 
     /**
@@ -2241,7 +2510,8 @@ Etnia: ${characteristics.ethnicity}
 Cidade: ${characteristics.city}
 Horário: ${characteristics.timeOfDay}
 Idade: ${characteristics.age}
-Cor Sugerida: ${characteristics.clothingColor}`;
+Cor Sugerida: ${characteristics.clothingColor}
+Ambiente: loja cheia, clientes atrás, movimento na loja`;
 
             console.log('🔍 Sending Portuguese input to LLM:', portugueseInput);
 
@@ -2265,8 +2535,8 @@ Cor Sugerida: ${characteristics.clothingColor}`;
      * Create fallback Portuguese prompt when LLM is not available
      */
     createFallbackPortuguesePrompt(basePrompt, cnae, characteristics) {
-        // Professional clothing logic for fallback - expanded list
-        const isProfessionalUniform = ['Clínicas / Odonto / Estética', 'Farmácia', 'Padaria'].some(prof => 
+        // Professional clothing logic for fallback - only medical professions get lab coats
+        const isProfessionalUniform = ['Clínicas / Odonto / Estética', 'Farmácia'].some(prof => 
             cnae.name.toLowerCase().includes(prof.toLowerCase())
         );
         
@@ -2277,7 +2547,7 @@ Cor Sugerida: ${characteristics.clothingColor}`;
         // Include global style settings
         const globalStyle = this.promptBuilder.getGlobalStylePrompt();
         
-        const fallbackPrompt = `${basePrompt}. Pessoa brasileira de ${characteristics.age} anos, ${characteristics.ethnicity}, usando ${clothingDescription}, em ${cnae.name} em ${characteristics.city}, ${characteristics.timeOfDay}, ambiente brasileiro profissional, sem textos ou letreiros visíveis. ${globalStyle}`;
+        const fallbackPrompt = `${basePrompt}. Pessoa brasileira de ${characteristics.age} anos, ${characteristics.ethnicity}, usando ${clothingDescription}, em ${cnae.name} em ${characteristics.city}, ${characteristics.timeOfDay}, ambiente brasileiro profissional movimentado com clientes ao fundo, loja cheia, movimento natural de clientes. ${globalStyle}`;
         
         console.log('🔄 Using Portuguese fallback prompt with global style:', fallbackPrompt);
         return fallbackPrompt;
@@ -2291,6 +2561,30 @@ Cor Sugerida: ${characteristics.clothingColor}`;
         if (styleTextarea) {
             styleTextarea.value = this.promptBuilder.getGlobalStylePrompt();
         }
+    }
+
+    /**
+     * Load global video settings to UI
+     */
+    loadGlobalVideoSettingsToUI() {
+        const globalVideoModel = document.getElementById('global-video-model-select');
+        const globalVideoDuration = document.getElementById('global-video-duration-select');
+        const globalVideoResolution = document.getElementById('global-video-resolution-select');
+        
+        if (globalVideoModel && this.globalVideoSettings) {
+            globalVideoModel.value = this.globalVideoSettings.model || 'seedanceLite';
+        }
+        
+        if (globalVideoDuration && this.globalVideoSettings) {
+            globalVideoDuration.value = this.globalVideoSettings.duration || 5;
+        }
+        
+        if (globalVideoResolution && this.globalVideoSettings) {
+            globalVideoResolution.value = this.globalVideoSettings.resolution || '720p';
+        }
+        
+        // Also sync to individual video controls
+        setTimeout(() => this.syncGlobalVideoSettings(), 100);
     }
 
     /**
@@ -2324,6 +2618,86 @@ Cor Sugerida: ${characteristics.clothingColor}`;
         this.saveData();
         console.log('🔄 Reset to default Brazilian camera settings');
         this.showMessage('Configurações resetadas para padrão brasileiro', 'success');
+    }
+
+    /**
+     * Save global video settings
+     */
+    saveGlobalVideoSettings() {
+        const globalVideoModel = document.getElementById('global-video-model-select')?.value || 'seedanceLite';
+        const globalVideoDuration = parseInt(document.getElementById('global-video-duration-select')?.value || 5);
+        const globalVideoResolution = document.getElementById('global-video-resolution-select')?.value || '720p';
+        
+        // Save to class properties for default values
+        this.globalVideoSettings = {
+            model: globalVideoModel,
+            duration: globalVideoDuration,
+            resolution: globalVideoResolution
+        };
+        
+        // Update pricing defaults
+        this.pricing.setVideoSettings(globalVideoModel, globalVideoDuration);
+        
+        this.saveData();
+        console.log('🎬 Updated global video settings:', this.globalVideoSettings);
+        this.showMessage('Configurações globais de vídeo salvas com sucesso', 'success');
+        
+        // Sync to individual video controls
+        this.syncGlobalVideoSettings();
+    }
+
+    /**
+     * Reset global video settings to default
+     */
+    resetGlobalVideoSettings() {
+        // Reset to defaults: SeedDance Lite, 5 seconds, 720p
+        this.globalVideoSettings = {
+            model: 'seedanceLite',
+            duration: 5,
+            resolution: '720p'
+        };
+        
+        // Update UI elements
+        const globalVideoModel = document.getElementById('global-video-model-select');
+        const globalVideoDuration = document.getElementById('global-video-duration-select');
+        const globalVideoResolution = document.getElementById('global-video-resolution-select');
+        
+        if (globalVideoModel) globalVideoModel.value = 'seedanceLite';
+        if (globalVideoDuration) globalVideoDuration.value = '5';
+        if (globalVideoResolution) globalVideoResolution.value = '720p';
+        
+        // Update pricing defaults
+        this.pricing.setVideoSettings('seedanceLite', 5);
+        
+        this.saveData();
+        console.log('🔄 Reset to default video settings');
+        this.showMessage('Configurações de vídeo resetadas para padrão', 'success');
+        
+        // Sync to individual video controls
+        this.syncGlobalVideoSettings();
+    }
+
+    /**
+     * Sync global video settings to individual video controls
+     */
+    syncGlobalVideoSettings() {
+        const globalVideoModel = document.getElementById('global-video-model-select')?.value || 'seedanceLite';
+        const globalVideoDuration = document.getElementById('global-video-duration-select')?.value || '5';
+        const globalVideoResolution = document.getElementById('global-video-resolution-select')?.value || '720p';
+        
+        // Update individual video controls to match global settings
+        const videoModelSelect = document.getElementById('video-model-select');
+        const videoDurationSelect = document.getElementById('video-duration-select');
+        const videoResolutionSelect = document.getElementById('video-resolution-select');
+        
+        if (videoModelSelect) videoModelSelect.value = globalVideoModel;
+        if (videoDurationSelect) videoDurationSelect.value = globalVideoDuration;
+        if (videoResolutionSelect) videoResolutionSelect.value = globalVideoResolution;
+        
+        // Update pricing display
+        this.updateVideoPricing();
+        
+        console.log('🔄 Synced global video settings to local controls');
     }
 
     /**
@@ -3091,6 +3465,17 @@ Cor Sugerida: ${characteristics.clothingColor}`;
      */
     renderMatrix() {
         const container = document.getElementById('matrix-grid');
+        
+        // Preserve current collapsed state before clearing
+        const currentLeftFrame = document.querySelector('.matrix-left-frame');
+        const isCurrentlyCollapsed = currentLeftFrame ? currentLeftFrame.classList.contains('collapsed') : true;
+        
+        // Preserve scroll positions
+        const currentContentArea = document.querySelector('.matrix-content-area');
+        const currentHeaderFrame = document.querySelector('.matrix-header-frame');
+        const scrollLeft = currentContentArea ? currentContentArea.scrollLeft : 0;
+        const scrollTop = currentContentArea ? currentContentArea.scrollTop : 0;
+        
         container.innerHTML = '';
 
         if (this.cnaes.length === 0 || this.products.length === 0) {
@@ -3103,21 +3488,21 @@ Cor Sugerida: ${characteristics.clothingColor}`;
             return;
         }
 
-        // Create fixed corner frame (top-left intersection) - collapsed by default
+        // Create fixed corner frame - preserve current state
         const cornerFrame = document.createElement('div');
-        cornerFrame.className = 'matrix-corner-frame collapsed';
+        cornerFrame.className = `matrix-corner-frame ${isCurrentlyCollapsed ? 'collapsed' : ''}`;
         
-        // Create fixed header frame - collapsed by default
+        // Create fixed header frame - preserve current state
         const headerFrame = document.createElement('div');
-        headerFrame.className = 'matrix-header-frame collapsed';
+        headerFrame.className = `matrix-header-frame ${isCurrentlyCollapsed ? 'collapsed' : ''}`;
         
-        // Create fixed left frame - collapsed by default
+        // Create fixed left frame - preserve current state
         const leftFrame = document.createElement('div');
-        leftFrame.className = 'matrix-left-frame collapsed';
+        leftFrame.className = `matrix-left-frame ${isCurrentlyCollapsed ? 'collapsed' : ''}`;
         
-        // Create scrollable content area - collapsed by default
+        // Create scrollable content area - preserve current state
         const contentArea = document.createElement('div');
-        contentArea.className = 'matrix-content-area collapsed';
+        contentArea.className = `matrix-content-area ${isCurrentlyCollapsed ? 'collapsed' : ''}`;
         
         // Create the main matrix container
         const matrixContainer = document.createElement('div');
@@ -3142,7 +3527,7 @@ Cor Sugerida: ${characteristics.clothingColor}`;
         const promptSpacer = document.createElement('div');
         promptSpacer.className = 'column-spacer';
         promptSpacer.id = 'prompt-spacer';
-        promptSpacer.style.display = 'none'; // Hidden by default since starting collapsed
+        promptSpacer.style.display = isCurrentlyCollapsed ? 'none' : 'block'; // Preserve visibility state
         cornerRow.appendChild(promptSpacer);
         
         cornerFrame.appendChild(cornerRow);
@@ -3226,7 +3611,7 @@ Cor Sugerida: ${characteristics.clothingColor}`;
                               onblur="app.savePromptEdit(${productIndex}, this)"
                               onkeypress="if(event.key==='Enter' && !event.shiftKey) { event.preventDefault(); this.blur(); }">${product.prompt || 'Professional top-view product shot on clean white background'}</textarea>
                 </div>
-                <div class="characteristics-display" onclick="event.stopPropagation(); app.shuffleProductCharacteristics('${product.name}')" title="Click to shuffle characteristics">${seedInfo.age} anos, ${seedInfo.ethnicity}, ${seedInfo.clothingColor}, ${seedInfo.timeOfDay}, ${seedInfo.city}</div>
+                <div class="characteristics-display" onclick="event.stopPropagation(); app.shuffleProductCharacteristics('${product.name}')" title="Click to shuffle characteristics">${seedInfo.age} anos, ${seedInfo.gender}, ${seedInfo.ethnicity}, ${seedInfo.clothingColor}, ${seedInfo.timeOfDay}, ${seedInfo.city}</div>
             `;
             promptsColumn.appendChild(promptRow);
         });
@@ -3260,7 +3645,7 @@ Cor Sugerida: ${characteristics.clothingColor}`;
         // Add dedicated border elements that match content area height        
         const productsBorder = document.createElement('div');
         productsBorder.className = 'matrix-border-products';
-        productsBorder.style.opacity = '0'; // Start hidden since starting collapsed
+        productsBorder.style.opacity = isCurrentlyCollapsed ? '0' : '1'; // Preserve visibility state
         container.appendChild(productsBorder);
         
         // Prompts border is now part of the actual prompts column
@@ -3268,16 +3653,47 @@ Cor Sugerida: ${characteristics.clothingColor}`;
         // Add scroll synchronization
         this.setupScrollSync(headerFrame, contentArea, leftFrame);
         
-        // Set body class for collapsed state by default
-        document.body.classList.add('matrix-collapsed');
+        // Set body class to preserve current state
+        if (isCurrentlyCollapsed) {
+            document.body.classList.add('matrix-collapsed');
+        } else {
+            document.body.classList.remove('matrix-collapsed');
+        }
         
         // Setup prompts column border interaction
         setTimeout(() => {
             this.setupPromptsColumnBorder();
         }, 100);
         
+        // Restore scroll positions after rendering
+        setTimeout(() => {
+            if (scrollLeft > 0 || scrollTop > 0) {
+                const newContentArea = document.querySelector('.matrix-content-area');
+                const newHeaderFrame = document.querySelector('.matrix-header-frame');
+                if (newContentArea) {
+                    newContentArea.scrollLeft = scrollLeft;
+                    newContentArea.scrollTop = scrollTop;
+                }
+                if (newHeaderFrame) {
+                    newHeaderFrame.scrollLeft = scrollLeft;
+                }
+            }
+        }, 50);
+        
         // Check for text overflow after rendering
         setTimeout(() => this.checkTextOverflow(), 50);
+        
+        // Update prompts toggle button state to match preserved state
+        setTimeout(() => {
+            const promptsToggle = document.getElementById('prompts-toggle');
+            if (promptsToggle) {
+                if (isCurrentlyCollapsed) {
+                    promptsToggle.classList.remove('active');
+                } else {
+                    promptsToggle.classList.add('active');
+                }
+            }
+        }, 50);
         
         console.log('✅ Matrix rendered with synced scroll layout');
     }
@@ -3412,21 +3828,31 @@ Cor Sugerida: ${characteristics.clothingColor}`;
         let content = 'Ready to generate';
         
         if (cellData) {
-            // Check for image first (regardless of status) - this fixes the bug
-            if (cellData.imageUrl) {
-                statusClass = 'cell-generated';
-                content = `<img src="${cellData.imageUrl}" alt="${product.name} - ${cnae.name}" class="cell-image">`;
-            } else if (cellData.status === 'generating') {
+            // Check generating status FIRST (highest priority during generation)
+            if (cellData.status === 'generating' || cellData.status === 'generating_video') {
                 statusClass = 'cell-generating';
                 if (cellData.loadingGif) {
                     content = `
-                        <div style="display: flex; justify-content: center; align-items: center; height: 100%; background: #161518;">
-                            <img src="https://media.giphy.com/media/xTkcEQACH24SMPxIQg/giphy.gif" style="max-height: 100%; width: auto; object-fit: contain;">
+                        <div style="position: relative; height: 100%; background: #161518;">
+                            <img src="https://media.giphy.com/media/xTkcEQACH24SMPxIQg/giphy.gif" style="width: 100%; height: 100%; object-fit: cover; border-radius: 8px;">
                         </div>
                     `;
                 } else {
-                    content = 'Generating...';
+                    const generationType = cellData.status === 'generating_video' ? 'video' : 'image';
+                    content = `Generating ${generationType}...`;
                 }
+            } else if (cellData.videoUrl) {
+                // Check for video (highest priority after generating)
+                statusClass = 'cell-generated';
+                content = `
+                    <video muted autoplay loop class="cell-video" style="width: 100%; height: 100%; object-fit: cover;">
+                        <source src="${cellData.videoUrl}" type="video/mp4">
+                        <img src="${cellData.imageUrl}" alt="${product.name} - ${cnae.name}" class="cell-image">
+                    </video>
+                `;
+            } else if (cellData.imageUrl) {
+                statusClass = 'cell-generated';
+                content = `<img src="${cellData.imageUrl}" alt="${product.name} - ${cnae.name}" class="cell-image">`;
             } else if (cellData.status === 'prompt_ready' || cellData.prompt) {
                 statusClass = 'cell-prompt-ready';
                 content = 'Prompt ready';
@@ -3437,7 +3863,7 @@ Cor Sugerida: ${characteristics.clothingColor}`;
         }
 
         return `
-            <div class="cnae-cell-content ${statusClass}" onclick="app.openCellModal('${cellKey}')">
+            <div class="cnae-cell-content ${statusClass}" data-cell="${cellKey}" onclick="app.openCellModal('${cellKey}')">
                 ${content}
             </div>
         `;
@@ -3501,7 +3927,7 @@ Cor Sugerida: ${characteristics.clothingColor}`;
         }
 
         this.matrixData[cellKey] = { status: 'generating' };
-        this.renderMatrix();
+        this.updateMatrixCell(cellKey); // Targeted update instead of renderMatrix()
         this.saveData();
 
         try {
@@ -3523,7 +3949,7 @@ Cor Sugerida: ${characteristics.clothingColor}`;
                 generatedAt: new Date().toISOString()
             };
 
-            this.renderMatrix();
+            this.updateMatrixCell(cellKey); // Targeted update instead of renderMatrix()
             this.saveData();
             this.updateCarouselIfNeeded(cnae.name);
 
@@ -3536,7 +3962,7 @@ Cor Sugerida: ${characteristics.clothingColor}`;
                 error: error.message,
                 lastAttempt: new Date().toISOString()
             };
-            this.renderMatrix();
+            this.updateMatrixCell(cellKey); // Targeted update instead of renderMatrix()
             this.saveData();
             this.showMessage(`Generation failed: ${error.message}`, 'error');
         }
@@ -3754,11 +4180,14 @@ Cor Sugerida: ${characteristics.clothingColor}`;
                 const cellKey = `${product.name}-${cnaeName}`;
                 const cellData = this.matrixData[cellKey];
                 
-                if (cellData && cellData.status === 'generated' && cellData.imageUrl) {
+                // Include any cell that has media (video or image), prioritize video if available
+                if (cellData && (cellData.videoUrl || cellData.imageUrl)) {
                     return {
                         title: product.name,
                         imageUrl: cellData.imageUrl,
-                        prompt: cellData.prompt
+                        videoUrl: cellData.videoUrl,
+                        prompt: cellData.prompt,
+                        hasVideo: !!cellData.videoUrl
                     };
                 }
                 return null;
@@ -3872,6 +4301,7 @@ Cor Sugerida: ${characteristics.clothingColor}`;
             width: ${wrapperWidth}%;
             height: 100%;
             display: flex;
+            gap: 0;
             transition: transform 0.5s cubic-bezier(0.4, 0, 0.2, 1);
             transform: translateX(-${translatePercent}%);
             position: absolute;
@@ -3891,20 +4321,37 @@ Cor Sugerida: ${characteristics.clothingColor}`;
                 overflow: hidden;
             `;
             
-            const img = document.createElement('img');
-            img.src = item.imageUrl;
-            img.alt = item.title;
-            img.style.cssText = `
-                width: auto;
-                height: 100%;
-                max-height: 100%;
-                object-fit: cover;
-                object-position: center;
-                display: block;
-                margin: 0 auto;
-            `;
+            // Prioritize video if available, otherwise use image
+            if (item.hasVideo && item.videoUrl) {
+                const video = document.createElement('video');
+                video.src = item.videoUrl;
+                video.muted = true;
+                video.autoplay = true;
+                video.loop = true;
+                video.style.cssText = `
+                    width: 100%;
+                    height: 100%;
+                    max-height: 100%;
+                    object-fit: cover;
+                    object-position: center;
+                    display: block;
+                `;
+                slide.appendChild(video);
+            } else if (item.imageUrl) {
+                const img = document.createElement('img');
+                img.src = item.imageUrl;
+                img.alt = item.title;
+                img.style.cssText = `
+                    width: 100%;
+                    height: 100%;
+                    max-height: 100%;
+                    object-fit: cover;
+                    object-position: center;
+                    display: block;
+                `;
+                slide.appendChild(img);
+            }
             
-            slide.appendChild(img);
             wrapper.appendChild(slide);
         });
 
@@ -4472,8 +4919,8 @@ class PricingCalculator {
         // Pricing rates (in USD)
         this.rates = {
             prompt: {
-                inputTokens: 0.0015 / 1000,   // $0.0015 per 1K input tokens (GPT-4o-mini)
-                outputTokens: 0.006 / 1000    // $0.006 per 1K output tokens (GPT-4o-mini)
+                inputTokens: 0.05 / 1000000,  // $0.05 per 1M input tokens (GPT-5-nano)
+                outputTokens: 0.40 / 1000000  // $0.40 per 1M output tokens (GPT-5-nano)
             },
             image: {
                 seedream: 0.03  // $0.03 per image
@@ -4487,7 +4934,8 @@ class PricingCalculator {
         // Default video settings
         this.videoSettings = {
             model: 'seedanceLite',    // 'seedanceLite' or 'seedancePro'
-            duration: 5               // 5 or 10 seconds
+            duration: 5,              // 5 or 10 seconds
+            resolution: '720p'        // '720p' or '1080p'
         };
     }
 
